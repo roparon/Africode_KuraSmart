@@ -22,7 +22,7 @@
 
 ## ✨ Features
 
-- 🔐 **Secure voter registration** via National ID or username
+- 🔐 **Secure voter registration** via National ID(Formal) or username(informal)
 - 📍 **Geographic voting zones**: County → Constituency → Ward → Sub-location
 - 🗳️ **Position-based voting** with 1-vote-per-position rule
 - 📊 **Live results dashboard** for admins and public
