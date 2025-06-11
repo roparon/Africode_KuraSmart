@@ -1,29 +1,65 @@
 from datetime import datetime
 from app.extensions import db
-from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     full_name = db.Column(db.String(120), nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
-    role = db.Column(db.String(10), nullable=False)
-    id_number = db.Column(db.String(20), unique=True, nullable=True)
-    username = db.Column(db.String(50), unique=True, nullable=True)
-    county = db.Column(db.String(50))
-    constituency = db.Column(db.String(50))
-    ward = db.Column(db.String(50))
-    sub_location = db.Column(db.String(50))
+    role = db.Column(db.String(50), default='voter')
+    id_number = db.Column(db.String(20), unique=True)
+    username = db.Column(db.String(80), unique=True)
+    county = db.Column(db.String(100))
+    constituency = db.Column(db.String(100))
+    ward = db.Column(db.String(100))
+    sub_location = db.Column(db.String(100))
     is_verified = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    def set_password(self, password):
+        from werkzeug.security import generate_password_hash
+        self.password_hash = generate_password_hash(password)
 
+    def check_password(self, password):
+        from werkzeug.security import check_password_hash
+        return check_password_hash(self.password_hash, password)
 
-def set_password(self, password):
-    self.password_hash = generate_password_hash(password)
+class Election(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text)
+    start_date = db.Column(db.DateTime, nullable=False)
+    end_date = db.Column(db.DateTime, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-def check_password(self, password):
-    return check_password_hash(self.password_hash, password)
+class Candidate(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=False)
+    manifesto = db.Column(db.Text)
+    approved = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-User.set_password = set_password
-User.check_password = check_password
+    user = db.relationship('User', backref='candidates')
+    election = db.relationship('Election', backref='candidates')
+
+class Vote(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    voter_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=False)
+    candidate_id = db.Column(db.Integer, db.ForeignKey('candidate.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    voter = db.relationship('User', backref='votes')
+    election = db.relationship('Election', backref='votes')
+    candidate = db.relationship('Candidate', backref='votes')
+
+class VerificationRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    status = db.Column(db.String(50), default='pending')  # pending, approved, rejected
+    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    reviewed_at = db.Column(db.DateTime)
+
+    user = db.relationship('User', backref='verification_requests')
