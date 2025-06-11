@@ -2,8 +2,9 @@ from flask import Blueprint, request, jsonify
 from app.extensions import db
 from app.models import User
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from datetime import timedelta
 
-auth_bp = Blueprint('auth_bp', __name__)
+auth_bp = Blueprint('auth_bp', __name__, url_prefix='/api/v1/auth')
 
 # Register
 @auth_bp.route('/register', methods=['POST'])
@@ -62,7 +63,7 @@ def login():
     if not user or not user.check_password(password):
         return jsonify({'error': 'Invalid credentials'}), 401
 
-    access_token = create_access_token(identity=user.id)
+    access_token = create_access_token(identity=user.id, expires_delta=timedelta(hours=12))
 
     return jsonify({
         'access_token': access_token,
@@ -73,4 +74,30 @@ def login():
             'role': user.role,
             'is_verified': user.is_verified
         }
+    }), 200
+
+
+# Get current user profile
+@auth_bp.route('/me', methods=['GET'])
+@jwt_required()
+def get_profile():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    return jsonify({
+        'id': user.id,
+        'email': user.email,
+        'full_name': user.full_name,
+        'role': user.role,
+        'is_verified': user.is_verified,
+        'id_number': user.id_number,
+        'username': user.username,
+        'county': user.county,
+        'constituency': user.constituency,
+        'ward': user.ward,
+        'sub_location': user.sub_location,
+        'created_at': user.created_at.isoformat()
     }), 200
