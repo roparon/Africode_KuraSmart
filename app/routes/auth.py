@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from app.extensions import db
 from app.models import User
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from datetime import timedelta
+from werkzeug.security import generate_password_hash
 
 auth_bp = Blueprint('auth_bp', __name__, url_prefix='/api/v1/auth')
 
@@ -63,7 +63,7 @@ def login():
     if not user or not user.check_password(password):
         return jsonify({'error': 'Invalid credentials'}), 401
 
-    access_token = create_access_token(identity=user.id, expires_delta=timedelta(hours=12))
+    access_token = create_access_token(identity=str(user.id))
 
     return jsonify({
         'access_token': access_token,
@@ -101,3 +101,89 @@ def get_profile():
         'sub_location': user.sub_location,
         'created_at': user.created_at.isoformat()
     }), 200
+
+
+
+@auth_bp.route('/me', methods=['GET'])
+@jwt_required()
+def get_current_user():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    return jsonify({
+        'id': user.id,
+        'email': user.email,
+        'full_name': user.full_name,
+        'role': user.role,
+        'is_verified': user.is_verified,
+        'id_number': user.id_number,
+        'username': user.username,
+        'county': user.county,
+        'constituency': user.constituency,
+        'ward': user.ward,
+        'sub_location': user.sub_location
+    }), 200
+
+
+
+@auth_bp.route('/me', methods=['PUT'])
+@jwt_required()
+def update_profile():
+    from app.models import User
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    data = request.get_json()
+
+    # Update allowed fields
+    if 'full_name' in data:
+        user.full_name = data['full_name']
+    if 'password' in data:
+        user.password_hash = generate_password_hash(data['password'])
+    if 'county' in data:
+        user.county = data['county']
+    if 'constituency' in data:
+        user.constituency = data['constituency']
+    if 'ward' in data:
+        user.ward = data['ward']
+    if 'sub_location' in data:
+        user.sub_location = data['sub_location']
+
+    db.session.commit()
+
+    return jsonify({
+        'id': user.id,
+        'email': user.email,
+        'full_name': user.full_name,
+        'role': user.role,
+        'is_verified': user.is_verified,
+        'id_number': user.id_number,
+        'username': user.username,
+        'county': user.county,
+        'constituency': user.constituency,
+        'ward': user.ward,
+        'sub_location': user.sub_location
+    }), 200
+
+@auth_bp.route('/logout', methods=['POST'])
+@jwt_required()
+def logout():
+    return jsonify({"message": "Logged out successfully."}), 200
+
+
+
+#temporary route for listing emails
+@auth_bp.route('/dev/users', methods=['GET'])
+def list_users():
+    users = User.query.all()
+    return jsonify([
+        {"id": user.id, "email": user.email, "full_name": user.full_name}
+        for user in users
+    ])
+
