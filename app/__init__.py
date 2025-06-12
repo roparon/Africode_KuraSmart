@@ -23,11 +23,13 @@ def create_app():
 
 
 
+
     app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
     app.register_blueprint(protected_bp, url_prefix='/api/v1')
     app.register_blueprint(verification_bp, url_prefix='/api/v1')
     app.register_blueprint(elections_bp, url_prefix='/api/v1')
     app.register_blueprint(candidates_bp, url_prefix='/api/v1')
+
 
 
 

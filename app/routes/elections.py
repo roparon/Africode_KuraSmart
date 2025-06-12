@@ -2,6 +2,9 @@ from flask import Blueprint, request, jsonify
 from app.extensions import db
 from app.models import Election, User
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from datetime import datetime
+
+
 
 elections_bp = Blueprint('elections_bp', __name__)
 
@@ -15,13 +18,26 @@ def create_election():
         return jsonify({'error': 'Unauthorized'}), 403
 
     data = request.get_json()
-    name = data.get('name')
+    title = data.get('title')
     description = data.get('description')
+    start_date = data.get('start_date')
+    end_date = data.get('end_date')
 
-    if not name:
-        return jsonify({'error': 'Election name required'}), 400
+    if not title or not start_date or not end_date:
+        return jsonify({'error': 'Missing required fields'}), 400
 
-    election = Election(name=name, description=description)
+    try:
+        start_dt = datetime.fromisoformat(start_date)
+        end_dt = datetime.fromisoformat(end_date)
+    except ValueError:
+        return jsonify({'error': 'Invalid date format. Use ISO format (YYYY-MM-DDTHH:MM:SS)'}), 400
+
+    election = Election(
+        title=title,
+        description=description,
+        start_date=start_dt,
+        end_date=end_dt
+    )
     db.session.add(election)
     db.session.commit()
 
