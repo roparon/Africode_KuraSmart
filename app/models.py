@@ -36,6 +36,9 @@ class Election(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=func.now())
     deactivated_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+from datetime import datetime
+from app.extensions import db
+
 class Candidate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -50,6 +53,21 @@ class Candidate(db.Model):
 
     user = db.relationship('User', backref='candidates')
     election = db.relationship('Election', backref='candidates')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'election_id': self.election_id,
+            'full_name': self.full_name,
+            'party_name': self.party_name,
+            'position': self.position,
+            'description': self.description,
+            'manifesto': self.manifesto,
+            'approved': self.approved,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
 
 
 
