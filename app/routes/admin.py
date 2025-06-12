@@ -6,6 +6,8 @@ from sqlalchemy import func
 
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/api/v1/admin')
+analytics_bp = Blueprint('analytics_bp', __name__, url_prefix='/api/v1/analytics')
+
 
 @admin_bp.route('/overview', methods=['GET'])
 @jwt_required()
@@ -161,3 +163,28 @@ def voter_turnout_analytics(election_id):
     }), 200
 
 
+
+@analytics_bp.route('/turnout/<int:election_id>', methods=['GET'])
+@jwt_required()
+def election_turnout(election_id):
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if not user or user.role != 'admin':
+        return jsonify({"error": "Admin access required"}), 403
+
+    election = Election.query.get(election_id)
+    if not election:
+        return jsonify({"error": "Election not found"}), 404
+
+    total_voters = User.query.filter_by(role='voter', is_verified=True).count()
+    total_votes = Vote.query.filter_by(election_id=election_id).count()
+
+    turnout = (total_votes / total_voters * 100) if total_voters > 0 else 0.0
+
+    return jsonify({
+        "election_id": election_id,
+        "total_voters": total_voters,
+        "total_votes_cast": total_votes,
+        "turnout_percentage": round(turnout, 2)
+    }), 200

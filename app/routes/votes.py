@@ -95,22 +95,6 @@ def list_all_votes():
 
 
 
-@vote_bp.route('/<int:vote_id>', methods=['DELETE'])
-@jwt_required()
-def delete_vote(vote_id):
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-    if not user or user.role != 'admin':
-        return jsonify({"error": "Admin access required"}), 403
-
-    vote = Vote.query.get(vote_id)
-    if not vote:
-        return jsonify({"error": "Vote not found"}), 404
-
-    db.session.delete(vote)
-    db.session.commit()
-    return jsonify({"message": "Vote deleted successfully"}), 200
-
 
 @vote_bp.route('/analytics/<int:election_id>', methods=['GET'])
 @jwt_required()
