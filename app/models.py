@@ -36,17 +36,19 @@ class Election(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=func.now())
     deactivated_by = db.Column(db.Integer, db.ForeignKey('user.id'))
-
 class Candidate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=False)
     manifesto = db.Column(db.Text)
+    description = db.Column(db.Text)
     approved = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     user = db.relationship('User', backref='candidates')
     election = db.relationship('Election', backref='candidates')
+
+
 
 class Vote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
