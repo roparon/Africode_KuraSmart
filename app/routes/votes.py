@@ -132,3 +132,63 @@ def delete_vote(vote_id):
     db.session.delete(vote)
     db.session.commit()
     return jsonify({"message": "Vote deleted successfully"}), 200
+
+@vote_bp.route('/results/<int:election_id>', methods=['GET'])
+@jwt_required()
+def get_election_results(election_id):
+    election = Election.query.get(election_id)
+    if not election:
+        return jsonify({"error": "Election not found"}), 404
+
+    candidates = Candidate.query.filter_by(election_id=election_id, approved=True).all()
+    votes = Vote.query.filter_by(election_id=election_id).all()
+
+    # Group votes by position
+    positions = {}
+    for candidate in candidates:
+        if candidate.position not in positions:
+            positions[candidate.position] = []
+
+        vote_count = sum(1 for vote in votes if vote.candidate_id == candidate.id)
+        total_votes_for_position = sum(
+            1 for vote in votes if vote.candidate.position == candidate.position
+        )
+
+        percentage = (vote_count / total_votes_for_position * 100) if total_votes_for_position else 0
+
+        positions[candidate.position].append({
+            "candidate_id": candidate.id,
+            "full_name": candidate.full_name,
+            "party_name": candidate.party_name,
+            "vote_count": vote_count,
+            "percentage": round(percentage, 2)
+        })
+
+    return jsonify({
+        "election": election.title,
+        "results_by_position": positions
+    }), 200
+
+@vote_bp.route('/analytics/turnout/<int:election_id>', methods=['GET'])
+@jwt_required()
+def voter_turnout(election_id):
+    user_id = get_jwt_identity()
+    admin = User.query.get(user_id)
+    if not admin or admin.role != "admin":
+        return jsonify({"error": "Admin access only"}), 403
+
+    election = Election.query.get(election_id)
+    if not election:
+        return jsonify({"error": "Election not found"}), 404
+
+    total_verified_voters = User.query.filter_by(role="voter", is_verified=True).count()
+    unique_voters = Vote.query.filter_by(election_id=election_id).with_entities(Vote.voter_id).distinct().count()
+
+    turnout_percentage = (unique_voters / total_verified_voters * 100) if total_verified_voters else 0
+
+    return jsonify({
+        "election": election.title,
+        "total_verified_voters": total_verified_voters,
+        "voters_who_voted": unique_voters,
+        "turnout_percentage": round(turnout_percentage, 2)
+    }), 200
