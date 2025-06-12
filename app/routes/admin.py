@@ -129,5 +129,35 @@ def get_all_votes():
     return jsonify(vote_data), 200
 
 
+@admin_bp.route('/analytics/turnout/<int:election_id>', methods=['GET'])
+@jwt_required()
+def voter_turnout_analytics(election_id):
+    user_id = get_jwt_identity()
+    admin = User.query.get(user_id)
+
+    if not admin or admin.role != 'admin':
+        return jsonify({'error': 'Admin access required'}), 403
+
+    election = Election.query.get(election_id)
+    if not election:
+        return jsonify({'error': 'Election not found'}), 404
+
+    # Total verified voters (you can adapt this filter based on your criteria)
+    total_voters = User.query.filter_by(is_verified=True).count()
+
+    # Total who voted in this election
+    total_voted = Vote.query.filter_by(election_id=election_id).count()
+
+    turnout_percentage = (
+        (total_voted / total_voters) * 100 if total_voters > 0 else 0
+    )
+
+    return jsonify({
+        "election_id": election.id,
+        "election_name": election.name,
+        "total_voters": total_voters,
+        "total_voted": total_voted,
+        "turnout_percentage": round(turnout_percentage, 2)
+    }), 200
 
 

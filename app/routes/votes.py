@@ -69,7 +69,18 @@ def list_all_votes():
     if not user or user.role != 'admin':
         return jsonify({"error": "Admin access required"}), 403
 
-    votes = Vote.query.all()
+    # Optional filters
+    voter_id = request.args.get('voter_id', type=int)
+    election_id = request.args.get('election_id', type=int)
+
+    query = Vote.query
+
+    if voter_id:
+        query = query.filter_by(voter_id=voter_id)
+    if election_id:
+        query = query.filter_by(election_id=election_id)
+
+    votes = query.all()
     results = []
     for vote in votes:
         results.append({
@@ -81,6 +92,7 @@ def list_all_votes():
         })
 
     return jsonify(results), 200
+
 
 
 @vote_bp.route('/<int:vote_id>', methods=['DELETE'])
@@ -119,14 +131,15 @@ def election_analytics(election_id):
         "total_votes": total_votes,
         "voter_turnout_percent": turnout
     }), 200
+
+
 @vote_bp.route('/<int:vote_id>', methods=['DELETE'])
 @jwt_required()
 def delete_vote(vote_id):
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
-
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
     if not user or user.role != 'admin':
-        return jsonify({"error": "Unauthorized"}), 403
+        return jsonify({"error": "Admin access required"}), 403
 
     vote = Vote.query.get(vote_id)
     if not vote:
@@ -134,5 +147,4 @@ def delete_vote(vote_id):
 
     db.session.delete(vote)
     db.session.commit()
-
     return jsonify({"message": "Vote deleted successfully"}), 200
