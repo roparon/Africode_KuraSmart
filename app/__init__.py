@@ -15,11 +15,23 @@ def create_app():
     from app.routes.verification import verification_bp
     from app.routes.elections import elections_bp
     from app.routes.candidates import candidate_bp
+    from app.routes.votes import vote_bp
+    from app.routes.admin import admin_bp
+    from app.routes.votes import vote_bp
+
+
+
 
     app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
     app.register_blueprint(protected_bp, url_prefix='/api/v1')
     app.register_blueprint(verification_bp, url_prefix='/api/v1')
     app.register_blueprint(elections_bp, url_prefix='/api/v1')
     app.register_blueprint(candidate_bp)
+    app.register_blueprint(vote_bp)
+    app.register_blueprint(admin_bp)
+    app.register_blueprint(vote_bp, url_prefix='/api/v1/votes')
+
+
+
 
     return app

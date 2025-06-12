@@ -69,8 +69,6 @@ class Candidate(db.Model):
 
 
 
-
-
 class Vote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     voter_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

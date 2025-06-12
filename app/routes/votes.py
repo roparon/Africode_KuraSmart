@@ -1,63 +1,138 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.extensions import db
-from app.models import Vote, Candidate, User
+from app.models import Vote, User, Election, Candidate
+from datetime import datetime
 
-votes_bp = Blueprint('votes', __name__, url_prefix='/api/v1/votes')
+vote_bp = Blueprint('vote_bp', __name__, url_prefix='/api/v1/votes')
 
-@votes_bp.route('/vote', methods=['POST'])
+
+@vote_bp.route('', methods=['POST'])
 @jwt_required()
 def cast_vote():
-    voter_id = get_jwt_identity()
+    user_id = get_jwt_identity()
     data = request.get_json()
+    election_id = data.get('election_id')
     candidate_id = data.get('candidate_id')
 
-    if not candidate_id:
-        return jsonify({'error': 'Candidate ID is required'}), 400
+    if not election_id or not candidate_id:
+        return jsonify({"error": "election_id and candidate_id are required"}), 400
 
+    # Check if election and candidate exist
+    election = Election.query.get(election_id)
     candidate = Candidate.query.get(candidate_id)
-    if not candidate or not candidate.approved:
-        return jsonify({'error': 'Candidate not found or not approved'}), 404
 
-    # Prevent double voting per election
-    existing_vote = Vote.query.join(Candidate).filter(
-        Candidate.election_id == candidate.election_id,
-        Vote.voter_id == voter_id
-    ).first()
+    if not election or not candidate:
+        return jsonify({"error": "Invalid election or candidate"}), 404
 
+    # Prevent duplicate vote
+    existing_vote = Vote.query.filter_by(voter_id=user_id, election_id=election_id).first()
     if existing_vote:
-        return jsonify({'error': 'You have already voted in this election'}), 403
+        return jsonify({"error": "You have already voted in this election"}), 403
 
-    vote = Vote(voter_id=voter_id, candidate_id=candidate_id)
+    vote = Vote(
+        voter_id=user_id,
+        election_id=election_id,
+        candidate_id=candidate_id,
+        created_at=datetime.utcnow()
+    )
     db.session.add(vote)
     db.session.commit()
+    return jsonify({"message": "Vote cast successfully"}), 201
 
-    return jsonify({'message': 'Vote cast successfully'}), 201
+
+@vote_bp.route('/results/<int:election_id>', methods=['GET'])
+def get_results(election_id):
+    election = Election.query.get(election_id)
+    if not election:
+        return jsonify({"error": "Election not found"}), 404
+
+    candidates = Candidate.query.filter_by(election_id=election_id).all()
+    results = []
+    for candidate in candidates:
+        vote_count = Vote.query.filter_by(candidate_id=candidate.id).count()
+        results.append({
+            "candidate_id": candidate.id,
+            "full_name": candidate.full_name,
+            "party_name": candidate.party_name,
+            "vote_count": vote_count
+        })
+
+    return jsonify({"election_id": election_id, "results": results}), 200
 
 
-@votes_bp.route('/results', methods=['GET'])
-def get_results():
-    election_id = request.args.get('election_id')
+@vote_bp.route('', methods=['GET'])
+@jwt_required()
+def list_all_votes():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    if not user or user.role != 'admin':
+        return jsonify({"error": "Admin access required"}), 403
 
-    query = db.session.query(
-        Candidate.id,
-        Candidate.full_name,
-        Candidate.position,
-        Candidate.party_name,
-        db.func.count(Vote.id).label('vote_count')
-    ).join(Vote).group_by(Candidate.id)
+    votes = Vote.query.all()
+    results = []
+    for vote in votes:
+        results.append({
+            "vote_id": vote.id,
+            "voter_id": vote.voter_id,
+            "election_id": vote.election_id,
+            "candidate_id": vote.candidate_id,
+            "timestamp": vote.created_at.isoformat()
+        })
 
-    if election_id:
-        query = query.filter(Candidate.election_id == election_id)
+    return jsonify(results), 200
 
-    results = query.all()
 
-    return jsonify([
-        {
-            'candidate_id': r.id,
-            'full_name': r.full_name,
-            'position': r.position,
-            'party_name': r.party_name,
-            'votes': r.vote_count
-        } for r in results
-    ]), 200
+@vote_bp.route('/<int:vote_id>', methods=['DELETE'])
+@jwt_required()
+def delete_vote(vote_id):
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    if not user or user.role != 'admin':
+        return jsonify({"error": "Admin access required"}), 403
+
+    vote = Vote.query.get(vote_id)
+    if not vote:
+        return jsonify({"error": "Vote not found"}), 404
+
+    db.session.delete(vote)
+    db.session.commit()
+    return jsonify({"message": "Vote deleted successfully"}), 200
+
+
+@vote_bp.route('/analytics/<int:election_id>', methods=['GET'])
+@jwt_required()
+def election_analytics(election_id):
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    if not user or user.role != 'admin':
+        return jsonify({"error": "Admin access required"}), 403
+
+    total_users = User.query.count()
+    total_votes = Vote.query.filter_by(election_id=election_id).count()
+
+    turnout = round((total_votes / total_users) * 100, 2) if total_users > 0 else 0
+
+    return jsonify({
+        "election_id": election_id,
+        "total_users": total_users,
+        "total_votes": total_votes,
+        "voter_turnout_percent": turnout
+    }), 200
+@vote_bp.route('/<int:vote_id>', methods=['DELETE'])
+@jwt_required()
+def delete_vote(vote_id):
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+
+    if not user or user.role != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+
+    vote = Vote.query.get(vote_id)
+    if not vote:
+        return jsonify({"error": "Vote not found"}), 404
+
+    db.session.delete(vote)
+    db.session.commit()
+
+    return jsonify({"message": "Vote deleted successfully"}), 200
