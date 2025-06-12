@@ -40,8 +40,11 @@ class Candidate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=False)
-    manifesto = db.Column(db.Text)
+    full_name = db.Column(db.String(100), nullable=False)
+    party_name = db.Column(db.String(100))
+    position = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
+    manifesto = db.Column(db.Text)
     approved = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
