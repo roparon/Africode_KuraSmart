@@ -1,5 +1,7 @@
 from datetime import datetime
 from app.extensions import db
+from sqlalchemy.sql import func
+
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -32,6 +34,8 @@ class Election(db.Model):
     end_date = db.Column(db.DateTime, nullable=False)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, onupdate=func.now())
+    deactivated_by = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 class Candidate(db.Model):
     id = db.Column(db.Integer, primary_key=True)

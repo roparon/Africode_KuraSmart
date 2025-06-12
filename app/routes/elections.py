@@ -43,6 +43,42 @@ def create_election():
 
     return jsonify({'message': 'Election created', 'election_id': election.id}), 201
 
+# update election
+@elections_bp.route('/elections/<int:election_id>', methods=['PUT'])
+@jwt_required()
+def update_election(election_id):
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if not user or user.role != 'admin' or not user.is_verified:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    election = Election.query.get_or_404(election_id)
+
+    data = request.get_json()
+    title = data.get('title')
+    description = data.get('description')
+    start_date = data.get('start_date')
+    end_date = data.get('end_date')
+
+    if title:
+        election.title = title
+    if description is not None:
+        election.description = description
+    if start_date:
+        try:
+            election.start_date = datetime.fromisoformat(start_date)
+        except ValueError:
+            return jsonify({'error': 'Invalid start_date format'}), 400
+    if end_date:
+        try:
+            election.end_date = datetime.fromisoformat(end_date)
+        except ValueError:
+            return jsonify({'error': 'Invalid end_date format'}), 400
+    db.session.commit()
+    return jsonify({'message': 'Election updated'}), 200
+
+
 
 #get list of election
 @elections_bp.route('/elections', methods=['GET'])
@@ -89,6 +125,7 @@ def deactivate_election(election_id):
 
     election = Election.query.get_or_404(election_id)
     election.is_active = False
+    election.deactivated_by = user.id
     db.session.commit()
 
     return jsonify({'message': 'Election deactivated'}), 200
