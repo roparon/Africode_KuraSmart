@@ -36,8 +36,7 @@ class Election(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=func.now())
     deactivated_by = db.Column(db.Integer, db.ForeignKey('user.id'))
-from datetime import datetime
-from app.extensions import db
+
 
 class Candidate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -71,6 +70,7 @@ class Candidate(db.Model):
 
 
 
+
 class Vote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     voter_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -81,6 +81,7 @@ class Vote(db.Model):
     voter = db.relationship('User', backref='votes')
     election = db.relationship('Election', backref='votes')
     candidate = db.relationship('Candidate', backref='votes')
+
 
 class VerificationRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
