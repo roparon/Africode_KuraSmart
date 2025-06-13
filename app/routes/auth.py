@@ -1,12 +1,15 @@
+from flask import render_template, redirect, url_for, flash
+from app.forms import LoginForm
 from flask import Blueprint, request, jsonify
 from app.extensions import db
 from app.models import User
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, create_refresh_token
+from flask_jwt_extended import (
+    create_access_token,create_refresh_token,jwt_required,get_jwt_identity)
 from werkzeug.security import generate_password_hash
 
 auth_bp = Blueprint('auth_bp', __name__, url_prefix='/api/v1/auth')
 
-# Register
+# Register route
 @auth_bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -25,7 +28,11 @@ def register():
     if not email or not password or not full_name or not (id_number or username):
         return jsonify({'error': 'Missing required fields'}), 400
 
-    if User.query.filter((User.email == email) | (User.id_number == id_number) | (User.username == username)).first():
+    if User.query.filter(
+        (User.email == email) |
+        (User.id_number == id_number) |
+        (User.username == username)
+    ).first():
         return jsonify({'error': 'User already exists'}), 409
 
     user = User(
@@ -53,7 +60,7 @@ def register():
     }), 201
 
 
-# Login
+# Login route
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -64,7 +71,6 @@ def login():
     if not user or not user.check_password(password):
         return jsonify({'error': 'Invalid credentials'}), 401
 
-    # Generate both access and refresh tokens
     access_token = create_access_token(identity=str(user.id))
     refresh_token = create_refresh_token(identity=str(user.id))
 
@@ -88,8 +94,6 @@ def refresh_token():
     user_id = get_jwt_identity()
     new_access_token = create_access_token(identity=user_id)
     return jsonify(access_token=new_access_token), 200
-
-
 
 
 # Get current user profile
@@ -118,36 +122,10 @@ def get_profile():
     }), 200
 
 
-
-@auth_bp.route('/me', methods=['GET'])
-@jwt_required()
-def get_current_user():
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-
-    if not user:
-        return jsonify({'error': 'User not found'}), 404
-
-    return jsonify({
-        'id': user.id,
-        'email': user.email,
-        'full_name': user.full_name,
-        'role': user.role,
-        'is_verified': user.is_verified,
-        'id_number': user.id_number,
-        'username': user.username,
-        'county': user.county,
-        'constituency': user.constituency,
-        'ward': user.ward,
-        'sub_location': user.sub_location
-    }), 200
-
-
-
+# Update profile
 @auth_bp.route('/me', methods=['PUT'])
 @jwt_required()
 def update_profile():
-    from app.models import User
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
 
@@ -156,7 +134,6 @@ def update_profile():
 
     data = request.get_json()
 
-    # Update allowed fields
     if 'full_name' in data:
         user.full_name = data['full_name']
     if 'password' in data:
@@ -186,14 +163,15 @@ def update_profile():
         'sub_location': user.sub_location
     }), 200
 
+
+# Logout (placeholder)
 @auth_bp.route('/logout', methods=['POST'])
 @jwt_required()
 def logout():
     return jsonify({"message": "Logged out successfully."}), 200
 
 
-
-#temporary route for listing emails
+# Developer route: list users
 @auth_bp.route('/dev/users', methods=['GET'])
 def list_users():
     users = User.query.all()
@@ -201,4 +179,3 @@ def list_users():
         {"id": user.id, "email": user.email, "full_name": user.full_name}
         for user in users
     ])
-
