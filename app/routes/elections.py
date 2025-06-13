@@ -132,13 +132,6 @@ def deactivate_election(election_id):
 
     return jsonify({'message': 'Election deactivated'}), 200
 
-from flask import Blueprint, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from datetime import datetime
-from app.models import User, Vote, Election, Candidate
-from app.extensions import db
-
-vote_bp = Blueprint('vote', __name__)
 
 @vote_bp.route('/results/<int:election_id>', methods=['GET'])
 @jwt_required()
