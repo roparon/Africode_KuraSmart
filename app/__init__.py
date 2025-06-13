@@ -10,7 +10,7 @@ def create_app():
     migrate.init_app(app, db)
     jwt.init_app(app)
 
-    from app.routes.auth import auth_bp
+    from app.api.auth import auth_bp
     from app.routes.protected import protected_bp
     from app.routes.verification import verification_bp
     from app.routes.elections import elections_bp
