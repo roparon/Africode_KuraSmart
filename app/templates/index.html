@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Home | KuraSmart{% endblock %}
+
+{% block content %}
+<section class="container py-5 text-center">
+  <div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+      <h1 class="display-4 mb-3">Welcome to <span class="text-primary">KuraSmart</span></h1>
+      <p class="lead mb-4">
+        Secure. Transparent. Smart Voting System for the modern era. Empowering communities with fair elections.
+      </p>
+      <a href="{{ url_for('auth_bp.login') }}" class="btn btn-primary btn-lg">Login</a>
+      <a href="{{ url_for('auth_bp.register') }}" class="btn btn-outline-secondary btn-lg ms-2">Register</a>
+    </div>
+  </div>
+</section>
+
+<section class="bg-light py-5 mt-4">
+  <div class="container">
+    <div class="row text-center">
+      <div class="col-md-4 mb-4">
+        <i class="fas fa-lock fa-3x text-primary mb-3"></i>
+        <h5>Secure</h5>
+        <p>End-to-end encrypted voting processes to ensure your data stays safe.</p>
+      </div>
+      <div class="col-md-4 mb-4">
+        <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+        <h5>Real-time Analytics</h5>
+        <p>Monitor elections live with powerful and transparent vote tracking tools.</p>
+      </div>
+      <div class="col-md-4 mb-4">
+        <i class="fas fa-users fa-3x text-primary mb-3"></i>
+        <h5>Community Focused</h5>
+        <p>Built for local governments, schools, and communities of all sizes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Add any index-specific JS here -->
+{% endblock %}

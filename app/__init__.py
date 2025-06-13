@@ -11,7 +11,13 @@ def create_app():
     jwt.init_app(app)
     login_manager.init_app(app)
 
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+    login_manager.login_view = 'web_auth.login'
+    login_manager.login_message_category = 'info'
 
+    
     from app.api.auth import auth_bp
     from app.routes.protected import protected_bp
     from app.routes.verification import verification_bp

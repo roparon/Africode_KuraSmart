@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, login_required
 from app.forms.login_form import LoginForm
 from app.models import User
 
-web_auth_bp = Blueprint('auth', __name__) 
+web_auth_bp = Blueprint('web_auth', __name__)
 
 @web_auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
