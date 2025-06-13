@@ -204,4 +204,107 @@ def get_election_results(election_id):
 
 
 
+@vote_bp.route('/results/<int:election_id>', methods=['GET'])
+@jwt_required()
+def get_election_results(election_id):
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    election = Election.query.get(election_id)
+    if not election:
+        return jsonify({"error": "Election not found"}), 404
+
+    if election.end_date and election.end_date > datetime.utcnow():
+        return jsonify({"error": "Results not available until the election ends."}), 403
+
+    # Get total voters and those who voted
+    total_voters = User.query.filter_by(role='voter').count()
+    voters_voted = db.session.query(Vote.voter_id).filter_by(election_id=election_id).distinct().count()
+    turnout_percent = round((voters_voted / total_voters) * 100, 2) if total_voters else 0.0
+
+    # Results by candidate
+    results = (
+        db.session.query(
+            Candidate.id,
+            Candidate.full_name,
+            Candidate.position,
+            db.func.count(Vote.id).label('vote_count')
+        )
+        .join(Vote, Candidate.id == Vote.candidate_id)
+        .filter(Vote.election_id == election_id)
+        .group_by(Candidate.id)
+        .order_by(db.desc('vote_count'))
+        .all()
+    )
+
+    results_data = []
+    for candidate_id, name, position, vote_count in results:
+        results_data.append({
+            "candidate_id": candidate_id,
+            "name": name,
+            "position": position,
+            "vote_count": vote_count
+        })
+
+    # Turnout by Constituency
+    constituency_turnout = []
+    constituencies = db.session.query(User.constituency).filter(User.role == 'voter').distinct().all()
+    for (constituency,) in constituencies:
+        if not constituency:
+            continue
+        total = User.query.filter_by(role='voter', constituency=constituency).count()
+        voted = (
+            db.session.query(Vote.voter_id)
+            .join(User, Vote.voter_id == User.id)
+            .filter(User.constituency == constituency, Vote.election_id == election_id)
+            .distinct()
+            .count()
+        )
+        percent = round((voted / total) * 100, 2) if total else 0.0
+        constituency_turnout.append({
+            "constituency": constituency,
+            "voters_voted": voted,
+            "total_voters": total,
+            "percentage": percent
+        })
+
+    # Turnout by Ward
+    ward_turnout = []
+    wards = db.session.query(User.ward).filter(User.role == 'voter').distinct().all()
+    for (ward,) in wards:
+        if not ward:
+            continue
+        total = User.query.filter_by(role='voter', ward=ward).count()
+        voted = (
+            db.session.query(Vote.voter_id)
+            .join(User, Vote.voter_id == User.id)
+            .filter(User.ward == ward, Vote.election_id == election_id)
+            .distinct()
+            .count()
+        )
+        percent = round((voted / total) * 100, 2) if total else 0.0
+        ward_turnout.append({
+            "ward": ward,
+            "voters_voted": voted,
+            "total_voters": total,
+            "percentage": percent
+        })
+
+    return jsonify({
+        "election": election.title,
+        "overall_turnout": {
+            "voters_voted": voters_voted,
+            "total_voters": total_voters,
+            "percentage": turnout_percent
+        },
+        "constituency_turnout": constituency_turnout,
+        "ward_turnout": ward_turnout,
+        "results": results_data
+    }), 200
+
+
+
 
