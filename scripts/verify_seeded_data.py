@@ -27,7 +27,8 @@ def verify_seeded_data():
         candidates = Candidate.query.all()
         for candidate in candidates:
             count = Vote.query.filter_by(candidate_id=candidate.id).count()
-            print(f"{candidate.full_name} - {count} votes")
+            print(f"{candidate.id}. {candidate.full_name} - {count} votes")
+
 
 
 if __name__ == "__main__":
