@@ -17,6 +17,8 @@ def create_app():
     from app.routes.candidates import candidate_bp
     from app.routes.votes import vote_bp
     from app.routes.admin import admin_bp
+    from app.routes.dashboard import dashboard_bp
+
 
 
 
@@ -28,6 +30,8 @@ def create_app():
     app.register_blueprint(candidate_bp)
     app.register_blueprint(vote_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(dashboard_bp)
+
 
 
 
