@@ -1,5 +1,5 @@
 from flask import Flask
-from app.extensions import db, migrate, jwt
+from app.extensions import db, migrate, jwt, login_manager
 from app.models import User
 
 def create_app():
@@ -9,6 +9,8 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+    login_manager.init_app(app)
+
 
     from app.api.auth import auth_bp
     from app.routes.protected import protected_bp
@@ -19,6 +21,8 @@ def create_app():
     from app.routes.admin import admin_bp
     from app.routes.dashboard import dashboard_bp
     from app.routes.web_auth import web_auth_bp
+    from app.routes.main import main_bp
+
 
 
 
@@ -34,7 +38,7 @@ def create_app():
     app.register_blueprint(admin_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(web_auth_bp)
-
+    app.register_blueprint(main_bp)
 
 
 
