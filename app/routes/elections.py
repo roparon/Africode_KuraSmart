@@ -132,6 +132,14 @@ def deactivate_election(election_id):
 
     return jsonify({'message': 'Election deactivated'}), 200
 
+from flask import Blueprint, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from datetime import datetime
+from app.models import User, Vote, Election, Candidate
+from app.extensions import db
+
+vote_bp = Blueprint('vote', __name__)
+
 @vote_bp.route('/results/<int:election_id>', methods=['GET'])
 @jwt_required()
 def get_election_results(election_id):
@@ -145,13 +153,29 @@ def get_election_results(election_id):
     if not election:
         return jsonify({"error": "Election not found"}), 404
 
-    # Optional: Prevent results before end of election
+    # Restrict access until election ends
     if election.end_date and election.end_date > datetime.utcnow():
         return jsonify({"error": "Results not available until the election ends."}), 403
 
-    # Count votes grouped by candidate
+    # Count total eligible voters (can add filters per region if needed)
+    total_voters = User.query.filter_by(role='voter').count()
+    voters_voted = (
+        db.session.query(Vote.voter_id)
+        .filter_by(election_id=election_id)
+        .distinct()
+        .count()
+    )
+
+    turnout = round((voters_voted / total_voters) * 100, 2) if total_voters else 0.0
+
+    # Aggregate votes per candidate
     results = (
-        db.session.query(Candidate.id, Candidate.full_name, Candidate.position, db.func.count(Vote.id).label('vote_count'))
+        db.session.query(
+            Candidate.id,
+            Candidate.full_name,
+            Candidate.position,
+            db.func.count(Vote.id).label('vote_count')
+        )
         .join(Vote, Candidate.id == Vote.candidate_id)
         .filter(Vote.election_id == election_id)
         .group_by(Candidate.id)
@@ -170,8 +194,14 @@ def get_election_results(election_id):
 
     return jsonify({
         "election": election.title,
+        "voter_turnout": {
+            "voters_voted": voters_voted,
+            "total_voters": total_voters,
+            "percentage": turnout
+        },
         "results": data
     }), 200
+
 
 
 
