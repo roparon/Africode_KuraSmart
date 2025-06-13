@@ -188,3 +188,5 @@ def election_turnout(election_id):
         "total_votes_cast": total_votes,
         "turnout_percentage": round(turnout, 2)
     }), 200
+
+

@@ -1,12 +1,14 @@
 from flask import Blueprint, request, jsonify
 from app.extensions import db
-from app.models import Election, User
+from app.models import Election, User, Candidate, Vote
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 
 
 
 elections_bp = Blueprint('elections_bp', __name__)
+vote_bp = Blueprint('vote_bp', __name__, url_prefix='/api/v1/votes')
+
 
 @elections_bp.route('/elections', methods=['POST'])
 @jwt_required()
@@ -129,5 +131,47 @@ def deactivate_election(election_id):
     db.session.commit()
 
     return jsonify({'message': 'Election deactivated'}), 200
+
+@vote_bp.route('/results/<int:election_id>', methods=['GET'])
+@jwt_required()
+def get_election_results(election_id):
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    election = Election.query.get(election_id)
+    if not election:
+        return jsonify({"error": "Election not found"}), 404
+
+    # Optional: Prevent results before end of election
+    if election.end_date and election.end_date > datetime.utcnow():
+        return jsonify({"error": "Results not available until the election ends."}), 403
+
+    # Count votes grouped by candidate
+    results = (
+        db.session.query(Candidate.id, Candidate.full_name, Candidate.position, db.func.count(Vote.id).label('vote_count'))
+        .join(Vote, Candidate.id == Vote.candidate_id)
+        .filter(Vote.election_id == election_id)
+        .group_by(Candidate.id)
+        .order_by(db.desc('vote_count'))
+        .all()
+    )
+
+    data = []
+    for candidate_id, name, position, vote_count in results:
+        data.append({
+            "candidate_id": candidate_id,
+            "name": name,
+            "position": position,
+            "vote_count": vote_count
+        })
+
+    return jsonify({
+        "election": election.title,
+        "results": data
+    }), 200
+
 
 
