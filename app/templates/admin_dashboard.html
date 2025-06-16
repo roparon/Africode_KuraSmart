@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard | KuraSmart{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">🛠️ Admin Dashboard</h2>
+
+    <div class="row g-4">
+
+        <!-- Manage Elections -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-body text-center">
+                    <h5 class="card-title">🗳️ Elections</h5>
+                    <p class="card-text">Create and manage elections and positions.</p>
+                    <a href="{{ url_for('election.manage') }}" class="btn btn-outline-success">Manage Elections</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manage Voters -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-body text-center">
+                    <h5 class="card-title">👥 Voters</h5>
+                    <p class="card-text">Verify, suspend or manage voter records.</p>
+                    <a href="{{ url_for('voter.admin_view') }}" class="btn btn-outline-primary">Manage Voters</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Results -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-body text-center">
+                    <h5 class="card-title">📊 Results</h5>
+                    <p class="card-text">Monitor and certify live election results.</p>
+                    <a href="{{ url_for('results.admin_view') }}" class="btn btn-outline-info">View Results</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Logs -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-body text-center">
+                    <h5 class="card-title">🔒 Audit Logs</h5>
+                    <p class="card-text">Access activity logs and voting trails.</p>
+                    <a href="{{ url_for('admin.logs') }}" class="btn btn-outline-dark">View Logs</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Role Management -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-body text-center">
+                    <h5 class="card-title">🧑‍💼 Roles</h5>
+                    <p class="card-text">Assign or revoke user roles.</p>
+                    <a href="{{ url_for('admin.roles') }}" class="btn btn-outline-warning">Manage Roles</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
