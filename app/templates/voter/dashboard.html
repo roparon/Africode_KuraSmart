@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Voter Dashboard - KuraSmart{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Welcome, {{ current_user.full_name }}</h2>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            Active Elections
+        </div>
+        <div class="card-body">
+            {% if elections %}
+                <ul class="list-group">
+                    {% for election in elections %}
+                        <li class="list-group-item">
+                            <strong>{{ election.title }}</strong><br>
+                            <small>{{ election.start_date }} → {{ election.end_date }}</small>
+                            <div class="mt-2">
+                                <a href="{{ url_for('voter.view_election', election_id=election.id) }}" class="btn btn-sm btn-outline-primary">View & Vote</a>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No active elections at the moment.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            My Voting History
+        </div>
+        <div class="card-body">
+            {% if votes %}
+                <ul class="list-group">
+                    {% for vote in votes %}
+                        <li class="list-group-item">
+                            Voted <strong>{{ vote.candidate_name }}</strong> for <em>{{ vote.position_name }}</em> in <strong>{{ vote.election_title }}</strong><br>
+                            <small class="text-muted">on {{ vote.voted_at }}</small>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">You haven't voted yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
