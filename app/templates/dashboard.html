@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | KuraSmart{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Welcome to KuraSmart Dashboard</h2>
+
+    <div class="row g-4">
+        <!-- Voter Statistics -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body text-center">
+                    <h5 class="card-title">📋 Voter Registry</h5>
+                    <p class="card-text">Manage verified and informal voters.</p>
+                    <a href="{{ url_for('voter.index') }}" class="btn btn-outline-primary">Manage Voters</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Elections -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body text-center">
+                    <h5 class="card-title">🗳️ Elections</h5>
+                    <p class="card-text">Create, view, and manage elections.</p>
+                    <a href="{{ url_for('election.index') }}" class="btn btn-outline-success">View Elections</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body text-center">
+                    <h5 class="card-title">📊 Results</h5>
+                    <p class="card-text">Monitor real-time voting results.</p>
+                    <a href="{{ url_for('results.index') }}" class="btn btn-outline-info">View Results</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Role-Based Access -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body text-center">
+                    <h5 class="card-title">👥 User Roles</h5>
+                    <p class="card-text">Assign roles: Voter, Admin, Super Admin.</p>
+                    <a href="{{ url_for('admin.roles') }}" class="btn btn-outline-warning">Manage Roles</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Logs or Analytics -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body text-center">
+                    <h5 class="card-title">🔍 Logs & Security</h5>
+                    <p class="card-text">View audit logs and login events.</p>
+                    <a href="{{ url_for('admin.logs') }}" class="btn btn-outline-dark">View Logs</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
