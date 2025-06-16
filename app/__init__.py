@@ -26,8 +26,9 @@ def create_app():
     from app.routes.votes import vote_bp
     from app.routes.admin import admin_bp
     from app.routes.dashboard import dashboard_bp
-    from app.routes.web_auth import web_auth_bp
+    from app.routes.web_auth import web_auth_bp, voter_bp
     from app.routes.main import main_bp
+
 
 
 
@@ -45,6 +46,9 @@ def create_app():
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(web_auth_bp)
     app.register_blueprint(main_bp)
+    app.register_blueprint(voter_bp, url_prefix='/voter')
+
+
 
 
 

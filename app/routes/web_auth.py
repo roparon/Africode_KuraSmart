@@ -1,10 +1,13 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_user, logout_user, login_required, current_user
 from app.forms.forms import LoginForm, RegistrationForm
 from app.models import User
 from app.extensions import db
 
 web_auth_bp = Blueprint('web_auth', __name__)
+admin_bp = Blueprint('admin', __name__)
+voter_bp = Blueprint('voter', __name__)
+
 
 #user registration
 @web_auth_bp.route('/register', methods=['GET', 'POST'])
@@ -50,4 +53,21 @@ def login():
 
         flash('Invalid email or password.', 'danger')
     return render_template('login.html', form=form)
+
+
+@admin_bp.route('/dashboard')
+@login_required
+def dashboard():
+    if current_user.role != 'admin':
+        abort(403)
+    return render_template('admin/dashboard.html')
+
+
+@voter_bp.route('/dashboard')
+@login_required
+def dashboard():
+    if current_user.role != 'voter':
+        abort(403)
+    return render_template('voter/dashboard.html')
+
 
