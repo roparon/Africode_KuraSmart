@@ -6,7 +6,7 @@ from app.extensions import db
 
 web_auth_bp = Blueprint('web_auth', __name__)
 
-
+#user registration
 @web_auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
@@ -31,10 +31,7 @@ def register():
     return render_template('register.html', form=form)
 
 
-
-
-
-
+#User loginoroute
 
 @web_auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
