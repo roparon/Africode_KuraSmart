@@ -46,7 +46,6 @@ def create_app():
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(web_auth_bp)
     app.register_blueprint(main_bp)
-    app.register_blueprint(voter_bp, url_prefix='/voter')
 
 
 

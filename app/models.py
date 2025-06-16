@@ -54,6 +54,7 @@ class Candidate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=False)
+    position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)  # ✅ Added this line
     full_name = db.Column(db.String(100), nullable=False)
     party_name = db.Column(db.String(100))
     position = db.Column(db.String(100), nullable=False)
@@ -63,13 +64,16 @@ class Candidate(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     user = db.relationship('User', backref='candidates')
+    election = db.relationship('Election', backref='candidates')
     votes = db.relationship('Vote', backref='candidate', lazy=True)
+    position_rel = db.relationship('Position', backref='candidates')  # ✅ Optional: clearer access to Position object
 
     def to_dict(self):
         return {
             'id': self.id,
             'user_id': self.user_id,
             'election_id': self.election_id,
+            'position_id': self.position_id,
             'full_name': self.full_name,
             'party_name': self.party_name,
             'position': self.position,
@@ -82,6 +86,7 @@ class Candidate(db.Model):
     def __repr__(self):
         return (f"<Candidate id={self.id}, full_name='{self.full_name}', "
                 f"position='{self.position}', approved={self.approved}>")
+
 
 
 class Position(db.Model):
