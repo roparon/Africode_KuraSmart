@@ -142,7 +142,6 @@ def get_election_results(election_id):
 
     candidates = Candidate.query.filter_by(election_id=election_id, approved=True).all()
     votes = Vote.query.filter_by(election_id=election_id).all()
-
     # Group votes by position
     positions = {}
     for candidate in candidates:
