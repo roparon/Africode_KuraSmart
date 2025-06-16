@@ -7,11 +7,11 @@
     <meta name="author" content="Africode KuraSmart Team">
     <title>{% block title %}KuraSmart{% endblock %}</title>
 
-    <!-- Favicons and Theme Color -->
+    <!-- Favicon -->
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
     <meta name="theme-color" content="#0d6efd">
 
-    <!-- Fonts -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
 
@@ -23,7 +23,6 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    
 
     {% block head_extra %}{% endblock %}
 </head>
@@ -40,48 +39,60 @@
 
             <div class="collapse navbar-collapse" id="navCollapse">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <!-- Home -->
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}" href="{{ url_for('main.index') }}">Home</a>
                     </li>
+
                     {% if current_user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}" href="{{ url_for('dashboard.index') }}">Dashboard</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button" data-bs-toggle="dropdown">
-                            {{ current_user.full_name }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{{ url_for('web_auth.logout') }}">Logout</a></li>
-                        </ul>
-                    </li>
+                        <!-- Dashboard (Only when logged in) -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}" href="{{ url_for('dashboard.index') }}">Dashboard</a>
+                        </li>
+                        <!-- User Dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button" data-bs-toggle="dropdown">
+                                {{ current_user.full_name }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{{ url_for('web_auth.logout') }}">Logout</a></li>
+                            </ul>
+                        </li>
                     {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('web_auth.login') }}">Login</a>
-                    </li>
+                        <!-- Login -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'web_auth.login' %}active{% endif %}" href="{{ url_for('web_auth.login') }}">Login</a>
+                        </li>
+                        <!-- Register -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'web_auth.register' %}active{% endif %}" href="{{ url_for('web_auth.register') }}">Register</a>
+                        </li>
                     {% endif %}
                 </ul>
 
+                <!-- Theme Toggle -->
                 <button id="theme-toggle" class="btn btn-outline-light ms-2" title="Toggle theme">
                     <i class="fas fa-moon"></i>
                 </button>
             </div>
         </div>
     </nav>
+
     <!-- Flash Messages -->
     <div class="container mt-3">
         {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            {% endfor %}
-        {% endif %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
         {% endwith %}
     </div>
-    <!-- Page Content -->
+
+    <!-- Main Page Content -->
     <main class="container py-4">
         {% block content %}{% endblock %}
     </main>
@@ -98,10 +109,10 @@
         </div>
     </footer>
 
-    <!-- Bootstrap JS + Popper -->
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
 
-    <!-- Theme Toggle -->
+    <!-- Theme Toggle Logic -->
     <script>
         document.getElementById('theme-toggle')?.addEventListener('click', () => {
             const html = document.documentElement;
