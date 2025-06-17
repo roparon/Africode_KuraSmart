@@ -120,7 +120,7 @@ Clone Repo
 bash
 Copy
 Edit
-git clone https://github.com/yourusername/kurasmart.git
+git clone https://github.com/roparon/kurasmart.git
 cd kurasmart
 Create Virtual Environment
 
