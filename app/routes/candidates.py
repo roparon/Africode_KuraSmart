@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_login import login_required, current_user
 from app.extensions import db
 from app.models import Candidate, User, Election
 
@@ -7,12 +7,9 @@ candidate_bp = Blueprint('candidates', __name__, url_prefix='/api/v1/candidates'
 
 
 @candidate_bp.route('', methods=['POST'])
-@jwt_required()
+@login_required
 def register_candidate():
-    user_id = get_jwt_identity()
-    admin = User.query.get(user_id)
-
-    if not admin or admin.role != 'admin' or not admin.is_verified:
+    if not current_user.is_admin() or not current_user.is_verified:
         return jsonify({'error': 'Unauthorized'}), 403
 
     data = request.get_json()
@@ -31,7 +28,7 @@ def register_candidate():
         return jsonify({'error': 'Election not found'}), 404
 
     candidate = Candidate(
-        user_id=admin.id,
+        user_id=current_user.id,
         election_id=election_id,
         full_name=full_name,
         party_name=party_name,
@@ -47,8 +44,11 @@ def register_candidate():
 
 
 @candidate_bp.route('/<int:candidate_id>/approve', methods=['POST'])
-@jwt_required()
+@login_required
 def approve_candidate(candidate_id):
+    if not current_user.is_admin() or not current_user.is_verified:
+        return jsonify({"error": "Unauthorized"}), 403
+
     candidate = Candidate.query.get(candidate_id)
     if not candidate:
         return jsonify({"message": "Candidate not found"}), 404
@@ -72,7 +72,6 @@ def list_candidates():
 
     candidates = query.all()
     return jsonify([c.to_dict() for c in candidates]), 200
-
 
 
 @candidate_bp.route('/<int:candidate_id>', methods=['GET'])

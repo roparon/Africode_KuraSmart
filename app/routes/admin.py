@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_login import login_required, current_user
 from app.models import User, Election, Candidate, Vote
 from app.extensions import db
 from sqlalchemy import func
@@ -14,12 +14,9 @@ def is_admin(user):
 
 # ---- Admin Overview ----
 @admin_bp.route('/overview', methods=['GET'])
-@jwt_required()
+@login_required
 def admin_overview():
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-
-    if not is_admin(user):
+    if not is_admin(current_user):
         return jsonify({'error': 'Unauthorized'}), 403
 
     stats = {
@@ -35,12 +32,9 @@ def admin_overview():
 
 # ---- Election Analytics ----
 @admin_bp.route('/elections/<int:election_id>/analytics', methods=['GET'])
-@jwt_required()
+@login_required
 def election_analytics(election_id):
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-
-    if not is_admin(user):
+    if not is_admin(current_user):
         return jsonify({'error': 'Unauthorized'}), 403
 
     election = Election.query.get(election_id)
@@ -52,7 +46,6 @@ def election_analytics(election_id):
     total_voters = User.query.filter_by(is_verified=True).count()
     turnout_percentage = (total_votes / total_voters * 100) if total_voters else 0
 
-    # Leading candidate
     leading_candidate = (
         db.session.query(Candidate, func.count(Vote.id).label('vote_count'))
         .join(Vote)
@@ -87,12 +80,9 @@ def election_analytics(election_id):
 
 # ---- Get All Votes ----
 @admin_bp.route('/votes', methods=['GET'])
-@jwt_required()
+@login_required
 def get_all_votes():
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-
-    if not is_admin(user):
+    if not is_admin(current_user):
         return jsonify({'error': 'Unauthorized'}), 403
 
     election_id = request.args.get('election_id')
@@ -131,12 +121,9 @@ def get_all_votes():
 
 # ---- Voter Turnout Analytics (admin-only) ----
 @admin_bp.route('/analytics/turnout/<int:election_id>', methods=['GET'])
-@jwt_required()
+@login_required
 def voter_turnout_analytics(election_id):
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-
-    if not is_admin(user):
+    if not is_admin(current_user):
         return jsonify({'error': 'Admin access required'}), 403
 
     election = Election.query.get(election_id)
@@ -145,10 +132,7 @@ def voter_turnout_analytics(election_id):
 
     total_voters = User.query.filter_by(is_verified=True).count()
     total_voted = Vote.query.filter_by(election_id=election_id).count()
-
-    turnout_percentage = (
-        (total_voted / total_voters) * 100 if total_voters > 0 else 0
-    )
+    turnout_percentage = (total_voted / total_voters) * 100 if total_voters else 0
 
     return jsonify({
         "election_id": election.id,
@@ -161,12 +145,9 @@ def voter_turnout_analytics(election_id):
 
 # ---- Analytics Route (duplicate functionality, can be merged) ----
 @analytics_bp.route('/turnout/<int:election_id>', methods=['GET'])
-@jwt_required()
+@login_required
 def election_turnout(election_id):
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-
-    if not is_admin(user):
+    if not is_admin(current_user):
         return jsonify({"error": "Admin access required"}), 403
 
     election = Election.query.get(election_id)
@@ -175,8 +156,7 @@ def election_turnout(election_id):
 
     total_voters = User.query.filter_by(role='voter', is_verified=True).count()
     total_votes = Vote.query.filter_by(election_id=election_id).count()
-
-    turnout = (total_votes / total_voters * 100) if total_voters > 0 else 0.0
+    turnout = (total_votes / total_voters * 100) if total_voters else 0.0
 
     return jsonify({
         "election_id": election_id,

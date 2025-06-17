@@ -1,22 +1,17 @@
 from flask import Blueprint, request, jsonify
+from flask_login import login_required, current_user
 from app.extensions import db
 from app.models import Election, User, Candidate, Vote
-from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
-
-
 
 elections_bp = Blueprint('elections_bp', __name__)
 vote_bp = Blueprint('vote_bp', __name__, url_prefix='/api/v1/votes')
 
 
 @elections_bp.route('/elections', methods=['POST'])
-@jwt_required()
+@login_required
 def create_election():
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-
-    if not user or user.role != 'admin' or not user.is_verified:
+    if not current_user.is_admin() or not current_user.is_verified:
         return jsonify({'error': 'Unauthorized'}), 403
 
     data = request.get_json()
@@ -45,14 +40,11 @@ def create_election():
 
     return jsonify({'message': 'Election created', 'election_id': election.id}), 201
 
-# update election
-@elections_bp.route('/elections/<int:election_id>', methods=['PUT'])
-@jwt_required()
-def update_election(election_id):
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
 
-    if not user or user.role != 'admin' or not user.is_verified:
+@elections_bp.route('/elections/<int:election_id>', methods=['PUT'])
+@login_required
+def update_election(election_id):
+    if not current_user.is_admin() or not current_user.is_verified:
         return jsonify({'error': 'Unauthorized'}), 403
 
     election = Election.query.get_or_404(election_id)
@@ -77,34 +69,28 @@ def update_election(election_id):
             election.end_date = datetime.fromisoformat(end_date)
         except ValueError:
             return jsonify({'error': 'Invalid end_date format'}), 400
+
     db.session.commit()
     return jsonify({'message': 'Election updated'}), 200
 
 
-
-#get list of election
 @elections_bp.route('/elections', methods=['GET'])
 def get_elections():
     elections = Election.query.all()
-
-    result = []
-    for election in elections:
-        result.append({
-            'id': election.id,
-            'title': election.title,
-            'description': election.description,
-            'start_date': election.start_date,
-            'end_date': election.end_date,
-            'is_active': election.is_active
-        })
-
+    result = [{
+        'id': e.id,
+        'title': e.title,
+        'description': e.description,
+        'start_date': e.start_date,
+        'end_date': e.end_date,
+        'is_active': e.is_active
+    } for e in elections]
     return jsonify(result), 200
 
-#get by id
+
 @elections_bp.route('/elections/<int:election_id>', methods=['GET'])
 def get_election(election_id):
     election = Election.query.get_or_404(election_id)
-
     return jsonify({
         'id': election.id,
         'title': election.title,
@@ -115,42 +101,33 @@ def get_election(election_id):
     }), 200
 
 
-#delete/deactivate electio
 @elections_bp.route('/elections/<int:election_id>/deactivate', methods=['PATCH'])
-@jwt_required()
+@login_required
 def deactivate_election(election_id):
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-
-    if not user or user.role != 'admin' or not user.is_verified:
+    if not current_user.is_admin() or not current_user.is_verified:
         return jsonify({'error': 'Unauthorized'}), 403
 
     election = Election.query.get_or_404(election_id)
     election.is_active = False
-    election.deactivated_by = user.id
+    election.deactivated_by = current_user.id
     db.session.commit()
 
     return jsonify({'message': 'Election deactivated'}), 200
 
 
 @vote_bp.route('/results/<int:election_id>', methods=['GET'])
-@jwt_required()
+@login_required
 def get_election_results(election_id):
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-
-    if not user:
+    if not current_user.is_authenticated:
         return jsonify({"error": "Unauthorized"}), 403
 
     election = Election.query.get(election_id)
     if not election:
         return jsonify({"error": "Election not found"}), 404
 
-    # Restrict access until election ends
     if election.end_date and election.end_date > datetime.utcnow():
         return jsonify({"error": "Results not available until the election ends."}), 403
 
-    # Count total eligible voters (can add filters per region if needed)
     total_voters = User.query.filter_by(role='voter').count()
     voters_voted = (
         db.session.query(Vote.voter_id)
@@ -158,67 +135,8 @@ def get_election_results(election_id):
         .distinct()
         .count()
     )
-
-    turnout = round((voters_voted / total_voters) * 100, 2) if total_voters else 0.0
-
-    # Aggregate votes per candidate
-    results = (
-        db.session.query(
-            Candidate.id,
-            Candidate.full_name,
-            Candidate.position,
-            db.func.count(Vote.id).label('vote_count')
-        )
-        .join(Vote, Candidate.id == Vote.candidate_id)
-        .filter(Vote.election_id == election_id)
-        .group_by(Candidate.id)
-        .order_by(db.desc('vote_count'))
-        .all()
-    )
-
-    data = []
-    for candidate_id, name, position, vote_count in results:
-        data.append({
-            "candidate_id": candidate_id,
-            "name": name,
-            "position": position,
-            "vote_count": vote_count
-        })
-
-    return jsonify({
-        "election": election.title,
-        "voter_turnout": {
-            "voters_voted": voters_voted,
-            "total_voters": total_voters,
-            "percentage": turnout
-        },
-        "results": data
-    }), 200
-
-
-
-@vote_bp.route('/results/<int:election_id>', methods=['GET'])
-@jwt_required()
-def get_election_results(election_id):
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-
-    if not user:
-        return jsonify({"error": "Unauthorized"}), 403
-
-    election = Election.query.get(election_id)
-    if not election:
-        return jsonify({"error": "Election not found"}), 404
-
-    if election.end_date and election.end_date > datetime.utcnow():
-        return jsonify({"error": "Results not available until the election ends."}), 403
-
-    # Get total voters and those who voted
-    total_voters = User.query.filter_by(role='voter').count()
-    voters_voted = db.session.query(Vote.voter_id).filter_by(election_id=election_id).distinct().count()
     turnout_percent = round((voters_voted / total_voters) * 100, 2) if total_voters else 0.0
 
-    # Results by candidate
     results = (
         db.session.query(
             Candidate.id,
@@ -242,7 +160,6 @@ def get_election_results(election_id):
             "vote_count": vote_count
         })
 
-    # Turnout by Constituency
     constituency_turnout = []
     constituencies = db.session.query(User.constituency).filter(User.role == 'voter').distinct().all()
     for (constituency,) in constituencies:
@@ -264,7 +181,6 @@ def get_election_results(election_id):
             "percentage": percent
         })
 
-    # Turnout by Ward
     ward_turnout = []
     wards = db.session.query(User.ward).filter(User.role == 'voter').distinct().all()
     for (ward,) in wards:
@@ -297,7 +213,3 @@ def get_election_results(election_id):
         "ward_turnout": ward_turnout,
         "results": results_data
     }), 200
-
-
-
-

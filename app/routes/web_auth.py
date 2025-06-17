@@ -18,8 +18,7 @@ voter_bp = Blueprint('voter', __name__, url_prefix='/voter')
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
-        existing_user = User.query.filter_by(email=form.email.data).first()
-        if existing_user:
+        if User.query.filter_by(email=form.email.data).first():
             flash('Email is already registered.', 'danger')
             return render_template('register.html', form=form)
 
@@ -32,7 +31,7 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        flash(f'{user.full_name}, registered successfully! Please log in.', 'success')
+        flash(f'Welcome {user.full_name}! Registration successful. Please log in.', 'success')
         return redirect(url_for('web_auth.login'))
 
     return render_template('register.html', form=form)
@@ -48,7 +47,7 @@ def login():
         user = User.query.filter_by(email=form.email.data).first()
         if user and user.check_password(form.password.data):
             login_user(user)
-            flash(f'{user.full_name} logged in successfully.', 'success')
+            flash(f'Welcome back, {user.full_name}!', 'success')
 
             if user.role == 'admin':
                 return redirect(url_for('admin.dashboard'))
@@ -82,12 +81,14 @@ def voter_dashboard():
     elections = Election.query.filter(Election.end_date >= datetime.utcnow()).all()
     votes = Vote.query.filter_by(voter_id=current_user.id).all()
 
-    vote_records = [{
-        "candidate_name": Candidate.query.get(vote.candidate_id).full_name,
-        "position_name": Position.query.get(vote.position_id).name,
-        "election_title": Election.query.get(vote.election_id).title,
-        "voted_at": vote.voted_at.strftime("%Y-%m-%d %H:%M")
-    } for vote in votes]
+    vote_records = []
+    for vote in votes:
+        vote_records.append({
+            "candidate_name": Candidate.query.get(vote.candidate_id).full_name,
+            "position_name": Position.query.get(vote.position_id).name,
+            "election_title": Election.query.get(vote.election_id).title,
+            "voted_at": vote.created_at.strftime("%Y-%m-%d %H:%M")
+        })
 
     return render_template('voter/dashboard.html', elections=elections, votes=vote_records)
 
@@ -98,7 +99,7 @@ def voter_dashboard():
 @web_auth_bp.route('/logout')
 @login_required
 def logout():
-    name = current_user.full_name if current_user.is_authenticated else "User"
+    name = current_user.full_name
     logout_user()
-    flash(f'{name} logged out successfully.', 'info')
+    flash(f'{name}, you have logged out successfully.', 'info')
     return redirect(url_for('web_auth.login'))

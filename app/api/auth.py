@@ -1,13 +1,13 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, redirect, url_for
+from flask_login import login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash
 from app.extensions import db
 from app.models import User
-from flask_jwt_extended import (
-    create_access_token,create_refresh_token,jwt_required,get_jwt_identity)
-from werkzeug.security import generate_password_hash
 
 auth_bp = Blueprint('auth_bp', __name__, url_prefix='/api/v1/auth')
 
-# Register route
+
+# ---- Register ----
 @auth_bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -58,7 +58,7 @@ def register():
     }), 201
 
 
-# Login route
+# ---- Login ----
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -69,12 +69,10 @@ def login():
     if not user or not user.check_password(password):
         return jsonify({'error': 'Invalid credentials'}), 401
 
-    access_token = create_access_token(identity=str(user.id))
-    refresh_token = create_refresh_token(identity=str(user.id))
+    login_user(user)
 
     return jsonify({
-        'access_token': access_token,
-        'refresh_token': refresh_token,
+        'message': 'Login successful',
         'user': {
             'id': user.id,
             'email': user.email,
@@ -85,24 +83,19 @@ def login():
     }), 200
 
 
-# Refresh token route
-@auth_bp.route('/refresh', methods=['POST'])
-@jwt_required(refresh=True)
-def refresh_token():
-    user_id = get_jwt_identity()
-    new_access_token = create_access_token(identity=user_id)
-    return jsonify(access_token=new_access_token), 200
+# ---- Logout ----
+@auth_bp.route('/logout', methods=['POST'])
+@login_required
+def logout():
+    logout_user()
+    return jsonify({"message": "Logged out successfully."}), 200
 
 
-# Get current user profile
+# ---- Profile (GET) ----
 @auth_bp.route('/me', methods=['GET'])
-@jwt_required()
+@login_required
 def get_profile():
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-
-    if not user:
-        return jsonify({'error': 'User not found'}), 404
+    user = current_user
 
     return jsonify({
         'id': user.id,
@@ -120,16 +113,11 @@ def get_profile():
     }), 200
 
 
-# Update profile
+# ---- Profile (PUT) ----
 @auth_bp.route('/me', methods=['PUT'])
-@jwt_required()
+@login_required
 def update_profile():
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-
-    if not user:
-        return jsonify({'error': 'User not found'}), 404
-
+    user = current_user
     data = request.get_json()
 
     if 'full_name' in data:
@@ -162,18 +150,11 @@ def update_profile():
     }), 200
 
 
-# Logout (placeholder)
-@auth_bp.route('/logout', methods=['POST'])
-@jwt_required()
-def logout():
-    return jsonify({"message": "Logged out successfully."}), 200
-
-
-# Developer route: list users
+# ---- Dev: List All Users ----
 @auth_bp.route('/dev/users', methods=['GET'])
 def list_users():
     users = User.query.all()
     return jsonify([
         {"id": user.id, "email": user.email, "full_name": user.full_name}
         for user in users
-    ])
+    ]), 200
