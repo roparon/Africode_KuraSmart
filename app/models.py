@@ -19,7 +19,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     full_name = db.Column(db.String(120), nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
-    
+
     role = db.Column(db.Enum(UserRole), default=UserRole.voter, nullable=False, index=True)
 
     username = db.Column(db.String(80), unique=True, nullable=True)
@@ -70,7 +70,7 @@ class Election(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=func.now())
-    deactivated_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    deactivated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     candidates = db.relationship('Candidate', back_populates='election', lazy=True)
     positions = db.relationship('Position', back_populates='election', lazy=True, cascade="all, delete-orphan")
@@ -82,7 +82,7 @@ class Election(db.Model):
 
 class Candidate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=False)
     position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)
     full_name = db.Column(db.String(100), nullable=False)
@@ -136,7 +136,7 @@ class Position(db.Model):
 
 class Vote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    voter_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    voter_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=False)
     candidate_id = db.Column(db.Integer, db.ForeignKey('candidate.id'), nullable=False)
     position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)
@@ -158,7 +158,7 @@ class Vote(db.Model):
 
 class VerificationRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     status = db.Column(db.String(50), default='pending')  # pending, approved, rejected
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     reviewed_at = db.Column(db.DateTime)

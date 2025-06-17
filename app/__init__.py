@@ -1,6 +1,6 @@
 from flask import Flask
 from app.extensions import db, migrate, jwt, login_manager
-from app.models import User
+from app.models import User, Candidate, Position, Election, Vote, VerificationRequest
 
 
 def create_app():
