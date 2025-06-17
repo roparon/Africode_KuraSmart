@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h1>Super Admin Dashboard</h1>
+    <div class="row my-4">
+        <div class="col-md-3"><div class="card"><div class="card-body">Total Users: <strong id="users-count"></strong></div></div></div>
+        <div class="col-md-3"><div class="card"><div class="card-body">Verified Users: <strong id="verified-count"></strong></div></div></div>
+        <div class="col-md-3"><div class="card"><div class="card-body">Elections: <strong id="elections-count"></strong></div></div></div>
+        <div class="col-md-3"><div class="card"><div class="card-body">Votes Cast: <strong id="votes-count"></strong></div></div></div>
+    </div>
+
+    <h2>All Users</h2>
+    <table class="table table-striped" id="users-table">
+        <thead>
+            <tr><th>ID</th><th>Email</th><th>Full Name</th><th>Role</th><th>Verified</th></tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script>
+    async function fetchDashboard() {
+        const response = await fetch("/api/v1/super-admin/dashboard");
+        const data = await response.json();
+        document.getElementById('users-count').innerText = data.total_users;
+        document.getElementById('verified-count').innerText = data.verified_users;
+        document.getElementById('elections-count').innerText = data.total_elections;
+        document.getElementById('votes-count').innerText = data.total_votes;
+    }
+
+    async function fetchUsers() {
+        const response = await fetch("/api/v1/super-admin/users");
+        const users = await response.json();
+        const tableBody = document.querySelector("#users-table tbody");
+        tableBody.innerHTML = "";
+
+        users.forEach(user => {
+            const row = `<tr>
+                <td>${user.id}</td>
+                <td>${user.email}</td>
+                <td>${user.full_name}</td>
+                <td>${user.role}</td>
+                <td>${user.is_verified ? 'Yes' : 'No'}</td>
+            </tr>`;
+            tableBody.innerHTML += row;
+        });
+    }
+
+    fetchDashboard();
+    fetchUsers();
+</script>
+{% endblock %}
