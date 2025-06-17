@@ -5,15 +5,12 @@ from app.models import User, Election, Candidate, Vote, Position
 from app.extensions import db
 from datetime import datetime
 
-# Define Blueprints
 web_auth_bp = Blueprint('web_auth', __name__)
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 voter_bp = Blueprint('voter', __name__, url_prefix='/voter')
 
 
-# -------------------------
 # User Registration
-# -------------------------
 @web_auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
@@ -37,9 +34,7 @@ def register():
     return render_template('register.html', form=form)
 
 
-# -------------------------
 # User Login
-# -------------------------
 @web_auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -58,9 +53,7 @@ def login():
     return render_template('login.html', form=form)
 
 
-# -------------------------
 # Admin Dashboard
-# -------------------------
 @admin_bp.route('/dashboard')
 @login_required
 def dashboard():
@@ -69,9 +62,7 @@ def dashboard():
     return render_template('admin/dashboard.html')
 
 
-# -------------------------
 # Voter Dashboard
-# -------------------------
 @voter_bp.route('/dashboard')
 @login_required
 def voter_dashboard():
