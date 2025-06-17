@@ -1,0 +1,123 @@
+/* General Body & Layout */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+}
+
+/* Sidebar */
+.sidebar {
+    height: 100vh;
+    background-color: #343a40;
+    color: white;
+    transition: all 0.3s;
+    overflow-x: hidden;
+}
+
+.sidebar .nav-link {
+    color: #cfd8dc;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    transition: 0.2s;
+}
+
+.sidebar .nav-link:hover {
+    background-color: #495057;
+    color: white;
+    text-decoration: none;
+}
+
+.sidebar .nav-link .fa {
+    margin-right: 10px;
+}
+
+/* Collapsed Sidebar */
+.sidebar.collapsed {
+    width: 0;
+}
+
+.sidebar.expanded {
+    width: 250px;
+}
+
+/* Top Navbar */
+.navbar-custom {
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    z-index: 1030;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    color: #343a40 !important;
+}
+
+.navbar-nav .nav-item .nav-link {
+    color: #343a40;
+}
+
+.navbar-nav .dropdown-menu {
+    right: 0;
+    left: auto;
+}
+
+/* Main content */
+#main-content {
+    transition: margin-left 0.3s;
+    padding: 20px;
+}
+
+/* Responsive Behavior */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        z-index: 1040;
+        width: 0;
+    }
+
+    .sidebar.expanded {
+        width: 250px;
+    }
+
+    #main-content {
+        margin-left: 0;
+    }
+
+    .sidebar-toggle {
+        display: inline-block;
+    }
+}
+
+.sidebar-toggle {
+    cursor: pointer;
+    font-size: 1.2rem;
+    margin-right: 15px;
+    color: #343a40;
+    display: none;
+}
+
+.user-card {
+    background: #ffffff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.user-card img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+/* Footer */
+footer {
+    background-color: #f1f3f5;
+    padding: 10px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-top: 30px;
+}
