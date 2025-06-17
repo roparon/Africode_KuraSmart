@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_user, logout_user, login_required, current_user
+from functools import wraps
 from app.forms.forms import LoginForm, RegistrationForm
 from app.models import User, Election, Candidate, Vote, Position
 from app.extensions import db
@@ -8,6 +9,22 @@ from datetime import datetime
 web_auth_bp = Blueprint('web_auth', __name__)
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 voter_bp = Blueprint('voter', __name__, url_prefix='/voter')
+
+
+def super_admin_required(f):
+    """
+    Decorator to restrict access to super admins only.
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            flash('You need to log in first.', 'warning')
+            return redirect(url_for('web_auth.login'))
+        if not current_user.is_superadmin:
+            flash('Access denied: Super Admins only.', 'danger')
+            return abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 # User Registration
@@ -44,21 +61,23 @@ def login():
             login_user(user)
             flash(f'Welcome back, {user.full_name}!', 'success')
 
+            # Redirect based on privileges
+            if user.is_superadmin:
+                return redirect(url_for('admin.dashboard'))
             if user.role == 'admin':
                 return redirect(url_for('admin.dashboard'))
-            else:
-                return redirect(url_for('voter.voter_dashboard'))
+            return redirect(url_for('voter.voter_dashboard'))
 
         flash('Invalid email or password.', 'danger')
     return render_template('login.html', form=form)
 
 
-# Admin Dashboard
+# Super Admin / Admin Dashboard
 @admin_bp.route('/dashboard')
 @login_required
+@super_admin_required
 def dashboard():
-    if current_user.role != 'admin':
-        abort(403)
+    """Accessible only to super admins."""
     return render_template('admin/dashboard.html')
 
 
@@ -84,9 +103,7 @@ def voter_dashboard():
     return render_template('voter/dashboard.html', elections=elections, votes=vote_records)
 
 
-# -------------------------
 # Logout
-# -------------------------
 @web_auth_bp.route('/logout')
 @login_required
 def logout():
