@@ -1,38 +1,64 @@
 from datetime import datetime
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db
 from sqlalchemy.sql import func
-from flask_login import UserMixin
+import enum
+
+class UserRole(enum.Enum):
+    voter = "voter"
+    candidate = "candidate"
+    admin = "admin"
+    super_admin = "super_admin"
 
 
 class User(db.Model, UserMixin):
+    __tablename__ = 'users'
+
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     full_name = db.Column(db.String(120), nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
-    role = db.Column(db.String(50), default='voter')
-    id_number = db.Column(db.String(20), unique=True)
-    username = db.Column(db.String(80), unique=True)
-    county = db.Column(db.String(100))
-    constituency = db.Column(db.String(100))
-    ward = db.Column(db.String(100))
-    sub_location = db.Column(db.String(100))
-    is_verified = db.Column(db.Boolean, default=False)
+    
+    role = db.Column(db.Enum(UserRole), default=UserRole.voter, nullable=False, index=True)
+
+    username = db.Column(db.String(80), unique=True, nullable=True)
+    id_number = db.Column(db.String(20), unique=True, nullable=True)
+    county = db.Column(db.String(100), nullable=True)
+    constituency = db.Column(db.String(100), nullable=True)
+    ward = db.Column(db.String(100), nullable=True)
+    sub_location = db.Column(db.String(100), nullable=True)
+
+    is_verified = db.Column(db.Boolean, default=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Relationships
     candidates = db.relationship('Candidate', back_populates='user')
     verification_requests = db.relationship('VerificationRequest', back_populates='user')
     votes = db.relationship('Vote', back_populates='voter')
 
+    # Password methods
     def set_password(self, password):
-        from werkzeug.security import generate_password_hash
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
-        from werkzeug.security import check_password_hash
         return check_password_hash(self.password_hash, password)
 
+    # Role-check helpers
+    def is_admin(self):
+        return self.role in [UserRole.admin, UserRole.super_admin]
+
+    def is_super_admin(self):
+        return self.role == UserRole.super_admin
+
+    def is_voter(self):
+        return self.role == UserRole.voter
+
+    def is_candidate(self):
+        return self.role == UserRole.candidate
+
     def __repr__(self):
-        return f"<User id={self.id}, email='{self.email}', role='{self.role}'>"
+        return f"<User id={self.id}, email='{self.email}', role='{self.role.value}'>"
 
 
 class Election(db.Model):
