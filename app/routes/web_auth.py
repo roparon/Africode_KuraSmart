@@ -11,9 +11,7 @@ admin_web_bp = Blueprint('admin_web', __name__, url_prefix='/admin')
 voter_bp = Blueprint('voter', __name__, url_prefix='/voter')
 
 
-# -------------------------
 # User Registration
-# -------------------------
 @web_auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
@@ -37,9 +35,7 @@ def register():
     return render_template('register.html', form=form)
 
 
-# -------------------------
 # User Login
-# -------------------------
 @web_auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
