@@ -19,6 +19,10 @@ class User(db.Model, UserMixin):
     is_verified = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    candidates = db.relationship('Candidate', back_populates='user')
+    verification_requests = db.relationship('VerificationRequest', back_populates='user')
+    votes = db.relationship('Vote', back_populates='voter')
+
     def set_password(self, password):
         from werkzeug.security import generate_password_hash
         self.password_hash = generate_password_hash(password)
@@ -42,9 +46,9 @@ class Election(db.Model):
     updated_at = db.Column(db.DateTime, onupdate=func.now())
     deactivated_by = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    candidates = db.relationship('Candidate', backref='election', lazy=True)
-    positions = db.relationship('Position', backref='election', lazy=True, cascade="all, delete-orphan")
-    votes = db.relationship('Vote', backref='election', lazy=True)
+    candidates = db.relationship('Candidate', back_populates='election', lazy=True)
+    positions = db.relationship('Position', back_populates='election', lazy=True, cascade="all, delete-orphan")
+    votes = db.relationship('Vote', back_populates='election', lazy=True)
 
     def __repr__(self):
         return f"<Election id={self.id}, title='{self.title}', active={self.is_active}>"
@@ -54,7 +58,7 @@ class Candidate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=False)
-    position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)  # ✅ Added this line
+    position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)
     full_name = db.Column(db.String(100), nullable=False)
     party_name = db.Column(db.String(100))
     position = db.Column(db.String(100), nullable=False)
@@ -63,10 +67,10 @@ class Candidate(db.Model):
     approved = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    user = db.relationship('User', backref='candidates')
-    election = db.relationship('Election', backref='candidates')
-    votes = db.relationship('Vote', backref='candidate', lazy=True)
-    position_rel = db.relationship('Position', backref='candidates')  # ✅ Optional: clearer access to Position object
+    user = db.relationship('User', back_populates='candidates')
+    election = db.relationship('Election', back_populates='candidates')
+    position_rel = db.relationship('Position', back_populates='candidates')
+    votes = db.relationship('Vote', back_populates='candidate', lazy=True)
 
     def to_dict(self):
         return {
@@ -88,7 +92,6 @@ class Candidate(db.Model):
                 f"position='{self.position}', approved={self.approved}>")
 
 
-
 class Position(db.Model):
     __tablename__ = 'position'
 
@@ -97,8 +100,9 @@ class Position(db.Model):
     name = db.Column(db.String(100), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
-    candidates = db.relationship('Candidate', backref='position', lazy=True, cascade="all, delete-orphan")
-    votes = db.relationship('Vote', backref='position', lazy=True, cascade="all, delete-orphan")
+    election = db.relationship('Election', back_populates='positions')
+    candidates = db.relationship('Candidate', back_populates='position_rel', lazy=True, cascade="all, delete-orphan")
+    votes = db.relationship('Vote', back_populates='position', lazy=True, cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Position id={self.id}, name='{self.name}', election_id={self.election_id}>"
@@ -112,7 +116,10 @@ class Vote(db.Model):
     position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    voter = db.relationship('User', backref='votes')
+    voter = db.relationship('User', back_populates='votes')
+    election = db.relationship('Election', back_populates='votes')
+    candidate = db.relationship('Candidate', back_populates='votes')
+    position = db.relationship('Position', back_populates='votes')
 
     __table_args__ = (
         db.UniqueConstraint('voter_id', 'election_id', 'position_id', name='uix_voter_election_position'),
@@ -130,7 +137,7 @@ class VerificationRequest(db.Model):
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     reviewed_at = db.Column(db.DateTime)
 
-    user = db.relationship('User', backref='verification_requests')
+    user = db.relationship('User', back_populates='verification_requests')
 
     def __repr__(self):
         return (f"<VerificationRequest id={self.id}, user_id={self.user_id}, status='{self.status}'>")
