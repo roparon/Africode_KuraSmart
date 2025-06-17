@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
+from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DateField
 from wtforms.validators import DataRequired, Email, Length, EqualTo
 
 
@@ -22,3 +22,12 @@ class LoginForm(FlaskForm):
 
 class VerificationRequestForm(FlaskForm):
     submit = SubmitField("Submit Verification Request", validators=[DataRequired()])
+
+
+
+class ElectionForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired()])
+    description = TextAreaField('Description')
+    start_date = DateField('Start Date', validators=[DataRequired()])
+    end_date = DateField('End Date', validators=[DataRequired()])
+    submit = SubmitField('Create Election')

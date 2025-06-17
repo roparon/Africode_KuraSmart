@@ -1,33 +1,19 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_user, logout_user, login_required, current_user
-from functools import wraps
-from app.forms.forms import LoginForm, RegistrationForm
+from app.forms.forms import LoginForm, RegistrationForm, ElectionForm
 from app.models import User, Election, Candidate, Vote, Position
 from app.extensions import db
 from datetime import datetime
 
+# Blueprints
 web_auth_bp = Blueprint('web_auth', __name__)
-admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+admin_web_bp = Blueprint('admin_web', __name__, url_prefix='/admin')
 voter_bp = Blueprint('voter', __name__, url_prefix='/voter')
 
 
-def super_admin_required(f):
-    """
-    Decorator to restrict access to super admins only.
-    """
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated:
-            flash('You need to log in first.', 'warning')
-            return redirect(url_for('web_auth.login'))
-        if not current_user.is_superadmin:
-            flash('Access denied: Super Admins only.', 'danger')
-            return abort(403)
-        return f(*args, **kwargs)
-    return decorated_function
-
-
+# -------------------------
 # User Registration
+# -------------------------
 @web_auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
@@ -51,7 +37,9 @@ def register():
     return render_template('register.html', form=form)
 
 
+# -------------------------
 # User Login
+# -------------------------
 @web_auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -61,28 +49,43 @@ def login():
             login_user(user)
             flash(f'Welcome back, {user.full_name}!', 'success')
 
-            # Redirect based on privileges
-            if user.is_superadmin:
-                return redirect(url_for('admin.dashboard'))
-            if user.role == 'admin':
-                return redirect(url_for('admin.dashboard'))
+            # Role-based redirection
+            if user.is_superadmin or user.role == 'admin':
+                return redirect(url_for('admin_web.dashboard'))
             return redirect(url_for('voter.voter_dashboard'))
 
         flash('Invalid email or password.', 'danger')
     return render_template('login.html', form=form)
 
 
-# Super Admin / Admin Dashboard
-@admin_bp.route('/dashboard')
+# -------------------------
+# Admin Dashboard
+# -------------------------
+@admin_web_bp.route('/dashboard', endpoint='dashboard')
 @login_required
-@super_admin_required
 def dashboard():
-    """Accessible only to super admins."""
+    if not (current_user.is_superadmin or current_user.role == 'admin'):
+        abort(403)
     return render_template('admin/dashboard.html')
 
 
+# -------------------------
+# Admin Manage Users
+# -------------------------
+@admin_web_bp.route('/manage-users', endpoint='manage_users')
+@login_required
+def manage_users():
+    if not (current_user.is_superadmin or current_user.role == 'admin'):
+        abort(403)
+
+    users = User.query.all()  # Adjust filter as needed
+    return render_template('admin/manage_users.html', users=users)
+
+
+# -------------------------
 # Voter Dashboard
-@voter_bp.route('/dashboard')
+# -------------------------
+@voter_bp.route('/dashboard', endpoint='voter_dashboard')
 @login_required
 def voter_dashboard():
     if current_user.role != 'voter':
@@ -103,7 +106,9 @@ def voter_dashboard():
     return render_template('voter/dashboard.html', elections=elections, votes=vote_records)
 
 
+# -------------------------
 # Logout
+# -------------------------
 @web_auth_bp.route('/logout')
 @login_required
 def logout():
@@ -111,3 +116,60 @@ def logout():
     logout_user()
     flash(f'{name}, you have logged out successfully.', 'info')
     return redirect(url_for('web_auth.login'))
+
+
+# -------------------------
+# Admin Manage Elections
+# -------------------------
+@admin_web_bp.route('/manage-elections', endpoint='manage_elections')
+@login_required
+def manage_elections():
+    if not (current_user.is_superadmin or current_user.role == 'admin'):
+        abort(403)
+
+    elections = Election.query.order_by(Election.start_date.desc()).all()
+    return render_template('admin/manage_elections.html', elections=elections)
+
+
+
+# -------------------------
+# Admin View Analytics
+# -------------------------
+@admin_web_bp.route('/analytics', endpoint='view_analytics')
+@login_required
+def view_analytics():
+    if not (current_user.is_superadmin or current_user.role == 'admin'):
+        abort(403)
+
+    total_users = User.query.count()
+    total_votes = Vote.query.count()
+    total_elections = Election.query.count()
+
+    return render_template('admin/analytics.html', 
+                           total_users=total_users, 
+                           total_votes=total_votes, 
+                           total_elections=total_elections)
+
+
+
+@admin_web_bp.route('/elections/create', methods=['GET', 'POST'], endpoint='create_election')
+@login_required
+def create_election():
+    if not (current_user.is_superadmin or current_user.role == 'admin'):
+        abort(403)
+
+    form = ElectionForm()
+    if form.validate_on_submit():
+        election = Election(
+            title=form.title.data,
+            description=form.description.data,
+            start_date=form.start_date.data,
+            end_date=form.end_date.data
+        )
+        db.session.add(election)
+        db.session.commit()
+        flash('Election created successfully!', 'success')
+        return redirect(url_for('admin_web.dashboard'))
+
+    return render_template('admin/create_election.html', form=form)
+

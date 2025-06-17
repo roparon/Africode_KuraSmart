@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>System Analytics</h2>
+    <ul class="list-group mt-3">
+        <li class="list-group-item">Total Users: {{ total_users }}</li>
+        <li class="list-group-item">Total Votes: {{ total_votes }}</li>
+        <li class="list-group-item">Total Elections: {{ total_elections }}</li>
+    </ul>
+</div>
+{% endblock %}
