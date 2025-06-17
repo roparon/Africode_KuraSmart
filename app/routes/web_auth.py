@@ -5,12 +5,15 @@ from app.models import User, Election, Candidate, Vote, Position
 from app.extensions import db
 from datetime import datetime
 
+# Define Blueprints
 web_auth_bp = Blueprint('web_auth', __name__)
-admin_bp = Blueprint('admin', __name__)
-voter_bp = Blueprint('voter', __name__)
+admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+voter_bp = Blueprint('voter', __name__, url_prefix='/voter')
 
 
-#user registration
+# -------------------------
+# User Registration
+# -------------------------
 @web_auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
@@ -29,15 +32,15 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        flash(f'{user.full_name}, registered successful! Please log in.', 'success')
+        flash(f'{user.full_name}, registered successfully! Please log in.', 'success')
         return redirect(url_for('web_auth.login'))
 
     return render_template('register.html', form=form)
 
 
-
-#User loginoroute
-
+# -------------------------
+# User Login
+# -------------------------
 @web_auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -50,12 +53,15 @@ def login():
             if user.role == 'admin':
                 return redirect(url_for('admin.dashboard'))
             else:
-                return redirect(url_for('voter.dashboard'))
+                return redirect(url_for('voter.voter_dashboard'))
 
         flash('Invalid email or password.', 'danger')
     return render_template('login.html', form=form)
 
 
+# -------------------------
+# Admin Dashboard
+# -------------------------
 @admin_bp.route('/dashboard')
 @login_required
 def dashboard():
@@ -64,30 +70,18 @@ def dashboard():
     return render_template('admin/dashboard.html')
 
 
+# -------------------------
+# Voter Dashboard
+# -------------------------
 @voter_bp.route('/dashboard')
 @login_required
-def dashboard():
+def voter_dashboard():
     if current_user.role != 'voter':
         abort(403)
-    return render_template('voter/dashboard.html')
 
-@web_auth_bp.route('/logout')
-@login_required
-def logout():
-    name = current_user.full_name if current_user.is_authenticated else "User"
-    logout_user()
-    flash(f'{name} logged out successfully.', 'info')
-    return redirect(url_for('web_auth.login'))
-
-
-
-@voter_bp.route('/dashboard')
-@login_required
-def dashboard():
     elections = Election.query.filter(Election.end_date >= datetime.utcnow()).all()
     votes = Vote.query.filter_by(voter_id=current_user.id).all()
-    
-    # You might need to enrich vote records with candidate/position/election info
+
     vote_records = [{
         "candidate_name": Candidate.query.get(vote.candidate_id).full_name,
         "position_name": Position.query.get(vote.position_id).name,
@@ -98,4 +92,13 @@ def dashboard():
     return render_template('voter/dashboard.html', elections=elections, votes=vote_records)
 
 
-
+# -------------------------
+# Logout
+# -------------------------
+@web_auth_bp.route('/logout')
+@login_required
+def logout():
+    name = current_user.full_name if current_user.is_authenticated else "User"
+    logout_user()
+    flash(f'{name} logged out successfully.', 'info')
+    return redirect(url_for('web_auth.login'))
