@@ -169,3 +169,13 @@ class VerificationRequest(db.Model):
 
     def __repr__(self):
         return (f"<VerificationRequest id={self.id}, user_id={self.user_id}, status='{self.status}'>")
+
+
+
+# admin = User(
+#     full_name="Aron Rop",
+#     email="aaronrop40@gmail.com",
+#     password_hash=generate_password_hash("0987654321"),
+#     role=UserRole.SUPER_ADMIN,
+#     is_superadmin=True
+# )
