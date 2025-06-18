@@ -10,8 +10,9 @@ web_auth_bp = Blueprint('web_auth', __name__)
 admin_web_bp = Blueprint('admin_web', __name__, url_prefix='/admin')
 voter_bp = Blueprint('voter', __name__, url_prefix='/voter')
 
-
+# -------------------------
 # User Registration
+# -------------------------
 @web_auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
@@ -34,8 +35,9 @@ def register():
 
     return render_template('register.html', form=form)
 
-
+# -------------------------
 # User Login
+# -------------------------
 @web_auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -53,6 +55,16 @@ def login():
         flash('Invalid email or password.', 'danger')
     return render_template('login.html', form=form)
 
+# -------------------------
+# Logout
+# -------------------------
+@web_auth_bp.route('/logout')
+@login_required
+def logout():
+    name = current_user.full_name
+    logout_user()
+    flash(f'{name}, you have logged out successfully.', 'info')
+    return redirect(url_for('web_auth.login'))
 
 # -------------------------
 # Admin Dashboard
@@ -64,7 +76,6 @@ def dashboard():
         abort(403)
     return render_template('admin/dashboard.html')
 
-
 # -------------------------
 # Admin Manage Users
 # -------------------------
@@ -74,9 +85,52 @@ def manage_users():
     if not (current_user.is_superadmin or current_user.role == 'admin'):
         abort(403)
 
-    users = User.query.all()  # Adjust filter as needed
+    users = User.query.all()
     return render_template('admin/manage_users.html', users=users)
 
+# -------------------------
+# Admin Manage Elections (View + Create)
+# -------------------------
+@admin_web_bp.route('/manage-elections', methods=['GET', 'POST'], endpoint='manage_elections')
+@login_required
+def manage_elections():
+    if not (current_user.is_superadmin or current_user.role == 'admin'):
+        abort(403)
+
+    form = ElectionForm()
+
+    if form.validate_on_submit():
+        new_election = Election(
+            title=form.title.data,
+            description=form.description.data,
+            start_date=form.start_date.data,
+            end_date=form.end_date.data
+        )
+        db.session.add(new_election)
+        db.session.commit()
+        flash('Election created successfully!', 'success')
+        return redirect(url_for('admin_web.manage_elections'))
+
+    elections = Election.query.order_by(Election.start_date.desc()).all()
+    return render_template('admin/manage_elections.html', elections=elections, form=form)
+
+# -------------------------
+# Admin View Analytics
+# -------------------------
+@admin_web_bp.route('/analytics', endpoint='view_analytics')
+@login_required
+def view_analytics():
+    if not (current_user.is_superadmin or current_user.role == 'admin'):
+        abort(403)
+
+    total_users = User.query.count()
+    total_votes = Vote.query.count()
+    total_elections = Election.query.count()
+
+    return render_template('admin/analytics.html', 
+                           total_users=total_users, 
+                           total_votes=total_votes, 
+                           total_elections=total_elections)
 
 # -------------------------
 # Voter Dashboard
@@ -102,70 +156,38 @@ def voter_dashboard():
     return render_template('voter/dashboard.html', elections=elections, votes=vote_records)
 
 
-# -------------------------
-# Logout
-# -------------------------
-@web_auth_bp.route('/logout')
+@admin_web_bp.route('/elections/<int:election_id>/edit', methods=['GET', 'POST'], endpoint='edit_election')
 @login_required
-def logout():
-    name = current_user.full_name
-    logout_user()
-    flash(f'{name}, you have logged out successfully.', 'info')
-    return redirect(url_for('web_auth.login'))
-
-
-# -------------------------
-# Admin Manage Elections
-# -------------------------
-@admin_web_bp.route('/manage-elections', endpoint='manage_elections')
-@login_required
-def manage_elections():
-    if not (current_user.is_superadmin or current_user.role == 'admin'):
+def edit_election(election_id):
+    if not current_user.is_superadmin:
         abort(403)
 
-    elections = Election.query.order_by(Election.start_date.desc()).all()
-    return render_template('admin/manage_elections.html', elections=elections)
+    election = Election.query.get_or_404(election_id)
+    form = ElectionForm(obj=election)
 
-
-
-# -------------------------
-# Admin View Analytics
-# -------------------------
-@admin_web_bp.route('/analytics', endpoint='view_analytics')
-@login_required
-def view_analytics():
-    if not (current_user.is_superadmin or current_user.role == 'admin'):
-        abort(403)
-
-    total_users = User.query.count()
-    total_votes = Vote.query.count()
-    total_elections = Election.query.count()
-
-    return render_template('admin/analytics.html', 
-                           total_users=total_users, 
-                           total_votes=total_votes, 
-                           total_elections=total_elections)
-
-
-
-@admin_web_bp.route('/elections/create', methods=['GET', 'POST'], endpoint='create_election')
-@login_required
-def create_election():
-    if not (current_user.is_superadmin or current_user.role == 'admin'):
-        abort(403)
-
-    form = ElectionForm()
     if form.validate_on_submit():
-        election = Election(
-            title=form.title.data,
-            description=form.description.data,
-            start_date=form.start_date.data,
-            end_date=form.end_date.data
-        )
-        db.session.add(election)
+        election.title = form.title.data
+        election.description = form.description.data
+        election.start_date = form.start_date.data
+        election.end_date = form.end_date.data
         db.session.commit()
-        flash('Election created successfully!', 'success')
-        return redirect(url_for('admin_web.dashboard'))
 
-    return render_template('admin/create_election.html', form=form)
+        flash("Election updated successfully!", "success")
+        return redirect(url_for('admin_web.manage_elections'))
+
+    return render_template('admin/edit_election.html', form=form, election=election)
+
+
+@admin_web_bp.route('/elections/<int:election_id>/delete', methods=['POST'], endpoint='delete_election')
+@login_required
+def delete_election(election_id):
+    if not current_user.is_superadmin:
+        abort(403)
+
+    election = Election.query.get_or_404(election_id)
+    db.session.delete(election)
+    db.session.commit()
+
+    flash("Election deleted successfully!", "warning")
+    return redirect(url_for('admin_web.manage_elections'))
 

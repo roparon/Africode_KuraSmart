@@ -3,27 +3,101 @@
 {% block content %}
 <div class="container mt-4">
     <h2 class="mb-4">Manage Elections</h2>
-    {% if elections %}
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for election in elections %}
-                <tr>
-                    <td>{{ election.title }}</td>
-                    <td>{{ election.start_date.strftime('%Y-%m-%d') }}</td>
-                    <td>{{ election.end_date.strftime('%Y-%m-%d') }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>No elections available.</p>
-    {% endif %}
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Election Creation Form -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header fw-bold">Create New Election</div>
+        <div class="card-body">
+            <form method="POST">
+                {{ form.hidden_tag() }}
+
+                <div class="mb-3">
+                    {{ form.title.label(class="form-label") }}
+                    {{ form.title(class="form-control", placeholder="Enter election title") }}
+                    {% for error in form.title.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.description.label(class="form-label") }}
+                    {{ form.description(class="form-control", rows=3, placeholder="Optional description") }}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.start_date.label(class="form-label") }}
+                        {{ form.start_date(class="form-control") }}
+                        {% for error in form.start_date.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.end_date.label(class="form-label") }}
+                        {{ form.end_date(class="form-control") }}
+                        {% for error in form.end_date.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="text-end">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Existing Elections Table -->
+    <div class="card shadow-sm">
+        <div class="card-header fw-bold">Existing Elections</div>
+        <div class="card-body">
+            {% if elections %}
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Description</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for election in elections %}
+                            <tr>
+                                <td>{{ election.title }}</td>
+                                <td>{{ election.description or '—' }}</td>
+                                <td>{{ election.start_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ election.end_date.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    <a href="{{ url_for('admin_web.edit_election', election_id=election.id) }}" class="btn btn-sm btn-warning me-2">Edit</a>
+                                    <form method="POST" action="{{ url_for('admin_web.delete_election', election_id=election.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this election?');">
+                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No elections available.</p>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}

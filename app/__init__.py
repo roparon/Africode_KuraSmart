@@ -26,7 +26,7 @@ def create_app():
     from app.routes.votes import vote_bp
     from app.routes.admin import admin_bp, analytics_bp
     from app.routes.dashboard import dashboard_bp
-    from app.routes.web_auth import web_auth_bp, voter_bp, admin_web_bp  # ✅ include admin_web_bp
+    from app.routes.web_auth import web_auth_bp, voter_bp, admin_web_bp
     from app.routes.main import main_bp
     # from app.routes.super_admin import super_admin_bp
 
