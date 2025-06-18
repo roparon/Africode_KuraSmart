@@ -42,3 +42,5 @@ class ElectionForm(FlaskForm):
             raise ValidationError("End time must be after the start time.")
         elif field.data > self.start_date.data + timedelta(hours=12, minutes=30):
             raise ValidationError("Election duration cannot exceed 12 hours 30 minutes.")
+        
+
