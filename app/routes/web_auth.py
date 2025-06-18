@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app.forms.forms import LoginForm, RegistrationForm, ElectionForm
 from app.models import User, Election, Candidate, Vote, Position
 from app.extensions import db
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Blueprints
 web_auth_bp = Blueprint('web_auth', __name__)
@@ -98,21 +98,41 @@ def manage_elections():
         abort(403)
 
     form = ElectionForm()
+    current_datetime = datetime.now().strftime('%Y-%m-%dT%H:%M')  # For use in HTML input min attribute
 
     if form.validate_on_submit():
-        new_election = Election(
-            title=form.title.data,
-            description=form.description.data,
-            start_date=form.start_date.data,
-            end_date=form.end_date.data
-        )
-        db.session.add(new_election)
-        db.session.commit()
-        flash('Election created successfully!', 'success')
-        return redirect(url_for('admin_web.manage_elections'))
+        start = form.start_date.data
+        end = form.end_date.data
+        now = datetime.now()
+
+        # Check for past start time
+        if start < now:
+            flash('Start date must be in the future or now.', 'danger')
+        # Check that end is after start
+        elif end <= start:
+            flash('End date must be after start date.', 'danger')
+        # Optional: Limit election duration (e.g., max 6 hours)
+        elif (end - start) > timedelta(hours=6):
+            flash('Election duration cannot exceed 6 hours.', 'danger')
+        else:
+            new_election = Election(
+                title=form.title.data,
+                description=form.description.data,
+                start_date=start,
+                end_date=end
+            )
+            db.session.add(new_election)
+            db.session.commit()
+            flash('Election created successfully!', 'success')
+            return redirect(url_for('admin_web.manage_elections'))
 
     elections = Election.query.order_by(Election.start_date.desc()).all()
-    return render_template('admin/manage_elections.html', elections=elections, form=form)
+    return render_template(
+        'admin/manage_elections.html',
+        elections=elections,
+        form=form,
+        current_datetime=current_datetime  # Used in Jinja2 template for min= value
+    )
 
 # -------------------------
 # Admin View Analytics
