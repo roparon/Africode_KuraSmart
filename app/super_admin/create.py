@@ -13,7 +13,8 @@ with app.app_context():
             username='roparon',
             role=UserRole.super_admin,
             password_hash=generate_password_hash('0987654321'),
-            is_verified=True
+            is_verified=True,
+            is_superadmin=True
         )
         db.session.add(super_admin)
         db.session.commit()
