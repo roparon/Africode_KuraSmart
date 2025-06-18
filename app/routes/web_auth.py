@@ -109,7 +109,7 @@ def manage_elections():
             flash('Start date must be in the future or now.', 'danger')
         elif end <= start:
             flash('End date must be after start date.', 'danger')
-        elif (end - start) > timedelta(hours=6):
+        elif (end - start) > timedelta(hours=13):
             flash('Election duration cannot exceed 6 hours.', 'danger')
         else:
             new_election = Election(
@@ -211,3 +211,54 @@ def delete_election(election_id):
 
     flash("Election deleted successfully!", "warning")
     return redirect(url_for('admin_web.manage_elections'))
+
+
+@admin_web_bp.route('/users/<int:user_id>/edit', methods=['PATCH'])
+@login_required
+def update_user_info(user_id):
+    if not (current_user.is_superadmin or current_user.role == UserRole.admin.value):
+        abort(403)
+
+    user = User.query.get_or_404(user_id)
+    data = request.get_json()
+
+    name = data.get('full_name')
+    email = data.get('email')
+
+    if name:
+        user.full_name = name.strip()
+    if email:
+        user.email = email.strip()
+
+    db.session.commit()
+    return {'message': 'User updated successfully'}, 200
+
+
+@admin_web_bp.route('/users/<int:user_id>/role', methods=['PATCH'])
+@login_required
+def update_user_role(user_id):
+    if not current_user.is_superadmin:
+        abort(403)
+
+    user = User.query.get_or_404(user_id)
+    data = request.get_json()
+    new_role = data.get('role')
+
+    if new_role not in [role.value for role in UserRole]:
+        return {'error': 'Invalid role provided'}, 400
+
+    user.role = new_role
+    db.session.commit()
+    return {'message': 'User role updated'}, 200
+
+
+@admin_web_bp.route('/users/<int:user_id>/delete', methods=['DELETE'])
+@login_required
+def delete_user(user_id):
+    if not current_user.is_superadmin:
+        abort(403)
+
+    user = User.query.get_or_404(user_id)
+    db.session.delete(user)
+    db.session.commit()
+    return {'message': 'User deleted'}, 200

@@ -2,6 +2,8 @@ from flask import Flask
 from app.extensions import db, migrate, login_manager
 from app.models import User
 from werkzeug.security import generate_password_hash
+from app.extensions import csrf
+
 
 def create_app():
     app = Flask(__name__, template_folder='templates')
@@ -10,6 +12,8 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
+    csrf.init_app(app)
+
 
     @login_manager.user_loader
     def load_user(user_id):
