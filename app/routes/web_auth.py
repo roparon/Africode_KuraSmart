@@ -126,19 +126,17 @@ def update_user_role(user_id):
         abort(403)
 
     user = User.query.get_or_404(user_id)
-    data = request.get_json()
-
-    if not data:
-        return jsonify({'error': 'No JSON payload received'}), 400
-
-    role = data.get('role')
+    role = request.form.get('role')
 
     if role not in [r.value for r in UserRole]:
-        return jsonify({'error': 'Invalid role'}), 400
+        flash('Invalid role selected.', 'danger')
+        return redirect(url_for('admin_web.manage_users'))
 
     user.role = role
     db.session.commit()
-    return jsonify({'message': 'Role updated'}), 200
+    flash(f"Role for {user.full_name} updated to {role}.", 'success')
+    return redirect(url_for('admin_web.manage_users'))
+
 
 # -------------------------
 # Delete Single User
