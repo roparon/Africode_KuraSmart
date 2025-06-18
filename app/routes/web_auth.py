@@ -48,7 +48,7 @@ def login():
             login_user(user)
             flash(f'Welcome back, {user.full_name}!', 'success')
 
-            if user.is_superadmin or user.role == UserRole.ADMIN.value:
+            if user.is_superadmin or user.role == UserRole.admin.value:
                 return redirect(url_for('admin_web.dashboard'))
             return redirect(url_for('voter.voter_dashboard'))
 
@@ -72,7 +72,7 @@ def logout():
 @admin_web_bp.route('/dashboard', endpoint='dashboard')
 @login_required
 def dashboard():
-    if not (current_user.is_superadmin or current_user.role == UserRole.ADMIN.value):
+    if not (current_user.is_superadmin or current_user.role == UserRole.admin.value):
         abort(403)
     return render_template('admin/dashboard.html')
 
@@ -82,7 +82,7 @@ def dashboard():
 @admin_web_bp.route('/manage-users', endpoint='manage_users')
 @login_required
 def manage_users():
-    if not (current_user.is_superadmin or current_user.role == UserRole.ADMIN.value):
+    if not (current_user.is_superadmin or current_user.role == UserRole.admin.value):
         abort(403)
 
     users = User.query.all()
@@ -137,7 +137,7 @@ def manage_elections():
 @admin_web_bp.route('/analytics', endpoint='view_analytics')
 @login_required
 def view_analytics():
-    if not (current_user.is_superadmin or current_user.role == UserRole.ADMIN.value):
+    if not (current_user.is_superadmin or current_user.role == UserRole.admin.value):
         abort(403)
 
     total_users = User.query.count()
@@ -155,7 +155,7 @@ def view_analytics():
 @voter_bp.route('/dashboard', endpoint='voter_dashboard')
 @login_required
 def voter_dashboard():
-    if current_user.role != UserRole.VOTER.value:
+    if current_user.role != UserRole.voter.value:
         abort(403)
 
     elections = Election.query.filter(Election.end_date >= datetime.utcnow()).all()
