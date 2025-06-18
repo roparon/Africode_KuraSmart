@@ -4,13 +4,16 @@ from app.forms.forms import LoginForm, RegistrationForm, ElectionForm
 from app.models import User, Election, Candidate, Vote, Position
 from app.extensions import db
 from datetime import datetime, timedelta
+from app.enums import UserRole
 
 # Blueprints
 web_auth_bp = Blueprint('web_auth', __name__)
 admin_web_bp = Blueprint('admin_web', __name__, url_prefix='/admin')
 voter_bp = Blueprint('voter', __name__, url_prefix='/voter')
 
+# -------------------------
 # User Registration
+# -------------------------
 @web_auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
@@ -22,7 +25,7 @@ def register():
         user = User(
             full_name=form.full_name.data,
             email=form.email.data,
-            role='voter'
+            role=UserRole.VOTER.value  # ✅ use enum
         )
         user.set_password(form.password.data)
         db.session.add(user)
@@ -33,7 +36,9 @@ def register():
 
     return render_template('register.html', form=form)
 
+# -------------------------
 # User Login
+# -------------------------
 @web_auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -43,15 +48,16 @@ def login():
             login_user(user)
             flash(f'Welcome back, {user.full_name}!', 'success')
 
-            # Role-based redirection
-            if user.is_superadmin or user.role == 'admin':
+            if user.is_superadmin or user.role == UserRole.ADMIN.value:
                 return redirect(url_for('admin_web.dashboard'))
             return redirect(url_for('voter.voter_dashboard'))
 
         flash('Invalid email or password.', 'danger')
     return render_template('login.html', form=form)
 
+# -------------------------
 # Logout
+# -------------------------
 @web_auth_bp.route('/logout')
 @login_required
 def logout():
@@ -66,7 +72,7 @@ def logout():
 @admin_web_bp.route('/dashboard', endpoint='dashboard')
 @login_required
 def dashboard():
-    if not (current_user.is_superadmin or current_user.role == 'admin'):
+    if not (current_user.is_superadmin or current_user.role == UserRole.ADMIN.value):
         abort(403)
     return render_template('admin/dashboard.html')
 
@@ -76,36 +82,33 @@ def dashboard():
 @admin_web_bp.route('/manage-users', endpoint='manage_users')
 @login_required
 def manage_users():
-    if not (current_user.is_superadmin or current_user.role == 'admin'):
+    if not (current_user.is_superadmin or current_user.role == UserRole.ADMIN.value):
         abort(403)
 
     users = User.query.all()
     return render_template('admin/manage_users.html', users=users)
 
 # -------------------------
-# Admin Manage Elections (View + Create)
+# Admin Manage Elections
 # -------------------------
 @admin_web_bp.route('/manage-elections', methods=['GET', 'POST'], endpoint='manage_elections')
 @login_required
 def manage_elections():
-    if not (current_user.is_superadmin or current_user.role == 'admin'):
+    if not (current_user.is_superadmin or current_user.role == UserRole.ADMIN.value):
         abort(403)
 
     form = ElectionForm()
-    current_datetime = datetime.now().strftime('%Y-%m-%dT%H:%M')  # For use in HTML input min attribute
+    current_datetime = datetime.now().strftime('%Y-%m-%dT%H:%M')
 
     if form.validate_on_submit():
         start = form.start_date.data
         end = form.end_date.data
         now = datetime.now()
 
-        # Check for past start time
         if start < now:
             flash('Start date must be in the future or now.', 'danger')
-        # Check that end is after start
         elif end <= start:
             flash('End date must be after start date.', 'danger')
-        # Optional: Limit election duration (e.g., max 6 hours)
         elif (end - start) > timedelta(hours=6):
             flash('Election duration cannot exceed 6 hours.', 'danger')
         else:
@@ -125,7 +128,7 @@ def manage_elections():
         'admin/manage_elections.html',
         elections=elections,
         form=form,
-        current_datetime=current_datetime  # Used in Jinja2 template for min= value
+        current_datetime=current_datetime
     )
 
 # -------------------------
@@ -134,7 +137,7 @@ def manage_elections():
 @admin_web_bp.route('/analytics', endpoint='view_analytics')
 @login_required
 def view_analytics():
-    if not (current_user.is_superadmin or current_user.role == 'admin'):
+    if not (current_user.is_superadmin or current_user.role == UserRole.ADMIN.value):
         abort(403)
 
     total_users = User.query.count()
@@ -152,7 +155,7 @@ def view_analytics():
 @voter_bp.route('/dashboard', endpoint='voter_dashboard')
 @login_required
 def voter_dashboard():
-    if current_user.role != 'voter':
+    if current_user.role != UserRole.VOTER.value:
         abort(403)
 
     elections = Election.query.filter(Election.end_date >= datetime.utcnow()).all()
@@ -169,7 +172,9 @@ def voter_dashboard():
 
     return render_template('voter/dashboard.html', elections=elections, votes=vote_records)
 
-
+# -------------------------
+# Edit Election
+# -------------------------
 @admin_web_bp.route('/elections/<int:election_id>/edit', methods=['GET', 'POST'], endpoint='edit_election')
 @login_required
 def edit_election(election_id):
@@ -191,7 +196,9 @@ def edit_election(election_id):
 
     return render_template('admin/edit_election.html', form=form, election=election)
 
-
+# -------------------------
+# Delete Election
+# -------------------------
 @admin_web_bp.route('/elections/<int:election_id>/delete', methods=['POST'], endpoint='delete_election')
 @login_required
 def delete_election(election_id):
@@ -204,4 +211,3 @@ def delete_election(election_id):
 
     flash("Election deleted successfully!", "warning")
     return redirect(url_for('admin_web.manage_elections'))
-
