@@ -1,19 +1,21 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify, send_file
 from flask_login import login_user, logout_user, login_required, current_user
 from app.forms.forms import LoginForm, RegistrationForm, ElectionForm
 from app.models import User, Election, Candidate, Vote, Position
 from app.extensions import db
-from datetime import datetime, timedelta
 from app.enums import UserRole
+from datetime import datetime, timedelta
+from io import StringIO
+import csv
 
 # Blueprints
 web_auth_bp = Blueprint('web_auth', __name__)
 admin_web_bp = Blueprint('admin_web', __name__, url_prefix='/admin')
 voter_bp = Blueprint('voter', __name__, url_prefix='/voter')
 
-# -------------------------
-# User Registration
-# -------------------------
+# -----------------------------------
+# Registration, Login, Logout Routes
+# -----------------------------------
 @web_auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
@@ -21,24 +23,14 @@ def register():
         if User.query.filter_by(email=form.email.data).first():
             flash('Email is already registered.', 'danger')
             return render_template('register.html', form=form)
-
-        user = User(
-            full_name=form.full_name.data,
-            email=form.email.data,
-            role=UserRole.VOTER.value  # ✅ use enum
-        )
+        user = User(full_name=form.full_name.data, email=form.email.data, role=UserRole.voter.value)
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-
-        flash(f'Welcome {user.full_name}! Registration successful. Please log in.', 'success')
+        flash(f'Welcome {user.full_name}! Registration successful.', 'success')
         return redirect(url_for('web_auth.login'))
-
     return render_template('register.html', form=form)
 
-# -------------------------
-# User Login
-# -------------------------
 @web_auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -47,29 +39,24 @@ def login():
         if user and user.check_password(form.password.data):
             login_user(user)
             flash(f'Welcome back, {user.full_name}!', 'success')
-
             if user.is_superadmin or user.role == UserRole.admin.value:
                 return redirect(url_for('admin_web.dashboard'))
             return redirect(url_for('voter.voter_dashboard'))
-
         flash('Invalid email or password.', 'danger')
     return render_template('login.html', form=form)
 
-# -------------------------
-# Logout
-# -------------------------
 @web_auth_bp.route('/logout')
 @login_required
 def logout():
     name = current_user.full_name
     logout_user()
-    flash(f'{name}, you have logged out successfully.', 'info')
+    flash(f'{name}, you have logged out.', 'info')
     return redirect(url_for('web_auth.login'))
 
 # -------------------------
 # Admin Dashboard
 # -------------------------
-@admin_web_bp.route('/dashboard', endpoint='dashboard')
+@admin_web_bp.route('/dashboard')
 @login_required
 def dashboard():
     if not (current_user.is_superadmin or current_user.role == UserRole.admin.value):
@@ -77,64 +64,203 @@ def dashboard():
     return render_template('admin/dashboard.html')
 
 # -------------------------
-# Admin Manage Users
+# Manage Users
 # -------------------------
-@admin_web_bp.route('/manage-users', endpoint='manage_users')
+@admin_web_bp.route('/manage-users', methods=['GET'])
 @login_required
 def manage_users():
+    search = request.args.get('search', '', type=str)
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+
+    query = User.query
+
+    if search:
+        query = query.filter(
+            db.or_(
+                User.full_name.ilike(f"%{search}%"),
+                User.email.ilike(f"%{search}%")
+            )
+        )
+
+    pagination = query.order_by(User.full_name).paginate(page=page, per_page=per_page, error_out=False)
+    users = pagination.items
+
+    return render_template('admin/manage_users.html',
+                           users=users,
+                           pagination=pagination,
+                           search=search)
+
+# -------------------------
+# Update User Field (name/email)
+# -------------------------
+@admin_web_bp.route('/users/<int:user_id>/edit', methods=['POST'])
+@login_required
+def update_user_field(user_id):
+    if not (current_user.is_superadmin or current_user.role == UserRole.admin.value):
+        return jsonify({'error': 'Forbidden'}), 403
+
+    user = User.query.get_or_404(user_id)
+    data = request.get_json()
+
+    if not data:
+        return jsonify({'error': 'No JSON payload received'}), 400
+
+    field = data.get('field')
+    value = data.get('value')
+
+    if field in ['full_name', 'email']:
+        setattr(user, field, value.strip())
+        db.session.commit()
+        return jsonify({'message': 'Updated'}), 200
+
+    return jsonify({'error': 'Invalid field'}), 400
+
+# -------------------------
+# Change User Role
+# -------------------------
+@admin_web_bp.route('/users/<int:user_id>/role', methods=['POST'])
+@login_required
+def update_user_role(user_id):
+    if not current_user.is_superadmin:
+        abort(403)
+
+    user = User.query.get_or_404(user_id)
+    data = request.get_json()
+
+    if not data:
+        return jsonify({'error': 'No JSON payload received'}), 400
+
+    role = data.get('role')
+
+    if role not in [r.value for r in UserRole]:
+        return jsonify({'error': 'Invalid role'}), 400
+
+    user.role = role
+    db.session.commit()
+    return jsonify({'message': 'Role updated'}), 200
+
+# -------------------------
+# Delete Single User
+# -------------------------
+@admin_web_bp.route('/users/<int:user_id>/delete', methods=['POST'])
+@login_required
+def delete_user(user_id):
+    if not current_user.is_superadmin:
+        abort(403)
+
+    user = User.query.get_or_404(user_id)
+
+    if user.id == current_user.id:
+        flash("You cannot delete yourself.", "danger")
+        return redirect(url_for('admin_web.manage_users'))
+
+    db.session.delete(user)
+    db.session.commit()
+    flash(f"Deleted {user.full_name}", "warning")
+    return redirect(url_for('admin_web.manage_users'))
+
+# -------------------------
+# Bulk Delete Users
+# -------------------------
+@admin_web_bp.route('/users/bulk-delete', methods=['POST'])
+@login_required
+def bulk_delete_users():
+    if not current_user.is_superadmin:
+        abort(403)
+
+    data = request.get_json()
+    ids = data.get('user_ids', [])
+
+    users = User.query.filter(User.id.in_(ids)).all()
+
+    for user in users:
+        if user.id != current_user.id:
+            db.session.delete(user)
+
+    db.session.commit()
+    return jsonify({'message': f'{len(users)} user(s) deleted'}), 200
+
+# -------------------------
+# Export Users to CSV
+# -------------------------
+@admin_web_bp.route('/users/export', methods=['GET'])
+@login_required
+def export_users_csv():
     if not (current_user.is_superadmin or current_user.role == UserRole.admin.value):
         abort(403)
 
-    users = User.query.all()
-    return render_template('admin/manage_users.html', users=users)
+    users = User.query.order_by(User.full_name).all()
+    si = StringIO()
+    cw = csv.writer(si)
+    cw.writerow(['ID', 'Full Name', 'Email', 'Role', 'Verified'])
+
+    for user in users:
+        cw.writerow([
+            user.id,
+            user.full_name,
+            user.email,
+            user.role,
+            'Yes' if user.is_verified else 'No'
+        ])
+
+    si.seek(0)
+    return send_file(
+        StringIO(si.getvalue()),
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='users_export.csv'
+    )
 
 # -------------------------
-# Admin Manage Elections
+# Manage Elections
 # -------------------------
-@admin_web_bp.route('/manage-elections', methods=['GET', 'POST'], endpoint='manage_elections')
+@admin_web_bp.route('/manage-elections', methods=['GET', 'POST'])
 @login_required
 def manage_elections():
-    if not (current_user.is_superadmin or current_user.role == UserRole.ADMIN.value):
+    if not (current_user.is_superadmin or current_user.role == UserRole.admin.value):
         abort(403)
 
     form = ElectionForm()
-    current_datetime = datetime.now().strftime('%Y-%m-%dT%H:%M')
+    now = datetime.now()
+    current_datetime = now.strftime('%Y-%m-%dT%H:%M')
 
     if form.validate_on_submit():
         start = form.start_date.data
         end = form.end_date.data
-        now = datetime.now()
 
         if start < now:
             flash('Start date must be in the future or now.', 'danger')
         elif end <= start:
-            flash('End date must be after start date.', 'danger')
-        elif (end - start) > timedelta(hours=13):
-            flash('Election duration cannot exceed 6 hours.', 'danger')
+            flash('End date must be after start.', 'danger')
+        elif (end - start) > timedelta(hours=6):
+            flash('Election cannot exceed 6 hours.', 'danger')
         else:
-            new_election = Election(
+            election = Election(
                 title=form.title.data,
                 description=form.description.data,
                 start_date=start,
                 end_date=end
             )
-            db.session.add(new_election)
+            db.session.add(election)
             db.session.commit()
-            flash('Election created successfully!', 'success')
+            flash('Election created.', 'success')
             return redirect(url_for('admin_web.manage_elections'))
 
-    elections = Election.query.order_by(Election.start_date.desc()).all()
-    return render_template(
-        'admin/manage_elections.html',
-        elections=elections,
-        form=form,
-        current_datetime=current_datetime
-    )
+    search_title = request.args.get("search_title", "").strip()
+    elections = Election.query.filter(Election.title.ilike(f"{search_title}%")) if search_title else Election.query
+    elections = elections.order_by(Election.start_date.desc()).all()
+
+    return render_template('admin/manage_elections.html',
+                           elections=elections,
+                           form=form,
+                           current_datetime=current_datetime,
+                           search_title=search_title)
 
 # -------------------------
-# Admin View Analytics
+# View Analytics
 # -------------------------
-@admin_web_bp.route('/analytics', endpoint='view_analytics')
+@admin_web_bp.route('/analytics')
 @login_required
 def view_analytics():
     if not (current_user.is_superadmin or current_user.role == UserRole.admin.value):
@@ -144,15 +270,15 @@ def view_analytics():
     total_votes = Vote.query.count()
     total_elections = Election.query.count()
 
-    return render_template('admin/analytics.html', 
-                           total_users=total_users, 
-                           total_votes=total_votes, 
+    return render_template('admin/analytics.html',
+                           total_users=total_users,
+                           total_votes=total_votes,
                            total_elections=total_elections)
 
 # -------------------------
 # Voter Dashboard
 # -------------------------
-@voter_bp.route('/dashboard', endpoint='voter_dashboard')
+@voter_bp.route('/dashboard')
 @login_required
 def voter_dashboard():
     if current_user.role != UserRole.voter.value:
@@ -170,12 +296,14 @@ def voter_dashboard():
             "voted_at": vote.created_at.strftime("%Y-%m-%d %H:%M")
         })
 
-    return render_template('voter/dashboard.html', elections=elections, votes=vote_records)
+    return render_template('voter/dashboard.html',
+                           elections=elections,
+                           votes=vote_records)
 
 # -------------------------
-# Edit Election
+# Edit & Delete Election
 # -------------------------
-@admin_web_bp.route('/elections/<int:election_id>/edit', methods=['GET', 'POST'], endpoint='edit_election')
+@admin_web_bp.route('/elections/<int:election_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_election(election_id):
     if not current_user.is_superadmin:
@@ -190,16 +318,12 @@ def edit_election(election_id):
         election.start_date = form.start_date.data
         election.end_date = form.end_date.data
         db.session.commit()
-
-        flash("Election updated successfully!", "success")
+        flash("Election updated!", "success")
         return redirect(url_for('admin_web.manage_elections'))
 
     return render_template('admin/edit_election.html', form=form, election=election)
 
-# -------------------------
-# Delete Election
-# -------------------------
-@admin_web_bp.route('/elections/<int:election_id>/delete', methods=['POST'], endpoint='delete_election')
+@admin_web_bp.route('/elections/<int:election_id>/delete', methods=['POST'])
 @login_required
 def delete_election(election_id):
     if not current_user.is_superadmin:
@@ -208,57 +332,5 @@ def delete_election(election_id):
     election = Election.query.get_or_404(election_id)
     db.session.delete(election)
     db.session.commit()
-
-    flash("Election deleted successfully!", "warning")
+    flash("Election deleted!", "warning")
     return redirect(url_for('admin_web.manage_elections'))
-
-
-@admin_web_bp.route('/users/<int:user_id>/edit', methods=['PATCH'])
-@login_required
-def update_user_info(user_id):
-    if not (current_user.is_superadmin or current_user.role == UserRole.admin.value):
-        abort(403)
-
-    user = User.query.get_or_404(user_id)
-    data = request.get_json()
-
-    name = data.get('full_name')
-    email = data.get('email')
-
-    if name:
-        user.full_name = name.strip()
-    if email:
-        user.email = email.strip()
-
-    db.session.commit()
-    return {'message': 'User updated successfully'}, 200
-
-
-@admin_web_bp.route('/users/<int:user_id>/role', methods=['PATCH'])
-@login_required
-def update_user_role(user_id):
-    if not current_user.is_superadmin:
-        abort(403)
-
-    user = User.query.get_or_404(user_id)
-    data = request.get_json()
-    new_role = data.get('role')
-
-    if new_role not in [role.value for role in UserRole]:
-        return {'error': 'Invalid role provided'}, 400
-
-    user.role = new_role
-    db.session.commit()
-    return {'message': 'User role updated'}, 200
-
-
-@admin_web_bp.route('/users/<int:user_id>/delete', methods=['DELETE'])
-@login_required
-def delete_user(user_id):
-    if not current_user.is_superadmin:
-        abort(403)
-
-    user = User.query.get_or_404(user_id)
-    db.session.delete(user)
-    db.session.commit()
-    return {'message': 'User deleted'}, 200

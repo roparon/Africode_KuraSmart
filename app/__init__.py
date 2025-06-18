@@ -1,8 +1,7 @@
 from flask import Flask
 from app.extensions import db, migrate, login_manager
 from app.models import User
-from werkzeug.security import generate_password_hash
-from app.extensions import csrf
+from app.extensions import csrf, CSRFProtect
 
 
 def create_app():
@@ -12,6 +11,7 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
+    csrf = CSRFProtect()
     csrf.init_app(app)
 
 

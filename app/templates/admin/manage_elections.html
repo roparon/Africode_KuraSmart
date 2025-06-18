@@ -60,6 +60,20 @@
         </div>
     </div>
 
+    <!-- Search by Title -->
+    <form method="GET" class="mb-3">
+        <div class="input-group">
+            <input 
+                type="text" 
+                name="search_title" 
+                class="form-control" 
+                placeholder="Search by Election Title" 
+                value="{{ request.args.get('search_title', '') }}"
+            >
+            <button class="btn btn-outline-secondary" type="submit">Search</button>
+        </div>
+    </form>
+
     <!-- Existing Elections Table -->
     <div class="card shadow-sm">
         <div class="card-header fw-bold">Existing Elections</div>
@@ -69,6 +83,7 @@
                     <table class="table table-bordered align-middle">
                         <thead class="table-light">
                             <tr>
+                                <th>ID</th>
                                 <th>Title</th>
                                 <th>Description</th>
                                 <th>Start Date</th>
@@ -79,6 +94,7 @@
                         <tbody>
                             {% for election in elections %}
                             <tr>
+                                <td>{{ election.id }}</td>
                                 <td>{{ election.title }}</td>
                                 <td>{{ election.description or '—' }}</td>
                                 <td>{{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</td>
@@ -95,7 +111,7 @@
                     </table>
                 </div>
             {% else %}
-                <p class="text-muted">No elections available.</p>
+                <p class="text-muted">No elections found.</p>
             {% endif %}
         </div>
     </div>
