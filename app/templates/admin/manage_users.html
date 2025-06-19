@@ -50,10 +50,18 @@
                     <td>
                         <form method="POST" action="{{ url_for('admin_web.update_user_role', user_id=user.id) }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <select name="role"  title="Change user role" class="form-select form-select-sm" onchange="this.form.submit()" {% if not current_user.is_superadmin %}disabled{% endif %}>
-                                {% for role in ['superadmin', 'admin', 'voter'] %}
+                            <label for="role-{{ user.id }}" class="visually-hidden">Change role</label>
+                            <select 
+                                id="role-{{ user.id }}" 
+                                name="role" 
+                                class="form-select form-select-sm" 
+                                onchange="this.form.submit()" 
+                                {% if not current_user.is_super_admin %}disabled{% endif %}
+                            >
+                                {% set roles = ['voter', 'candidate', 'admin', 'super_admin'] %}
+                                {% for role in roles %}
                                     <option value="{{ role }}" {% if user.role.value == role %}selected{% endif %}>
-                                        {{ role.title() }}
+                                        {{ role.replace('_', ' ').title() }}
                                     </option>
                                 {% endfor %}
                             </select>
@@ -67,7 +75,7 @@
                         {% endif %}
                     </td>
                     <td>
-                        {% if current_user.is_superadmin %}
+                        {% if current_user.is_super_admin %}
                         <form 
                             method="POST" 
                             action="{{ url_for('admin_web.delete_user', user_id=user.id) }}" 

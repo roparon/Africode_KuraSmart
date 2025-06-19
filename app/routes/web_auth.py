@@ -128,14 +128,16 @@ def update_user_role(user_id):
     user = User.query.get_or_404(user_id)
     role = request.form.get('role')
 
+    # Ensure role is valid
     if role not in [r.value for r in UserRole]:
         flash('Invalid role selected.', 'danger')
         return redirect(url_for('admin_web.manage_users'))
 
     user.role = role
     db.session.commit()
-    flash(f"Role for {user.full_name} updated to {role}.", 'success')
+    flash(f"Role for {user.full_name} updated to {role.title()}.", 'success')
     return redirect(url_for('admin_web.manage_users'))
+
 
 
 # -------------------------
