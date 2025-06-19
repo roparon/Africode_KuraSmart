@@ -8,6 +8,18 @@
         <i class="bi bi-people-fill"></i> Manage Users
     </h3>
 
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
     <!-- Search Bar -->
     <form method="GET" action="{{ url_for('admin_web.manage_users') }}" class="mb-4">
         <input 
@@ -38,15 +50,11 @@
                     <td>
                         <form method="POST" action="{{ url_for('admin_web.update_user_role', user_id=user.id) }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <select 
-                                name="role" 
-                                class="form-select form-select-sm" 
-                                onchange="this.form.submit()" 
-                                {% if not current_user.is_superadmin %}disabled{% endif %}>
-                                {% for role in ['Super Admin', 'Admin', 'Voter'] %}
-                                <option value="{{ role }}" {% if user.role == role %}selected{% endif %}>
-                                    {{ role }}
-                                </option>
+                            <select name="role"  title="Change user role" class="form-select form-select-sm" onchange="this.form.submit()" {% if not current_user.is_superadmin %}disabled{% endif %}>
+                                {% for role in ['superadmin', 'admin', 'voter'] %}
+                                    <option value="{{ role }}" {% if user.role.value == role %}selected{% endif %}>
+                                        {{ role.title() }}
+                                    </option>
                                 {% endfor %}
                             </select>
                         </form>
