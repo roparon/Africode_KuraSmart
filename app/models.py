@@ -61,6 +61,9 @@ class User(db.Model, UserMixin):
     def __repr__(self):
         return f"<User id={self.id}, email='{self.email}', role='{self.role.value}'>"
 
+    def __str__(self):
+        return self.full_name
+
 class Election(db.Model):
     __tablename__ = 'election'
     id = db.Column(db.Integer, primary_key=True)
@@ -80,6 +83,9 @@ class Election(db.Model):
 
     def __repr__(self):
         return f"<Election id={self.id}, title='{self.title}', active={self.is_active}>"
+
+    def __str__(self):
+        return self.title
 
 class Candidate(db.Model):
     __tablename__ = 'candidate'
@@ -119,6 +125,9 @@ class Candidate(db.Model):
         return (f"<Candidate id={self.id}, full_name='{self.full_name}', "
                 f"position='{self.position}', approved={self.approved}>")
 
+    def __str__(self):
+        return self.full_name
+
 class Position(db.Model):
     __tablename__ = 'position'
 
@@ -133,6 +142,9 @@ class Position(db.Model):
 
     def __repr__(self):
         return f"<Position id={self.id}, name='{self.name}', election_id={self.election_id}>"
+
+    def __str__(self):
+        return self.name
 
 class Vote(db.Model):
     __tablename__ = 'vote'
@@ -156,6 +168,9 @@ class Vote(db.Model):
         return (f"<Vote id={self.id}, voter_id={self.voter_id}, election_id={self.election_id}, "
                 f"position_id={self.position_id}, candidate_id={self.candidate_id}>")
 
+    def __str__(self):
+        return f"Vote by User {self.voter_id} for Candidate {self.candidate_id} in Election {self.election_id}"
+
 class VerificationRequest(db.Model):
     __tablename__ = 'verification_requests'
     id = db.Column(db.Integer, primary_key=True)
@@ -168,3 +183,6 @@ class VerificationRequest(db.Model):
 
     def __repr__(self):
         return (f"<VerificationRequest id={self.id}, user_id={self.user_id}, status='{self.status}'>")
+
+    def __str__(self):
+        return f"VerificationRequest by User {self.user_id} ({self.status})"
