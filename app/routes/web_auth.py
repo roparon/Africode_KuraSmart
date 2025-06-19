@@ -141,8 +141,8 @@ def update_user_role(user_id):
     flash(f"Role for {user.full_name} updated to {role.title()}.", 'success')
     return redirect(url_for('admin_web.manage_users'))
 
-
-# Verify User
+# -------------------------
+# Verify/Unverify User
 # -------------------------
 @admin_web_bp.route('/users/<int:user_id>/verify', methods=['POST'])
 @login_required
@@ -169,8 +169,6 @@ def unverify_user(user_id):
         db.session.commit()
         flash(f'Verification revoked for {user.full_name}.', 'warning')
     return redirect(url_for('admin_web.manage_users'))
-
-
 
 # -------------------------
 # Delete Single User
@@ -273,13 +271,14 @@ def manage_elections():
                 description=form.description.data,
                 start_date=start,
                 end_date=end,
-                status=ElectionStatusEnum.INACTIVE)  # default value
+                status=ElectionStatusEnum.INACTIVE
+            )
             db.session.add(election)
             db.session.commit()
             flash('Election created and set to INACTIVE.', 'success')
             return redirect(url_for('admin_web.manage_elections'))
 
-    # Optional auto-update of status based on time
+    # Auto-update status based on time
     elections = Election.query.all()
     for election in elections:
         if election.status not in [ElectionStatusEnum.ENDED, ElectionStatusEnum.PAUSED]:
@@ -300,15 +299,15 @@ def manage_elections():
                            search_title=search_title,
                            now=now)
 
-
-
-
 @admin_web_bp.route('/elections/<int:election_id>/activate', methods=['POST'])
 @login_required
 def activate_election(election_id):
     if not current_user.is_superadmin:
         abort(403)
     election = Election.query.get_or_404(election_id)
+    if election.status == ElectionStatusEnum.ENDED:
+        flash("Cannot activate an ended election.", "danger")
+        return redirect(url_for('admin_web.manage_elections'))
     election.status = ElectionStatusEnum.ACTIVE
     db.session.commit()
     flash(f"Election '{election.title}' activated.", "success")
@@ -320,6 +319,9 @@ def pause_election(election_id):
     if not current_user.is_superadmin:
         abort(403)
     election = Election.query.get_or_404(election_id)
+    if election.status == ElectionStatusEnum.ENDED:
+        flash("Cannot pause an ended election.", "danger")
+        return redirect(url_for('admin_web.manage_elections'))
     election.status = ElectionStatusEnum.PAUSED
     db.session.commit()
     flash(f"Election '{election.title}' paused.", "warning")
@@ -331,6 +333,9 @@ def end_election(election_id):
     if not current_user.is_superadmin:
         abort(403)
     election = Election.query.get_or_404(election_id)
+    if election.status == ElectionStatusEnum.ENDED:
+        flash("Election is already ended.", "info")
+        return redirect(url_for('admin_web.manage_elections'))
     election.status = ElectionStatusEnum.ENDED
     db.session.commit()
     flash(f"Election '{election.title}' ended.", "danger")
@@ -342,12 +347,13 @@ def deactivate_election(election_id):
     if not current_user.is_superadmin:
         abort(403)
     election = Election.query.get_or_404(election_id)
+    if election.status == ElectionStatusEnum.ENDED:
+        flash("Cannot deactivate an ended election.", "danger")
+        return redirect(url_for('admin_web.manage_elections'))
     election.status = ElectionStatusEnum.INACTIVE
     db.session.commit()
     flash(f"Election '{election.title}' deactivated.", "info")
     return redirect(url_for('admin_web.manage_elections'))
-
-
 
 # -------------------------
 # View Analytics

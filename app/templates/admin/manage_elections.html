@@ -157,6 +157,13 @@
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <button type="submit" class="btn btn-sm btn-dark">End</button>
                                         </form>
+                                    {% elif status == 'INACTIVE' %}
+                                        <!-- Activate -->
+                                        <form method="POST"
+                                              action="{{ url_for('admin_web.activate_election', election_id=election.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-success">Activate</button>
+                                        </form>
                                     {% endif %}
                                 </div>
                             </td>
