@@ -74,7 +74,7 @@ class Election(db.Model):
     start_date = db.Column(db.DateTime, nullable=False)
     end_date = db.Column(db.DateTime, nullable=False)
     is_active = db.Column(db.Boolean, default=True)
-    status = db.Column(db.Enum(ElectionStatusEnum), default=ElectionStatusEnum.ACTIVE)
+    status = db.Column(db.Enum(ElectionStatusEnum), nullable=False, default=ElectionStatusEnum.INACTIVE)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=func.now())
     deactivated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
