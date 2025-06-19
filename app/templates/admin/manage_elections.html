@@ -101,7 +101,10 @@
                                 <td>{{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</td>
                                 <td>
                                     <a href="{{ url_for('admin_web.edit_election', election_id=election.id) }}" class="btn btn-sm btn-warning me-2">Edit</a>
+                                    
+                                    <!-- Delete Form with CSRF Token -->
                                     <form method="POST" action="{{ url_for('admin_web.delete_election', election_id=election.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this election?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                     </form>
                                 </td>

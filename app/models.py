@@ -20,20 +20,15 @@ class User(db.Model, UserMixin):
     full_name = db.Column(db.String(120), nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     is_superadmin = db.Column(db.Boolean, default=False)
-
-
     role = db.Column(db.Enum(UserRole), default=UserRole.voter, nullable=False, index=True)
-
     username = db.Column(db.String(80), unique=True, nullable=True)
     id_number = db.Column(db.String(20), unique=True, nullable=True)
     county = db.Column(db.String(100), nullable=True)
     constituency = db.Column(db.String(100), nullable=True)
     ward = db.Column(db.String(100), nullable=True)
     sub_location = db.Column(db.String(100), nullable=True)
-
     is_verified = db.Column(db.Boolean, default=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
     # Relationships
     candidates = db.relationship('Candidate', back_populates='user')
     verification_requests = db.relationship('VerificationRequest', back_populates='user')

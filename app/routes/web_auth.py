@@ -37,6 +37,9 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user and user.check_password(form.password.data):
+            if not user.is_verified:
+                flash('Your account is pending verification by an admin.', 'warning')
+                return redirect(url_for('web_auth.login'))
             login_user(user)
             flash(f'Welcome back, {user.full_name}!', 'success')
             if user.is_superadmin or user.role == UserRole.admin.value:
@@ -139,6 +142,21 @@ def update_user_role(user_id):
     return redirect(url_for('admin_web.manage_users'))
 
 
+# Verify User
+# -------------------------
+@admin_web_bp.route('/users/<int:user_id>/verify', methods=['POST'])
+@login_required
+def verify_user(user_id):
+    if not current_user.is_superadmin:
+        abort(403)
+
+    user = User.query.get_or_404(user_id)
+    user.is_verified = True
+    db.session.commit()
+    flash(f"User {user.full_name} has been verified.", "success")
+    return redirect(url_for('admin_web.manage_users'))
+
+
 
 # -------------------------
 # Delete Single User
@@ -233,8 +251,8 @@ def manage_elections():
             flash('Start date must be in the future or now.', 'danger')
         elif end <= start:
             flash('End date must be after start.', 'danger')
-        elif (end - start) > timedelta(hours=6):
-            flash('Election cannot exceed 6 hours.', 'danger')
+        elif (end - start) > timedelta(hours=12):
+            flash('Election cannot exceed 12 hours.', 'danger')
         else:
             election = Election(
                 title=form.title.data,
