@@ -415,6 +415,7 @@ def edit_election(election_id):
         election.description = form.description.data
         election.start_date = form.start_date.data
         election.end_date = form.end_date.data
+        election.status = ElectionStatusEnum.ACTIVE
         db.session.commit()
         flash("Election updated!", "success")
         return redirect(url_for('admin_web.manage_elections'))
@@ -426,7 +427,6 @@ def edit_election(election_id):
 def delete_election(election_id):
     if not current_user.is_superadmin:
         abort(403)
-
     election = Election.query.get_or_404(election_id)
     db.session.delete(election)
     db.session.commit()
