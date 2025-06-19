@@ -61,6 +61,9 @@ class User(db.Model, UserMixin):
     def __repr__(self):
         return f"<User id={self.id}, email='{self.email}', role='{self.role.value}'>"
 
+    def __str__(self):
+        return self.full_name
+
 class Election(db.Model):
     __tablename__ = 'election'
     id = db.Column(db.Integer, primary_key=True)
@@ -73,12 +76,16 @@ class Election(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=func.now())
     deactivated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+
     candidates = db.relationship('Candidate', back_populates='election', lazy='dynamic')
     positions = db.relationship('Position', back_populates='election', lazy='dynamic', cascade="all, delete-orphan")
     votes = db.relationship('Vote', back_populates='election', lazy='dynamic')
 
     def __repr__(self):
         return f"<Election id={self.id}, title='{self.title}', active={self.is_active}>"
+
+    def __str__(self):
+        return self.title
 
 class Candidate(db.Model):
     __tablename__ = 'candidate'
@@ -118,6 +125,9 @@ class Candidate(db.Model):
         return (f"<Candidate id={self.id}, full_name='{self.full_name}', "
                 f"position='{self.position}', approved={self.approved}>")
 
+    def __str__(self):
+        return self.full_name
+
 class Position(db.Model):
     __tablename__ = 'position'
 
@@ -125,12 +135,16 @@ class Position(db.Model):
     election_id = db.Column(db.Integer, db.ForeignKey('election.id', ondelete='CASCADE'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
     election = db.relationship('Election', back_populates='positions')
     candidates = db.relationship('Candidate', back_populates='position_rel', lazy='dynamic', cascade="all, delete-orphan")
     votes = db.relationship('Vote', back_populates='position', lazy='dynamic', cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Position id={self.id}, name='{self.name}', election_id={self.election_id}>"
+
+    def __str__(self):
+        return self.name
 
 class Vote(db.Model):
     __tablename__ = 'vote'
@@ -140,6 +154,7 @@ class Vote(db.Model):
     candidate_id = db.Column(db.Integer, db.ForeignKey('candidate.id'), nullable=False)
     position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
     voter = db.relationship('User', back_populates='votes')
     election = db.relationship('Election', back_populates='votes')
     candidate = db.relationship('Candidate', back_populates='votes')
@@ -153,6 +168,9 @@ class Vote(db.Model):
         return (f"<Vote id={self.id}, voter_id={self.voter_id}, election_id={self.election_id}, "
                 f"position_id={self.position_id}, candidate_id={self.candidate_id}>")
 
+    def __str__(self):
+        return f"Vote by User {self.voter_id} for Candidate {self.candidate_id} in Election {self.election_id}"
+
 class VerificationRequest(db.Model):
     __tablename__ = 'verification_requests'
     id = db.Column(db.Integer, primary_key=True)
@@ -160,7 +178,11 @@ class VerificationRequest(db.Model):
     status = db.Column(db.String(50), default='pending')  # pending, approved, rejected
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     reviewed_at = db.Column(db.DateTime)
+
     user = db.relationship('User', back_populates='verification_requests')
 
     def __repr__(self):
         return (f"<VerificationRequest id={self.id}, user_id={self.user_id}, status='{self.status}'>")
+
+    def __str__(self):
+        return f"VerificationRequest by User {self.user_id} ({self.status}) on {self.submitted_at.isoformat() if self.submitted_at else 'unknown date'}"
