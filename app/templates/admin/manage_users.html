@@ -4,124 +4,131 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h3 class="text-center mb-4">
-        <i class="bi bi-people-fill"></i> Manage Users
-    </h3>
+  <h3 class="text-center mb-4">
+    <i class="bi bi-people-fill"></i> Manage Users
+  </h3>
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-
-    <!-- Search Bar -->
-    <form method="GET" action="{{ url_for('admin_web.manage_users') }}" class="mb-4">
-        <input 
-            type="text" 
-            name="search" 
-            class="form-control" 
-            placeholder="Search users by name or email..." 
-            value="{{ search }}">
-    </form>
-
-    <!-- Users Table -->
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped text-center align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th>Full Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Verified</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in users %}
-                <tr>
-                    <td>{{ user.full_name }}</td>
-                    <td>{{ user.email }}</td>
-                    <td>
-                        <form method="POST" action="{{ url_for('admin_web.update_user_role', user_id=user.id) }}">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <label for="role-{{ user.id }}" class="visually-hidden">Change role</label>
-                            <select 
-                                id="role-{{ user.id }}" 
-                                name="role" 
-                                class="form-select form-select-sm" 
-                                onchange="this.form.submit()" 
-                                {% if not current_user.is_super_admin %}disabled{% endif %}
-                            >
-                                {% set roles = ['voter', 'candidate', 'admin', 'super_admin'] %}
-                                {% for role in roles %}
-                                    <option value="{{ role }}" {% if user.role.value == role %}selected{% endif %}>
-                                        {{ role.replace('_', ' ').title() }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </form>
-                    </td>
-                    <td>
-                        {% if user.is_verified %}
-                            <span class="text-success">&#10003;</span>
-                        {% else %}
-                            <span class="text-danger">&#10007;</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if current_user.is_super_admin %}
-                        <form 
-                            method="POST" 
-                            action="{{ url_for('admin_web.delete_user', user_id=user.id) }}" 
-                            onsubmit="return confirm('Are you sure you want to delete {{ user.full_name }}?');">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                        </form>
-                        {% else %}
-                        <span class="text-muted">Restricted</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Pagination -->
-    {% if pagination.pages > 1 %}
-    <nav aria-label="User pagination">
-        <ul class="pagination justify-content-center mt-4">
-            {% if pagination.has_prev %}
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('admin_web.manage_users', page=pagination.prev_num, search=search) }}">
-                    Previous
-                </a>
-            </li>
-            {% endif %}
-            {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-            {% if p %}
-            <li class="page-item {% if pagination.page == p %}active{% endif %}">
-                <a class="page-link" href="{{ url_for('admin_web.manage_users', page=p, search=search) }}">{{ p }}</a>
-            </li>
-            {% else %}
-            <li class="page-item disabled"><span class="page-link">…</span></li>
-            {% endif %}
-            {% endfor %}
-            {% if pagination.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('admin_web.manage_users', page=pagination.next_num, search=search) }}">
-                    Next
-                </a>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
     {% endif %}
+  {% endwith %}
+
+  <!-- Search Bar -->
+  <form method="GET" action="{{ url_for('admin_web.manage_users') }}" class="mb-4">
+    <input
+      type="text" name="search"
+      class="form-control"
+      placeholder="Search users by name or email..."
+      value="{{ search or '' }}"
+    >
+  </form>
+
+  <!-- Users Table -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped text-center align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>Full Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Verified</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td>{{ user.full_name }}</td>
+          <td>{{ user.email }}</td>
+          <td>
+            {% if user.role.value != 'super_admin' %}
+              <form method="POST" action="{{ url_for('admin_web.update_user_role', user_id=user.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label for="role-{{ user.id }}" class="visually-hidden">Role</label>
+                <select id="role-{{ user.id }}" name="role"
+                  class="form-select form-select-sm"
+                  onchange="this.form.submit()"
+                  title="Change user role"
+                  {% if not current_user.is_super_admin %}disabled{% endif %}
+                >
+                  {% for role_val in ['voter', 'candidate', 'admin', 'super_admin'] %}
+                    <option value="{{ role_val }}" {% if user.role.value == role_val %}selected{% endif %}>
+                      {{ role_val.replace('_', ' ').title() }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </form>
+            {% else %}
+              <span class="fw-bold">Super Admin</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if user.is_verified %}
+              <span class="text-success">&#10003;</span>
+            {% else %}
+              <span class="text-danger">&#10007;</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if current_user.is_super_admin %}
+              <form method="POST" action="{{ url_for('admin_web.delete_user', user_id=user.id) }}"
+                    onsubmit="return confirm('Are you sure you want to delete {{ user.full_name }}?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+              </form>
+            {% else %}
+              <span class="text-muted">Restricted</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if pagination.pages > 1 %}
+    <nav aria-label="User pagination">
+      <ul class="pagination justify-content-center mt-4">
+        {% if pagination.has_prev %}
+          <li class="page-item">
+            <a class="page-link"
+               href="{{ url_for('admin_web.manage_users', page=pagination.prev_num, search=search) }}">
+              Previous
+            </a>
+          </li>
+        {% endif %}
+
+        {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+          {% if p %}
+            <li class="page-item {% if pagination.page == p %}active{% endif %}">
+              <a class="page-link"
+                 href="{{ url_for('admin_web.manage_users', page=p, search=search) }}">
+                {{ p }}
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+          {% endif %}
+        {% endfor %}
+
+        {% if pagination.has_next %}
+          <li class="page-item">
+            <a class="page-link"
+               href="{{ url_for('admin_web.manage_users', page=pagination.next_num, search=search) }}">
+              Next
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
 </div>
 {% endblock %}
