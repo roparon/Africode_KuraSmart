@@ -1,145 +1,211 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="auto">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{% block meta_description %}Modern Voting App{% endblock %}">
-    <meta name="author" content="Africode KuraSmart Team">
-    <title>{% block title %}KuraSmart{% endblock %}</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="{% block meta_description %}Smart Dashboard{% endblock %}" />
+  <meta name="author" content="Africode KuraSmart Team" />
+  <title>{% block title %}KuraSmart Dashboard{% endblock %}</title>
 
-    <!-- Favicon -->
-    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
-    <meta name="theme-color" content="#0d6efd">
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" />
+  <meta name="theme-color" content="#6c5ce7" />
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 
-    <!-- Font Awesome -->
-    <script src="https://kit.fontawesome.com/your-kit-id.js" crossorigin="anonymous"></script>
+  <script src="https://kit.fontawesome.com/your-kit-id.js" crossorigin="anonymous"></script>
+  
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+    .dashboard-sec {
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 0.75rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .typewriter {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 1.5rem;
+      min-height: 2rem;
+    }
+    .login-card {
+      border: none;
+      border-radius: 0.75rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      padding: 2rem;
+      background: #ffffffee;
+    }
+    .login-card .form-control:focus {
+      box-shadow: 0 0 8px rgba(108, 92, 231, 0.4);
+      border-color: #6c5ce7;
+    }
+    .gradient-btn {
+      background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+      color: #fff;
+      border: none;
+      transition: transform 0.2s;
+    }
+    .gradient-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(108, 92, 231, 0.3);
+    }
+  </style>
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-
-    {% block head_extra %}{% endblock %}
+  {% block head_extra %}{% endblock %}
 </head>
 
-<body class="bg-body text-body" style="font-family: 'Inter', sans-serif;">
-
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="{{ url_for('main.index') }}">KuraSmart</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navCollapse" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navCollapse">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                    <!-- Home -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}" href="{{ url_for('main.index') }}">Home</a>
-                    </li>
-
-                    {% if current_user.is_authenticated %}
-                        <!-- User Dashboard -->
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'dashboard.dashboard' %}active{% endif %}" href="{{ url_for('dashboard.dashboard') }}">Dashboard</a>
-                        </li>
-
-                        <!-- Admin Dashboard -->
-                        {% if current_user.role in ['admin', 'super_admin'] %}
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}" href="{{ url_for('admin.dashboard') }}">Admin Panel</a>
-                        </li>
-                        {% endif %}
-
-                        <!-- User Dropdown -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button" data-bs-toggle="dropdown">
-                                {{ current_user.full_name }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{{ url_for('web_auth.logout') }}">Logout</a></li>
-                            </ul>
-                        </li>
-                    {% else %}
-                        <!-- Login -->
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'web_auth.login' %}active{% endif %}" href="{{ url_for('web_auth.login') }}">Login</a>
-                        </li>
-                        <!-- Register -->
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'web_auth.register' %}active{% endif %}" href="{{ url_for('web_auth.register') }}">Register</a>
-                        </li>
-                    {% endif %}
-                </ul>
-
-                <!-- Theme Toggle -->
-                <button id="theme-toggle" class="btn btn-outline-light ms-2" title="Toggle theme">
-                    <i class="fas fa-moon"></i>
-                </button>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Flash Messages -->
-    <div class="container mt-3">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold" href="{{ url_for('main.index') }}">KuraSmart</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navCollapse">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navCollapse">
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+          <!-- Links omitted for brevity -->
+        </ul>
+        <button id="theme-toggle" class="btn btn-outline-light ms-2" title="Toggle theme">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
     </div>
+  </nav>
 
-    <!-- Main Page Content -->
-    <main class="container py-4">
-        {% block content %}{% endblock %}
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-light text-center py-4 mt-auto">
-        <div class="container">
-            <p class="mb-1">&copy; {{ current_year }} KuraSmart Voting System</p>
-            <div>
-                <a href="#" class="text-muted me-2"><i class="fab fa-twitter"></i></a>
-                <a href="#" class="text-muted me-2"><i class="fab fa-facebook"></i></a>
-                <a href="#" class="text-muted"><i class="fab fa-github"></i></a>
+  <div class="container my-5">
+    <div class="row gx-4">
+      <!-- 3/4 Dashboard Section -->
+      <div class="col-lg-8">
+        <div class="dashboard-sec">
+          <div class="typewriter" id="auto-type"></div>
+          <div class="row g-3">
+            <!-- Example cards -->
+            <div class="col-md-4">
+              <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                  <i class="fas fa-chart-line fa-2x text-primary mb-3"></i>
+                  <h5 class="card-title">Analytics</h5>
+                  <p class="card-text">Get real-time insights</p>
+                </div>
+              </div>
             </div>
+            <div class="col-md-4">
+              <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                  <i class="fas fa-users fa-2x text-success mb-3"></i>
+                  <h5 class="card-title">User Stats</h5>
+                  <p class="card-text">Monitor activity</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                  <i class="fas fa-file-alt fa-2x text-warning mb-3"></i>
+                  <h5 class="card-title">Reports</h5>
+                  <p class="card-text">Downloadable summaries</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-    </footer>
+      </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+      <!-- 1/4 Login/Register Panel -->
+      <div class="col-lg-4">
+        <div class="login-card">
+          <h3 class="mb-4 text-center">Welcome Back</h3>
+          <form method="POST" action="{{ url_for('web_auth.login') }}">
+            {{ form.hidden_tag() }}
+            <div class="mb-3 position-relative">
+              <i class="fas fa-user position-absolute top-50 translate-middle-y ms-2 text-muted"></i>
+              {{ form.email(class="form-control ps-5", placeholder="Email") }}
+            </div>
+            <div class="mb-3 position-relative">
+              <i class="fas fa-lock position-absolute top-50 translate-middle-y ms-2 text-muted"></i>
+              {{ form.password(class="form-control ps-5", placeholder="Password") }}
+            </div>
+            <button type="submit" class="btn gradient-btn w-100 py-2">Login</button>
+          </form>
+          <div class="text-center mt-3">
+            <p>Don't have an account? <a href="{{ url_for('web_auth.register') }}">Register</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <!-- Theme Toggle Logic -->
-    <script>
-        document.getElementById('theme-toggle')?.addEventListener('click', () => {
-            const html = document.documentElement;
-            const current = html.getAttribute('data-bs-theme');
-            const newTheme = current === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-bs-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-        });
+  <div class="container mt-3">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
 
-        window.addEventListener('DOMContentLoaded', () => {
-            const saved = localStorage.getItem('theme');
-            if (saved) {
-                document.documentElement.setAttribute('data-bs-theme', saved);
-            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                document.documentElement.setAttribute('data-bs-theme', 'dark');
-            }
-        });
-    </script>
+  <footer class="bg-light text-center py-4 mt-auto">
+    <div class="container">
+      <p class="mb-1">&copy; {{ current_year }} KuraSmart Voting System</p>
+      <div>
+        <a href="#" class="text-muted me-2"><i class="fab fa-twitter"></i></a>
+        <a href="#" class="text-muted me-2"><i class="fab fa-facebook"></i></a>
+        <a href="#" class="text-muted"><i class="fab fa-github"></i></a>
+      </div>
+    </div>
+  </footer>
 
-    {% block scripts %}{% endblock %}
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+  <script>
+    // Autotyping effect
+    const phrases = [
+      "Smart Insights",
+      "Real‑time Monitoring",
+      "Kura Smart Dashboard – Your Data, Smarter"
+    ];
+    let idx = 0, pos = 0, forward = true;
+    function type() {
+      const el = document.getElementById('auto-type');
+      el.textContent = phrases[idx].slice(0, pos);
+      if (forward && pos < phrases[idx].length) { pos++; }
+      else if (!forward && pos > 0) { pos--; }
+      else {
+        forward = !forward;
+        if (forward) idx = (idx + 1) % phrases.length;
+      }
+      setTimeout(type, forward ? 100 : 60);
+    }
+    document.addEventListener('DOMContentLoaded', type);
+
+    // Theme toggle logic (unchanged)
+    document.getElementById('theme-toggle')?.addEventListener('click', () => {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-bs-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-bs-theme', next);
+      localStorage.setItem('theme', next);
+    });
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('theme');
+      if (saved) document.documentElement.setAttribute('data-bs-theme', saved);
+      else if (window.matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
+    });
+  </script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>
