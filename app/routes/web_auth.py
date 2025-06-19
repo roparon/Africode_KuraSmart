@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify, send_file
 from flask_login import login_user, logout_user, login_required, current_user
 from app.forms.forms import LoginForm, RegistrationForm, ElectionForm
-from app.models import User, Election, Candidate, Vote, Position
+from app.models import User, Election, Candidate, Vote, Position, db
 from app.extensions import db
 from app.enums import UserRole
 from datetime import datetime, timedelta
@@ -156,7 +156,7 @@ def verify_user(user_id):
     flash(f"User {user.full_name} has been verified.", "success")
     return redirect(url_for('admin_web.manage_users'))
 
-
+@admin_web_bp.route('/users/<int:user_id>/unverify', methods=['POST'])
 @login_required
 def unverify_user(user_id):
     if not current_user.is_super_admin:

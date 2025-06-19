@@ -2,14 +2,23 @@ from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db
+from app.enums import ElectionStatusEnum
 from sqlalchemy.sql import func
 import enum
+from enum import Enum
+
 
 class UserRole(enum.Enum):
     voter = "voter"
     candidate = "candidate"
     admin = "admin"
     super_admin = "super_admin"
+
+class ElectionStatus(Enum):
+    ACTIVE = "active"
+    PAUSED = "paused"
+    ENDED = "ended"
+
 
 
 class User(db.Model, UserMixin):
@@ -65,6 +74,7 @@ class Election(db.Model):
     start_date = db.Column(db.DateTime, nullable=False)
     end_date = db.Column(db.DateTime, nullable=False)
     is_active = db.Column(db.Boolean, default=True)
+    status = db.Column(db.Enum(ElectionStatusEnum), default=ElectionStatusEnum.ACTIVE)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=func.now())
     deactivated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
