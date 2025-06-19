@@ -95,10 +95,10 @@
                         {% for election in elections %}
                         {% set status = election.status.value if election.status else None %}
                         {% set status_color = {
-                            'INACTIVE': 'secondary',
-                            'ACTIVE': 'success',
-                            'PAUSED': 'warning',
-                            'ENDED': 'danger'
+                            'inactive': 'secondary',
+                            'active': 'success',
+                            'paused': 'warning',
+                            'ended': 'danger'
                         } %}
                         <tr>
                             <td>{{ election.id }}</td>

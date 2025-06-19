@@ -406,9 +406,12 @@ def voter_dashboard():
 def edit_election(election_id):
     if not current_user.is_superadmin:
         abort(403)
-
     election = Election.query.get_or_404(election_id)
     form = ElectionForm(obj=election)
+    now = datetime.now()
+    if election.status != ElectionStatusEnum.ENDED and now >= election.end_date:
+        election.status = ElectionStatusEnum.ENDED
+        db.session.commit()
 
     if form.validate_on_submit():
         election.title = form.title.data

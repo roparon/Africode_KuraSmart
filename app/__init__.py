@@ -1,7 +1,7 @@
 from flask import Flask
 from app.extensions import db, migrate, login_manager
 from app.models import User
-from app.extensions import csrf, CSRFProtect
+from app.extensions import CSRFProtect
 
 
 def create_app():
