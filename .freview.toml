@@ -1,0 +1,31 @@
+# FReview Configuration File
+# https://github.com/ronoh48/freview
+
+[freview]
+# Directories to scan for models (relative to project root)
+model_dirs = ["models", "app/models", "src/models"]
+
+# File patterns
+include_patterns = ["*.py"]
+exclude_patterns = ["__pycache__", "*.pyc", "test_*", "*_test.py"]
+
+# Naming convention patterns (regex)
+class_name_pattern = "^[A-Z][a-zA-Z0-9]+$"
+table_name_pattern = "^[a-z][a-z0-9_]*$"
+
+# Skip specific checks
+# Available: unused_models, circular_imports, repr_methods, str_methods
+skip_checks = []
+
+# Severity settings
+error_as_warning = false
+warning_as_error = false
+
+# Output settings
+max_issues_per_file = 50
+show_success_messages = true
+
+# Model analysis settings
+check_repr_methods = true
+check_str_methods = true
+require_docstrings = false
