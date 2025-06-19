@@ -415,12 +415,15 @@ def edit_election(election_id):
         election.description = form.description.data
         election.start_date = form.start_date.data
         election.end_date = form.end_date.data
-        election.status = ElectionStatusEnum.ACTIVE
+        new_status = request.form.get('status')
+        if new_status in [e.value for e in ElectionStatusEnum]:
+            election.status = ElectionStatusEnum(new_status)
         db.session.commit()
         flash("Election updated!", "success")
         return redirect(url_for('admin_web.manage_elections'))
 
     return render_template('admin/edit_election.html', form=form, election=election)
+
 
 @admin_web_bp.route('/elections/<int:election_id>/delete', methods=['POST'])
 @login_required
