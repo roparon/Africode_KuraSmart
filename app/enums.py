@@ -7,7 +7,8 @@ class UserRole(enum.Enum):
     admin = "admin"
     super_admin = "super_admin"
 
-class ElectionStatusEnum(Enum):
-    ACTIVE = 'active'
-    PAUSED = 'paused'
-    ENDED = 'ended'
+class ElectionStatusEnum(str, Enum):
+    INACTIVE = "inactive"
+    ACTIVE = "active"
+    PAUSED = "paused"
+    ENDED = "ended"

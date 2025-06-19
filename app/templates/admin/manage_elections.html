@@ -1,8 +1,9 @@
 {% extends "base.html" %}
+{% block title %}Manage Elections{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h2 class="mb-4">Manage Elections</h2>
+    <h2 class="mb-4"><i class="bi bi-check2-square me-2"></i>Manage Elections</h2>
 
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -16,8 +17,8 @@
       {% endif %}
     {% endwith %}
 
-    <!-- Election Creation Form -->
-    <div class="card mb-4 shadow-sm">
+    <!-- Create Election Form -->
+    <div class="card shadow-sm mb-4">
         <div class="card-header fw-bold">Create New Election</div>
         <div class="card-body">
             <form method="POST">
@@ -60,61 +61,112 @@
         </div>
     </div>
 
-    <!-- Search by Title -->
-    <form method="GET" class="mb-3">
-        <div class="input-group">
-            <input 
-                type="text" 
-                name="search_title" 
-                class="form-control" 
-                placeholder="Search by Election Title" 
-                value="{{ request.args.get('search_title', '') }}"
-            >
-            <button class="btn btn-outline-secondary" type="submit">Search</button>
-        </div>
+    <!-- Search Form -->
+    <form method="GET" class="input-group mb-4">
+        <input 
+            type="text" 
+            name="search_title" 
+            class="form-control" 
+            placeholder="Search by Election Title" 
+            value="{{ search_title }}"
+        >
+        <button class="btn btn-outline-secondary" type="submit">Search</button>
     </form>
 
-    <!-- Existing Elections Table -->
+    <!-- Elections Table -->
     <div class="card shadow-sm">
         <div class="card-header fw-bold">Existing Elections</div>
         <div class="card-body">
             {% if elections %}
-                <div class="table-responsive">
-                    <table class="table table-bordered align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>ID</th>
-                                <th>Title</th>
-                                <th>Description</th>
-                                <th>Start Date</th>
-                                <th>End Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for election in elections %}
-                            <tr>
-                                <td>{{ election.id }}</td>
-                                <td>{{ election.title }}</td>
-                                <td>{{ election.description or '—' }}</td>
-                                <td>{{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</td>
-                                <td>{{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</td>
-                                <td>
-                                    <a href="{{ url_for('admin_web.edit_election', election_id=election.id) }}" class="btn btn-sm btn-warning me-2">Edit</a>
-                                    
-                                    <!-- Delete Form with CSRF Token -->
-                                    <form method="POST" action="{{ url_for('admin_web.delete_election', election_id=election.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this election?');">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle text-center">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for election in elections %}
+                        {% set status = election.status.value if election.status else None %}
+                        {% set status_color = {
+                            'INACTIVE': 'secondary',
+                            'ACTIVE': 'success',
+                            'PAUSED': 'warning',
+                            'ENDED': 'danger'
+                        } %}
+                        <tr>
+                            <td>{{ election.id }}</td>
+                            <td>{{ election.title }}</td>
+                            <td>{{ election.description or '—' }}</td>
+                            <td>{{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                {% if status %}
+                                    <span class="badge bg-{{ status_color.get(status, 'dark') }}">{{ status.title() }}</span>
+                                {% else %}
+                                    <span class="badge bg-dark">Unknown</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex flex-wrap justify-content-center gap-1">
+                                    <!-- Edit -->
+                                    <a href="{{ url_for('admin_web.edit_election', election_id=election.id) }}"
+                                       class="btn btn-sm btn-warning">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </a>
+
+                                    <!-- Delete -->
+                                    <form method="POST"
+                                          action="{{ url_for('admin_web.delete_election', election_id=election.id) }}"
+                                          onsubmit="return confirm('Are you sure you want to delete this election?');">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                        <button type="submit" class="btn btn-sm btn-danger">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
                                     </form>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+
+                                    {% if status == 'ACTIVE' %}
+                                        <!-- Pause -->
+                                        <form method="POST"
+                                              action="{{ url_for('admin_web.pause_election', election_id=election.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-secondary">Pause</button>
+                                        </form>
+                                        <!-- End -->
+                                        <form method="POST"
+                                              action="{{ url_for('admin_web.end_election', election_id=election.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-dark">End</button>
+                                        </form>
+                                    {% elif status == 'PAUSED' %}
+                                        <!-- Activate -->
+                                        <form method="POST"
+                                              action="{{ url_for('admin_web.activate_election', election_id=election.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-success">Activate</button>
+                                        </form>
+                                        <!-- End -->
+                                        <form method="POST"
+                                              action="{{ url_for('admin_web.end_election', election_id=election.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-dark">End</button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% else %}
-                <p class="text-muted">No elections found.</p>
+                <p class="text-center text-muted mb-0">No elections found.</p>
             {% endif %}
         </div>
     </div>

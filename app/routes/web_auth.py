@@ -1,9 +1,9 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify, send_file
 from flask_login import login_user, logout_user, login_required, current_user
 from app.forms.forms import LoginForm, RegistrationForm, ElectionForm
-from app.models import User, Election, Candidate, Vote, Position, db
+from app.models import User, Election, Candidate, Vote, Position
 from app.extensions import db
-from app.enums import UserRole
+from app.enums import UserRole, ElectionStatusEnum
 from datetime import datetime, timedelta
 from io import StringIO
 import csv
@@ -159,7 +159,7 @@ def verify_user(user_id):
 @admin_web_bp.route('/users/<int:user_id>/unverify', methods=['POST'])
 @login_required
 def unverify_user(user_id):
-    if not current_user.is_super_admin:
+    if not current_user.is_superadmin:
         abort(403)
     user = User.query.get_or_404(user_id)
     if not user.is_verified:
@@ -272,12 +272,22 @@ def manage_elections():
                 title=form.title.data,
                 description=form.description.data,
                 start_date=start,
-                end_date=end
-            )
+                end_date=end,
+                status=ElectionStatusEnum.INACTIVE)  # default value
             db.session.add(election)
             db.session.commit()
-            flash('Election created.', 'success')
+            flash('Election created and set to INACTIVE.', 'success')
             return redirect(url_for('admin_web.manage_elections'))
+
+    # Optional auto-update of status based on time
+    elections = Election.query.all()
+    for election in elections:
+        if election.status not in [ElectionStatusEnum.ENDED, ElectionStatusEnum.PAUSED]:
+            if election.start_date <= now < election.end_date:
+                election.status = ElectionStatusEnum.ACTIVE
+            elif now >= election.end_date:
+                election.status = ElectionStatusEnum.ENDED
+    db.session.commit()
 
     search_title = request.args.get("search_title", "").strip()
     elections = Election.query.filter(Election.title.ilike(f"{search_title}%")) if search_title else Election.query
@@ -287,7 +297,57 @@ def manage_elections():
                            elections=elections,
                            form=form,
                            current_datetime=current_datetime,
-                           search_title=search_title)
+                           search_title=search_title,
+                           now=now)
+
+
+
+
+@admin_web_bp.route('/elections/<int:election_id>/activate', methods=['POST'])
+@login_required
+def activate_election(election_id):
+    if not current_user.is_superadmin:
+        abort(403)
+    election = Election.query.get_or_404(election_id)
+    election.status = ElectionStatusEnum.ACTIVE
+    db.session.commit()
+    flash(f"Election '{election.title}' activated.", "success")
+    return redirect(url_for('admin_web.manage_elections'))
+
+@admin_web_bp.route('/elections/<int:election_id>/pause', methods=['POST'])
+@login_required
+def pause_election(election_id):
+    if not current_user.is_superadmin:
+        abort(403)
+    election = Election.query.get_or_404(election_id)
+    election.status = ElectionStatusEnum.PAUSED
+    db.session.commit()
+    flash(f"Election '{election.title}' paused.", "warning")
+    return redirect(url_for('admin_web.manage_elections'))
+
+@admin_web_bp.route('/elections/<int:election_id>/end', methods=['POST'])
+@login_required
+def end_election(election_id):
+    if not current_user.is_superadmin:
+        abort(403)
+    election = Election.query.get_or_404(election_id)
+    election.status = ElectionStatusEnum.ENDED
+    db.session.commit()
+    flash(f"Election '{election.title}' ended.", "danger")
+    return redirect(url_for('admin_web.manage_elections'))
+
+@admin_web_bp.route('/elections/<int:election_id>/deactivate', methods=['POST'])
+@login_required
+def deactivate_election(election_id):
+    if not current_user.is_superadmin:
+        abort(403)
+    election = Election.query.get_or_404(election_id)
+    election.status = ElectionStatusEnum.INACTIVE
+    db.session.commit()
+    flash(f"Election '{election.title}' deactivated.", "info")
+    return redirect(url_for('admin_web.manage_elections'))
+
+
 
 # -------------------------
 # View Analytics
