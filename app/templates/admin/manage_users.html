@@ -71,9 +71,27 @@
           </td>
           <td>
             {% if user.is_verified %}
-              <span class="text-success">&#10003;</span>
+              <span class="badge bg-success">Verified</span>
+              {% if current_user.is_super_admin %}
+                <form method="POST"
+                      action="{{ url_for('admin_web.unverify_user', user_id=user.id) }}"
+                      class="d-inline ms-2"
+                      onsubmit="return confirm('Unverify {{ user.full_name }}?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm btn-outline-warning">Unverify</button>
+                </form>
+              {% endif %}
             {% else %}
-              <span class="text-danger">&#10007;</span>
+              <span class="badge bg-warning text-dark">Not Verified</span>
+              {% if current_user.is_super_admin %}
+                <form method="POST"
+                      action="{{ url_for('admin_web.verify_user', user_id=user.id) }}"
+                      class="d-inline ms-2"
+                      onsubmit="return confirm('Verify {{ user.full_name }}?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm btn-outline-success">Verify</button>
+                </form>
+              {% endif %}
             {% endif %}
           </td>
           <td>

@@ -157,6 +157,20 @@ def verify_user(user_id):
     return redirect(url_for('admin_web.manage_users'))
 
 
+@login_required
+def unverify_user(user_id):
+    if not current_user.is_super_admin:
+        abort(403)
+    user = User.query.get_or_404(user_id)
+    if not user.is_verified:
+        flash(f'{user.full_name} is already unverified.', 'info')
+    else:
+        user.is_verified = False
+        db.session.commit()
+        flash(f'Verification revoked for {user.full_name}.', 'warning')
+    return redirect(url_for('admin_web.manage_users'))
+
+
 
 # -------------------------
 # Delete Single User
