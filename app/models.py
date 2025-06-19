@@ -1,22 +1,16 @@
 from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.sql import func
 from app.extensions import db
 from app.enums import ElectionStatusEnum
-from sqlalchemy.sql import func
 import enum
-from enum import Enum
 
 class UserRole(enum.Enum):
     voter = "voter"
     candidate = "candidate"
     admin = "admin"
     super_admin = "super_admin"
-
-class ElectionStatus(Enum):
-    ACTIVE = "active"
-    PAUSED = "paused"
-    ENDED = "ended"
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
@@ -35,7 +29,7 @@ class User(db.Model, UserMixin):
     sub_location = db.Column(db.String(100), nullable=True)
     is_verified = db.Column(db.Boolean, default=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    # Relationships
+
     candidates = db.relationship('Candidate', back_populates='user', lazy='dynamic')
     verification_requests = db.relationship('VerificationRequest', back_populates='user', lazy='dynamic')
     votes = db.relationship('Vote', back_populates='voter', lazy='dynamic')
@@ -46,26 +40,16 @@ class User(db.Model, UserMixin):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def is_admin(self):
-        return self.role in [UserRole.admin, UserRole.super_admin]
-
-    def is_super_admin(self):
-        return self.role == UserRole.super_admin
-
-    def is_voter(self):
-        return self.role == UserRole.voter
-
-    def is_candidate(self):
-        return self.role == UserRole.candidate
-
     def __repr__(self):
         return f"<User id={self.id}, email='{self.email}', role='{self.role.value}'>"
 
     def __str__(self):
         return self.full_name
 
+
 class Election(db.Model):
     __tablename__ = 'election'
+
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text)
@@ -82,13 +66,34 @@ class Election(db.Model):
     votes = db.relationship('Vote', back_populates='election', lazy='dynamic')
 
     def __repr__(self):
-        return f"<Election id={self.id}, title='{self.title}', active={self.is_active}>"
+        return f"<Election id={self.id}, title='{self.title}'>"
 
     def __str__(self):
         return self.title
 
+
+class Position(db.Model):
+    __tablename__ = 'position'
+
+    id = db.Column(db.Integer, primary_key=True)
+    election_id = db.Column(db.Integer, db.ForeignKey('election.id', ondelete='CASCADE'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+    election = db.relationship('Election', back_populates='positions')
+    candidates = db.relationship('Candidate', back_populates='position_rel', lazy='dynamic', cascade="all, delete-orphan")
+    votes = db.relationship('Vote', back_populates='position', lazy='dynamic', cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<Position id={self.id}, name='{self.name}'>"
+
+    def __str__(self):
+        return self.name
+
+
 class Candidate(db.Model):
     __tablename__ = 'candidate'
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=False)
@@ -122,39 +127,21 @@ class Candidate(db.Model):
         }
 
     def __repr__(self):
-        return (f"<Candidate id={self.id}, full_name='{self.full_name}', "
-                f"position='{self.position}', approved={self.approved}>")
+        return f"<Candidate id={self.id}, full_name='{self.full_name}'>"
 
     def __str__(self):
         return self.full_name
 
-class Position(db.Model):
-    __tablename__ = 'position'
-
-    id = db.Column(db.Integer, primary_key=True)
-    election_id = db.Column(db.Integer, db.ForeignKey('election.id', ondelete='CASCADE'), nullable=False)
-    name = db.Column(db.String(100), nullable=False)
-    created_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-
-    election = db.relationship('Election', back_populates='positions')
-    candidates = db.relationship('Candidate', back_populates='position_rel', lazy='dynamic', cascade="all, delete-orphan")
-    votes = db.relationship('Vote', back_populates='position', lazy='dynamic', cascade="all, delete-orphan")
-
-    def __repr__(self):
-        return f"<Position id={self.id}, name='{self.name}', election_id={self.election_id}>"
-
-    def __str__(self):
-        return self.name
 
 class Vote(db.Model):
     __tablename__ = 'vote'
+
     id = db.Column(db.Integer, primary_key=True)
     voter_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=False)
     candidate_id = db.Column(db.Integer, db.ForeignKey('candidate.id'), nullable=False)
     position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
     voter = db.relationship('User', back_populates='votes')
     election = db.relationship('Election', back_populates='votes')
     candidate = db.relationship('Candidate', back_populates='votes')
@@ -165,14 +152,15 @@ class Vote(db.Model):
     )
 
     def __repr__(self):
-        return (f"<Vote id={self.id}, voter_id={self.voter_id}, election_id={self.election_id}, "
-                f"position_id={self.position_id}, candidate_id={self.candidate_id}>")
+        return f"<Vote voter_id={self.voter_id}, candidate_id={self.candidate_id}>"
 
     def __str__(self):
-        return f"Vote by User {self.voter_id} for Candidate {self.candidate_id} in Election {self.election_id}"
+        return f"Vote by {self.voter_id} for {self.candidate_id}"
+
 
 class VerificationRequest(db.Model):
     __tablename__ = 'verification_requests'
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     status = db.Column(db.String(50), default='pending')  # pending, approved, rejected
@@ -182,7 +170,7 @@ class VerificationRequest(db.Model):
     user = db.relationship('User', back_populates='verification_requests')
 
     def __repr__(self):
-        return (f"<VerificationRequest id={self.id}, user_id={self.user_id}, status='{self.status}'>")
+        return f"<VerificationRequest id={self.id}, status='{self.status}'>"
 
     def __str__(self):
         return f"VerificationRequest by User {self.user_id} ({self.status})"
