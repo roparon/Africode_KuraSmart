@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify, send_file, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from app.forms.forms import LoginForm, RegistrationForm, ElectionForm, PositionForm, ProfileImageForm
+from app.forms.forms import LoginForm, RegistrationForm, ElectionForm, PositionForm, ProfileImageForm, NotificationForm
 from app.models import User, Election, Candidate, Vote, Position, Notification
 from app.extensions import db
 from app.enums import UserRole, ElectionStatusEnum
@@ -518,10 +518,13 @@ def update_profile_image():
 def manage_notifications():
     if not current_user.is_superadmin:
         abort(403)
-    if request.method == 'POST':
-        subject = request.form['subject']
-        message = request.form['message']
-        send_email = 'send_email' in request.form
+
+    form = NotificationForm()
+    if form.validate_on_submit():
+        subject = form.title.data
+        message = form.message.data
+        send_email = form.send_email.data
+
         notif = Notification(subject=subject, message=message, send_email=send_email)
         db.session.add(notif)
         db.session.commit()
@@ -530,9 +533,10 @@ def manage_notifications():
             users = User.query.all()
             for u in users:
                 send_email_async(u.email, subject, message)
+
         flash('Notification sent successfully!', 'success')
         return redirect(url_for('admin_web.manage_notifications'))
 
-    notifs = Notification.query.order_by(Notification.created_at.desc()).all()
-    return render_template('admin/notifications.html', notifs=notifs)
+    notifications = Notification.query.order_by(Notification.created_at.desc()).all()
+    return render_template('admin/notifications.html', form=form, notifications=notifications)
 

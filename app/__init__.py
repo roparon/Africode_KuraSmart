@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_apscheduler import APScheduler
-from app.extensions import db, migrate, login_manager, CSRFProtect
+from app.extensions import db, migrate, login_manager, CSRFProtect, mail
 from app.models import User
 from app.tasks.reminders import send_reminders
 
@@ -14,6 +14,7 @@ def create_app():
     login_manager.init_app(app)
     csrf = CSRFProtect()
     csrf.init_app(app)
+    mail.init_app(app)
 
     # APScheduler setup
     scheduler = APScheduler()
