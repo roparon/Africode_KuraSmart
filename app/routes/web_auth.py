@@ -573,19 +573,20 @@ def delete_notification(notif_id):
     return redirect(url_for('admin_web.manage_notifications'))
 
 
-from flask import render_template, request, flash, redirect, url_for, abort
-from flask_login import login_required, current_user
-from app import db
-from app.models import Candidate, Position
 from app.forms.candidate_form import CandidateForm
 
-@admin_web_bp.route('/candidates')
+
+@admin_web_bp.route('/candidates', methods=['GET'])
 @login_required
 def manage_candidates():
     if not current_user.is_superadmin:
         abort(403)
-    candidates = Candidate.query.order_by(Candidate.full_name).all()
-    return render_template('admin/candidates.html', candidates=candidates)
+
+    candidates = Candidate.query.all()
+    form = CandidateForm()
+
+    return render_template('admin/candidates.html', candidates=candidates, form=form)
+
 
 @admin_web_bp.route('/candidates/create', methods=['GET','POST'])
 @login_required
@@ -603,21 +604,20 @@ def create_candidate():
         return redirect(url_for('admin_web.manage_candidates'))
     return render_template('admin/candidate_form.html', form=form, title='Add Candidate')
 
-@admin_web_bp.route('/candidates/edit/<int:candidate_id>', methods=['GET','POST'])
+@admin_web_bp.route('/candidates/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
-def edit_candidate(candidate_id):
-    if not current_user.is_superadmin:
-        abort(403)
-    cand = Candidate.query.get_or_404(candidate_id)
-    form = CandidateForm(obj=cand)
+def edit_candidate(id):
+    candidate = Candidate.query.get_or_404(id)
+    form = CandidateForm(obj=candidate)
     if form.validate_on_submit():
-        cand.full_name = form.full_name.data
-        cand.party = form.party.data
-        cand.position_id = form.position.data
+        candidate.full_name = form.full_name.data
+        candidate.party = form.party.data
+        candidate.position = form.position.data
         db.session.commit()
-        flash('Candidate updated!', 'success')
+        flash('Candidate updated successfully!', 'success')
         return redirect(url_for('admin_web.manage_candidates'))
-    return render_template('admin/candidate_form.html', form=form, title='Edit Candidate')
+    return render_template('admin/edit_candidate.html', form=form, candidate=candidate)
+
 
 @admin_web_bp.route('/candidates/delete/<int:candidate_id>', methods=['POST'])
 @login_required
