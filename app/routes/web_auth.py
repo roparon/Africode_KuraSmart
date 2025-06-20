@@ -493,18 +493,19 @@ def delete_position(position_id):
     return redirect(url_for('admin_web.manage_positions'))
 
 
-@admin_web_bp.route('/profile/image', methods=['GET', 'POST'])
+@admin_web_bp.route('/update-profile-image', methods=['POST'])
 @login_required
 def update_profile_image():
     form = ProfileImageForm()
     if form.validate_on_submit():
-        image_file = form.image.data
-        filename = secure_filename(image_file.filename)
-        image_path = os.path.join(current_app.root_path, 'static', 'img', filename)
-        image_file.save(image_path)
-        current_user.profile_image_url = f'img/{filename}'
-        db.session.commit()
-        flash('Profile image updated successfully!', 'success')
-        return redirect(url_for('admin_web.dashboard'))
-
-    return render_template('admin/update_image.html', form=form)
+        image_file = request.files.get('image')
+        if image_file and image_file.filename != "":
+            filename = secure_filename(image_file.filename)
+            image_path = os.path.join(current_app.root_path, 'static', 'img', filename)
+            image_file.save(image_path)
+            current_user.profile_image_url = f"img/{filename}"
+            db.session.commit()
+            flash("Profile image updated successfully!", "success")
+        else:
+            flash("Please select a valid image file.", "warning")
+    return redirect(url_for('admin_web.dashboard'))
