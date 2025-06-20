@@ -12,27 +12,48 @@
       <div class="card-header bg-gradient-primary text-white fw-semibold rounded-top-4">
         Recent Alerts
       </div>
+
       <div class="card-body p-0">
         {% if notifications %}
-          <div class="list-group list-group-flush">
+          <ul class="list-group list-group-flush">
             {% for n in notifications %}
-              <div class="list-group-item px-4 py-3 border-bottom {% if not n.read %}bg-light{% endif %}" 
-                   data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 class="mb-1 fw-bold text-dark">{{ n.subject }}</h6>
-                    <p class="mb-1 text-muted small">{{ n.message }}</p>
-                    {% if n.send_email %}
-                      <span class="badge bg-success small">📧 Email Sent</span>
-                    {% endif %}
-                  </div>
-                  <small class="text-muted ms-3">{{ n.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+              <li class="list-group-item px-4 py-3 border-bottom d-flex justify-content-between align-items-center {% if not n.read %}bg-light{% endif %}"
+                  data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
+                
+                <div class="flex-grow-1">
+                  <h6 class="mb-1 fw-bold">{{ n.subject }}</h6>
+                  <p class="mb-1 text-muted small">{{ n.message }}</p>
+                  {% if n.send_email %}
+                    <span class="badge bg-success small">📧 Email Sent</span>
+                  {% endif %}
                 </div>
-              </div>
+
+                <div class="text-end ms-3">
+                  <small class="text-muted">{{ n.created_at.strftime('%Y-%m-%d %H:%M') }}</small><br>
+                  
+                  <!-- Mark as Read Button -->
+                  {% if not n.read %}
+                  <form method="POST" class="d-inline" action="{{ url_for('voter.mark_read', notif_id=n.id) }}">
+                    <button type="submit" class="btn btn-sm btn-outline-primary mt-1">
+                      Mark Read
+                    </button>
+                  </form>
+                  {% endif %}
+
+                  <!-- Delete Button -->
+                  <form method="POST" class="d-inline" action="{{ url_for('voter.delete_notification', notif_id=n.id) }}"
+                        onsubmit="return confirm('Delete this notification?');">
+                    <button type="submit" class="btn btn-sm btn-outline-danger mt-1">
+                      Delete
+                    </button>
+                  </form>
+                </div>
+
+              </li>
             {% endfor %}
-          </div>
+          </ul>
         {% else %}
-          <p class="text-center text-muted py-4">No notifications available yet.</p>
+          <p class="text-center text-muted py-4">No notifications available.</p>
         {% endif %}
       </div>
     </div>
@@ -46,13 +67,8 @@
     background: linear-gradient(to bottom right, #f8f9fa, #e9ecef);
     min-height: 100vh;
   }
-  .list-group-item {
-    transition: all 0.3s ease;
-    border-radius: 0;
-  }
-  .list-group-item:hover {
-    background-color: #f1f5f9;
-  }
+  .list-group-item { transition: all 0.3s ease; }
+  .list-group-item:hover { background-color: #f1f5f9; cursor: pointer; }
 </style>
 {% endblock %}
 
