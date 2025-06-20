@@ -540,3 +540,34 @@ def manage_notifications():
     notifications = Notification.query.order_by(Notification.created_at.desc()).all()
     return render_template('admin/notifications.html', form=form, notifications=notifications)
 
+
+@admin_web_bp.route('/notifications/edit/<int:notif_id>', methods=['GET', 'POST'])
+@login_required
+def edit_notification(notif_id):
+    if not current_user.is_superadmin:
+        abort(403)
+    notif = Notification.query.get_or_404(notif_id)
+    form = NotificationForm(obj=notif)
+    form.id = notif.id  # hidden field
+
+    if form.validate_on_submit():
+        notif.subject = form.title.data
+        notif.message = form.message.data
+        notif.send_email = form.send_email.data
+        db.session.commit()
+        flash('Notification updated.', 'success')
+        return redirect(url_for('admin_web.manage_notifications'))
+
+    notifications = Notification.query.order_by(Notification.created_at.desc()).all()
+    return render_template('admin/notifications.html', form=form, notifications=notifications)
+
+@admin_web_bp.route('/notifications/delete/<int:notif_id>', methods=['POST'])
+@login_required
+def delete_notification(notif_id):
+    if not current_user.is_superadmin:
+        abort(403)
+    notif = Notification.query.get_or_404(notif_id)
+    db.session.delete(notif)
+    db.session.commit()
+    flash('Notification deleted.', 'warning')
+    return redirect(url_for('admin_web.manage_notifications'))
