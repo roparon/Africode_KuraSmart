@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DateTimeLocalField, SelectField, FileField
+from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DateTimeLocalField, SelectField,BooleanField, FileField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
 from flask_wtf.file import FileField, FileAllowed
 
@@ -56,5 +56,16 @@ class PositionForm(FlaskForm):
     description = TextAreaField('Description')
     election_id = SelectField('Assign to Election', coerce=int)
     submit = SubmitField('Save Position')
+
+
+class NotificationForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired()])
+    message = TextAreaField('Message', validators=[DataRequired()])
+    send_email = BooleanField('Send via Email')
+    submit = SubmitField('Send Notification')
+    
+    def validate_title(self, field):
+        if len(field.data) < 5:
+            raise ValidationError("Title must be at least 5 characters long.")
         
 
