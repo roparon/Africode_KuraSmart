@@ -51,6 +51,8 @@ def create_app():
     from app.routes.web_auth import web_auth_bp, voter_bp, admin_web_bp
     from app.routes.main import main_bp
     from app.routes.notifications import notifications_bp
+    from app.routes.voter import voter_bp
+
 
 
 
@@ -70,6 +72,7 @@ def create_app():
     app.register_blueprint(admin_web_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(notifications_bp)
+
 
 
     # CLI command registration

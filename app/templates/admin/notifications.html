@@ -1,15 +1,21 @@
 {% extends "base.html" %}
 {% block title %}Notifications | KuraSmart{% endblock %}
+
 {% block content %}
 <div class="admin-dashboard-background py-5">
   <div class="container" data-aos="fade-up">
     <h2 class="mb-4 fw-bold"><i class="bi bi-bell-fill me-2 text-primary"></i>Notifications Center</h2>
+    
+    <!-- Create / Edit Form -->
     <div class="card shadow-sm rounded-4 mb-5" data-aos="fade-right">
-      <div class="card-header bg-gradient-primary text-white rounded-top-4">Broadcast Notification</div>
+      <div class="card-header bg-gradient-primary text-white rounded-top-4">
+        {{ form.id.data and 'Edit Notification' or 'Broadcast Notification' }}
+      </div>
       <div class="card-body">
         <form method="POST">
           {{ form.hidden_tag() }}
           <div class="mb-4">
+            {{ form.id }}
             {{ form.title.label(class="form-label") }}
             {{ form.title(class="form-control") }}
           </div>
@@ -34,15 +40,32 @@
       <div class="card-body">
         {% if notifications %}
           {% for n in notifications %}
-          <div class="border rounded-3 p-3 mb-3 bg-light" data-aos="zoom-in" data-aos-delay="{{ loop.index * 50 }}">
-            <div class="d-flex justify-content-between">
-              <h6 class="mb-1">{{ n.subject }}</h6>
-              <small class="text-muted">{{ n.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+          <div class="border rounded-3 p-3 mb-3 bg-light d-flex justify-content-between align-items-start"
+               data-aos="zoom-in" data-aos-delay="{{ loop.index * 50 }}">
+            <div>
+              <div class="d-flex justify-content-between">
+                <h6 class="mb-1">{{ n.subject }}</h6>
+                <small class="text-muted">{{ n.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+              </div>
+              <p class="mb-2">{{ n.message }}</p>
+              {% if n.send_email %}
+                <span class="badge bg-success">✉️ Email Sent</span>
+              {% endif %}
             </div>
-            <p class="mb-0">{{ n.message }}</p>
-            {% if n.send_email %}
-              <span class="badge bg-success mt-2">✉️ Email Sent</span>
-            {% endif %}
+            <div class="action-buttons">
+              <a href="{{ url_for('admin_web.edit_notification', notif_id=n.id) }}"
+                 class="btn btn-sm btn-outline-primary me-1"> Edith
+                <i class="bi bi-pencil-fill"></i>
+              </a>
+              <form method="POST"
+                    action="{{ url_for('admin_web.delete_notification', notif_id=n.id) }}"
+                    onsubmit="return confirm('Delete this notification?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger"> Delete
+                  <i class="bi bi-trash-fill"></i>
+                </button>
+              </form>
+            </div>
           </div>
           {% endfor %}
         {% else %}
@@ -56,13 +79,14 @@
 
 {% block head_extra %}
 <style>
-  .admin-dashboard-background { background: #f8f9fb; min-height: 100vh; }
-  .card, .input-group { border-radius: 0.75rem; }
-  .btn { transition: transform 0.2s, box-shadow 0.2s; }
-  .btn:hover { transform: translateY(-2px); box-shadow: 0 0.4rem 1rem rgba(0,0,0,0.15); }
-  .border { border-color: #dee2e6 !important; }
+.admin-dashboard-background { background: #f8f9fb; min-height: 100vh; }
+.card { border-radius: 0.75rem; }
+.btn { transition: transform 0.2s, box-shadow 0.2s; }
+.btn:hover { transform: translateY(-2px); box-shadow: 0 0.4rem 1rem rgba(0,0,0,0.15); }
+.action-buttons form, .action-buttons a { display: inline-block; }
 </style>
 {% endblock %}
+
 {% block scripts %}
 <script>
   AOS.init({ duration: 600, once: true, easing: 'ease-out-cubic' });

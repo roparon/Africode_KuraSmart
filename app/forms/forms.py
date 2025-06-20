@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DateTimeLocalField, SelectField,BooleanField, FileField
+from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DateTimeLocalField, SelectField,BooleanField, FileField, HiddenField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
 from flask_wtf.file import FileField, FileAllowed
 
@@ -60,6 +60,7 @@ class PositionForm(FlaskForm):
 
 class NotificationForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired()])
+    id = HiddenField()
     message = TextAreaField('Message', validators=[DataRequired()])
     send_email = BooleanField('Send via Email')
     submit = SubmitField('Send Notification')
