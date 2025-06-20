@@ -187,10 +187,10 @@ class VerificationRequest(db.Model):
         return f"VerificationRequest by User {self.user_id} ({self.status}) on {self.submitted_at.isoformat() if self.submitted_at else 'unknown date'}"
     
 
-class Notification(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(150), nullable=False)
-    message = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    send_email = db.Column(db.Boolean, default=False)
+# class Notification(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     title = db.Column(db.String(150), nullable=False)
+#     message = db.Column(db.Text, nullable=False)
+#     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+#     send_email = db.Column(db.Boolean, default=False)
 

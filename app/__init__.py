@@ -49,6 +49,10 @@ def create_app():
     from app.routes.dashboard import dashboard_bp
     from app.routes.web_auth import web_auth_bp, voter_bp, admin_web_bp
     from app.routes.main import main_bp
+    from app.routes.notifications import notifications_bp
+
+
+
 
     app.register_blueprint(auth_bp, url_prefix='/api/v1')
     app.register_blueprint(protected_bp, url_prefix='/api/v1')
@@ -64,6 +68,8 @@ def create_app():
     app.register_blueprint(voter_bp)
     app.register_blueprint(admin_web_bp)
     app.register_blueprint(main_bp)
+    app.register_blueprint(notifications_bp)
+
 
     # CLI command registration
     try:
