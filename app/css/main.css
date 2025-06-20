@@ -1,0 +1,12 @@
+body {
+    font-family: 'Inter', sans-serif;
+  }
+  
+  h1, h5 {
+    letter-spacing: -0.5px;
+  }
+  
+  footer p {
+    color: #6c757d;
+  }
+  

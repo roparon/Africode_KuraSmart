@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Voter Dashboard | KuraSmart{% endblock %}
+
+{% block content %}
+<div class="voter-dashboard-background py-5">
+    <div class="container" data-aos="fade-up">
+        <h2 class="mb-4 fw-bold">Welcome, <span class="text-primary">{{ current_user.full_name }}</span></h2>
+
+        <!-- Voter Profile -->
+        <div class="card shadow-sm mb-4" data-aos="zoom-in" data-aos-delay="100">
+            <div class="card-header bg-primary text-white">
+                Your Profile
+            </div>
+            <div class="card-body">
+                <p><strong>Username / ID:</strong> {{ current_user.username or current_user.id_number }}</p>
+                <p><strong>County:</strong> {{ current_user.county or 'N/A' }}</p>
+                <p><strong>Ward:</strong> {{ current_user.ward or 'N/A' }}</p>
+                <p><strong>Sub-location:</strong> {{ current_user.sub_location or 'N/A' }}</p>
+                <p><strong>Registered On:</strong> {{ current_user.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+            </div>
+        </div>
+
+        <!-- Voting Actions -->
+        <div class="row">
+            <div class="col-md-6 mb-4" data-aos="fade-up" data-aos-delay="150">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-success text-white">Participate in Elections</div>
+                    <div class="card-body d-flex flex-column justify-content-between">
+                        <p>Cast your vote in currently active elections assigned to your area.</p>
+                        <a href="{{ url_for('voting.active_elections') }}" class="btn btn-outline-success mt-2">View Active Elections</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-info text-white">View Results</div>
+                    <div class="card-body d-flex flex-column justify-content-between">
+                        <p>See results from elections you’ve participated in.</p>
+                        <a href="{{ url_for('voting.view_results') }}" class="btn btn-outline-info mt-2">View Results</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block head_extra %}
+<style>
+.voter-dashboard-background {
+    background: linear-gradient(to right, #fdfbfb, #ebedee);
+    min-height: 100vh;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+</style>
+{% endblock %}
