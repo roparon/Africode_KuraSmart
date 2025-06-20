@@ -1,19 +1,35 @@
 from flask import Flask
-from app.extensions import db, migrate, login_manager
+from flask_apscheduler import APScheduler
+from app.extensions import db, migrate, login_manager, CSRFProtect
 from app.models import User
-from app.extensions import CSRFProtect
-
+from app.tasks.reminders import send_reminders
 
 def create_app():
     app = Flask(__name__, template_folder='templates')
     app.config.from_object('config.Config')
 
+    # Initialize core extensions
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
     csrf = CSRFProtect()
     csrf.init_app(app)
 
+    # APScheduler setup
+    scheduler = APScheduler()
+    app.config['SCHEDULER_API_ENABLED'] = True
+    scheduler.init_app(app)
+    scheduler.start()
+
+    # Schedule the daily 9 AM reminder job
+    scheduler.add_job(
+        id='daily_election_reminder',
+        func=send_reminders,
+        trigger='cron',
+        hour=9,
+        minute=0,
+        timezone=app.config.get('TIMEZONE', 'UTC')
+    )
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -22,6 +38,7 @@ def create_app():
     login_manager.login_view = 'web_auth.login'
     login_manager.login_message_category = 'info'
 
+    # Register blueprints
     from app.api.auth import auth_bp
     from app.routes.protected import protected_bp
     from app.routes.verification import verification_bp
@@ -32,9 +49,7 @@ def create_app():
     from app.routes.dashboard import dashboard_bp
     from app.routes.web_auth import web_auth_bp, voter_bp, admin_web_bp
     from app.routes.main import main_bp
-    # from app.routes.super_admin import super_admin_bp
 
-    # --- Register API Blueprints ---
     app.register_blueprint(auth_bp, url_prefix='/api/v1')
     app.register_blueprint(protected_bp, url_prefix='/api/v1')
     app.register_blueprint(verification_bp, url_prefix='/api/v1')
@@ -43,7 +58,6 @@ def create_app():
     app.register_blueprint(vote_bp, url_prefix='/api/v1')
     app.register_blueprint(admin_bp, url_prefix='/api/v1')
     app.register_blueprint(analytics_bp, url_prefix='/api/v1')
-    # app.register_blueprint(super_admin_bp, url_prefix='/api/v1/superadmin')
 
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(web_auth_bp)
@@ -51,6 +65,7 @@ def create_app():
     app.register_blueprint(admin_web_bp)
     app.register_blueprint(main_bp)
 
+    # CLI command registration
     try:
         from app.commands import create_superadmin
         app.cli.add_command(create_superadmin)
