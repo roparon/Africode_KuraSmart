@@ -175,10 +175,9 @@ class VerificationRequest(db.Model):
     __tablename__ = 'verification_requests'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    status = db.Column(db.String(50), default='pending')  # pending, approved, rejected
+    status = db.Column(db.String(50), default='pending')
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     reviewed_at = db.Column(db.DateTime)
-
     user = db.relationship('User', back_populates='verification_requests')
 
     def __repr__(self):
