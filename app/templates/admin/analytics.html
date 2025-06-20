@@ -57,7 +57,7 @@
           <div class="card-body">
             {% if total_votes > 0 %}
               {% for pos, count in position_data %}
-                {% set percent = (count / total_votes) * 100 %}
+                {% set percent = ((count / total_votes) * 100) if total_votes > 0 else 0 %}
                 <div class="mb-3">
                   <div class="d-flex justify-content-between small fw-semibold">
                     <span>{{ pos }}</span>
