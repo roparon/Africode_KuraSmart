@@ -1,7 +1,8 @@
 from flask import Flask
+from flask_login import current_user
 from flask_apscheduler import APScheduler
 from app.extensions import db, migrate, login_manager, CSRFProtect, mail
-from app.models import User
+from app.models import User, Notification
 from app.tasks.reminders import send_reminders
 
 def create_app():
@@ -51,6 +52,7 @@ def create_app():
     from app.routes.web_auth import web_auth_bp, voter_bp, admin_web_bp
     from app.routes.main import main_bp
     from app.routes.notifications import notifications_bp
+    from app.context_processors import inject_unread_notifs
     from app.routes.voter import voter_bp
 
 
@@ -72,7 +74,17 @@ def create_app():
     app.register_blueprint(admin_web_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(notifications_bp)
+    app.context_processor(inject_unread_notifs)
 
+
+
+    @app.context_processor
+    def inject_unread_notifs():
+        if current_user.is_authenticated:
+            count = Notification.query.filter_by(read=False).count()
+        else:
+            count = 0
+        return {'unread_count': count}
 
 
     # CLI command registration
