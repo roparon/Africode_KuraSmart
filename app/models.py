@@ -20,7 +20,6 @@ class ElectionStatus(Enum):
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
-
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     full_name = db.Column(db.String(120), nullable=False)
@@ -77,7 +76,6 @@ class Election(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=func.now())
     deactivated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-
     candidates = db.relationship('Candidate', back_populates='election', lazy='dynamic')
     positions = db.relationship('Position', back_populates='election', lazy='dynamic', cascade="all, delete-orphan")
     votes = db.relationship('Vote', back_populates='election', lazy='dynamic')
@@ -101,7 +99,6 @@ class Candidate(db.Model):
     manifesto = db.Column(db.Text)
     approved = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
     user = db.relationship('User', back_populates='candidates')
     election = db.relationship('Election', back_populates='candidates')
     position_rel = db.relationship('Position', back_populates='candidates')
@@ -131,7 +128,6 @@ class Candidate(db.Model):
 
 class Position(db.Model):
     __tablename__ = 'position'
-
     id = db.Column(db.Integer, primary_key=True)
     election_id = db.Column(db.Integer, db.ForeignKey('election.id', ondelete='CASCADE'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
@@ -154,7 +150,6 @@ class Vote(db.Model):
     candidate_id = db.Column(db.Integer, db.ForeignKey('candidate.id'), nullable=False)
     position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
     voter = db.relationship('User', back_populates='votes')
     election = db.relationship('Election', back_populates='votes')
     candidate = db.relationship('Candidate', back_populates='votes')
@@ -189,7 +184,6 @@ class VerificationRequest(db.Model):
 
 class Notification(db.Model):
     __tablename__ = 'notifications'
-
     id = db.Column(db.Integer, primary_key=True)
     subject = db.Column(db.String(150), nullable=False)
     message = db.Column(db.Text, nullable=False)
