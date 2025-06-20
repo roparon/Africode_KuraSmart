@@ -571,3 +571,61 @@ def delete_notification(notif_id):
     db.session.commit()
     flash('Notification deleted.', 'warning')
     return redirect(url_for('admin_web.manage_notifications'))
+
+
+from flask import render_template, request, flash, redirect, url_for, abort
+from flask_login import login_required, current_user
+from app import db
+from app.models import Candidate, Position
+from app.forms.candidate_form import CandidateForm
+
+@admin_web_bp.route('/candidates')
+@login_required
+def manage_candidates():
+    if not current_user.is_superadmin:
+        abort(403)
+    candidates = Candidate.query.order_by(Candidate.full_name).all()
+    return render_template('admin/candidates.html', candidates=candidates)
+
+@admin_web_bp.route('/candidates/create', methods=['GET','POST'])
+@login_required
+def create_candidate():
+    if not current_user.is_superadmin:
+        abort(403)
+    form = CandidateForm()
+    if form.validate_on_submit():
+        cand = Candidate(full_name=form.full_name.data,
+                         party=form.party.data,
+                         position_id=form.position.data)
+        db.session.add(cand)
+        db.session.commit()
+        flash('Candidate added!', 'success')
+        return redirect(url_for('admin_web.manage_candidates'))
+    return render_template('admin/candidate_form.html', form=form, title='Add Candidate')
+
+@admin_web_bp.route('/candidates/edit/<int:candidate_id>', methods=['GET','POST'])
+@login_required
+def edit_candidate(candidate_id):
+    if not current_user.is_superadmin:
+        abort(403)
+    cand = Candidate.query.get_or_404(candidate_id)
+    form = CandidateForm(obj=cand)
+    if form.validate_on_submit():
+        cand.full_name = form.full_name.data
+        cand.party = form.party.data
+        cand.position_id = form.position.data
+        db.session.commit()
+        flash('Candidate updated!', 'success')
+        return redirect(url_for('admin_web.manage_candidates'))
+    return render_template('admin/candidate_form.html', form=form, title='Edit Candidate')
+
+@admin_web_bp.route('/candidates/delete/<int:candidate_id>', methods=['POST'])
+@login_required
+def delete_candidate(candidate_id):
+    if not current_user.is_superadmin:
+        abort(403)
+    cand = Candidate.query.get_or_404(candidate_id)
+    db.session.delete(cand)
+    db.session.commit()
+    flash('Candidate deleted.', 'warning')
+    return redirect(url_for('admin_web.manage_candidates'))
