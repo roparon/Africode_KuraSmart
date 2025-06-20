@@ -12,4 +12,12 @@ class Config:
 
     # Flask-Login session config (optional tweaks)
     SESSION_COOKIE_SECURE = False  
-    REMEMBER_COOKIE_DURATION = 3600  
+    REMEMBER_COOKIE_DURATION = 3600 
+
+    TIMEZONE = 'Africa/Nairobi'
+    MAIL_SERVER = 'smtp.gmail.com'
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+    MAIL_USERNAME = 'aaronrop40@gmail.com'
+    MAIL_PASSWORD = '0987654321'
+ 
