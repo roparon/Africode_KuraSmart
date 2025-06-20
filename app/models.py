@@ -193,6 +193,7 @@ class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     subject = db.Column(db.String(150), nullable=False)
     message = db.Column(db.Text, nullable=False)
+    read = db.Column(db.Boolean, default=False)
     send_email = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
