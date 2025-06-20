@@ -3,107 +3,130 @@
 {% block title %}System Analytics | KuraSmart{% endblock %}
 
 {% block content %}
-<div class="container mt-4" data-aos="fade-up">
-    <h2 class="mb-4">System Analytics</h2>
+<div class="analytics-section py-5">
+  <div class="container" data-aos="fade-up">
+    <h2 class="mb-4 fw-bold text-primary"><i class="bi bi-bar-chart-fill me-2"></i>System Analytics</h2>
 
     <!-- Summary Cards -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card text-white bg-primary shadow-sm mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Total Users</h5>
-                    <p class="card-text fs-4">{{ total_users }}</p>
-                </div>
-            </div>
+    <div class="row mb-5">
+      <div class="col-md-4 mb-3">
+        <div class="card text-white bg-primary shadow-sm rounded-4">
+          <div class="card-body text-center">
+            <h6>Total Users</h6>
+            <p class="fs-3 fw-bold">{{ total_users }}</p>
+          </div>
         </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-success shadow-sm mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Total Votes</h5>
-                    <p class="card-text fs-4">{{ total_votes }}</p>
-                </div>
-            </div>
+      </div>
+      <div class="col-md-4 mb-3">
+        <div class="card text-white bg-success shadow-sm rounded-4">
+          <div class="card-body text-center">
+            <h6>Total Votes</h6>
+            <p class="fs-3 fw-bold">{{ total_votes }}</p>
+          </div>
         </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-info shadow-sm mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Total Elections</h5>
-                    <p class="card-text fs-4">{{ total_elections }}</p>
-                </div>
-            </div>
+      </div>
+      <div class="col-md-4 mb-3">
+        <div class="card text-white bg-info shadow-sm rounded-4">
+          <div class="card-body text-center">
+            <h6>Total Elections</h6>
+            <p class="fs-3 fw-bold">{{ total_elections }}</p>
+          </div>
         </div>
+      </div>
     </div>
 
-    <!-- Charts -->
     <div class="row">
-        <!-- Voter Turnout -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-light fw-semibold">Voter Turnout</div>
-                <div class="card-body text-center">
-                    {% set turnout_pct = (voted_users / total_users) * 100 %}
-                    <div class="donut-chart" style="--percentage: {{ turnout_pct | round(0) }};">
-                        <span>{{ turnout_pct | round(0) }}%</span>
-                    </div>
-                    <p class="mt-2 text-muted">Voted: {{ voted_users }} / {{ total_users }}</p>
-                </div>
+      <!-- Voter Turnout Chart -->
+      <div class="col-md-6 mb-4">
+        <div class="card shadow-sm rounded-4" data-aos="fade-right">
+          <div class="card-header fw-semibold bg-light rounded-top-4">Voter Turnout</div>
+          <div class="card-body text-center">
+            {% set turnout_pct = (voted_users / total_users * 100) if total_users > 0 else 0 %}
+            <div class="donut-chart" style="--percentage: {{ turnout_pct | round(0) }};">
+              <span>{{ turnout_pct | round(0) }}%</span>
             </div>
+            <p class="mt-3 text-muted">Voted: {{ voted_users }} / {{ total_users }}</p>
+          </div>
         </div>
+      </div>
 
-        <!-- Vote Distribution -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-light fw-semibold">Vote Distribution by Position</div>
-                <div class="card-body">
-                    {% for pos, count in position_data %}
-                        <div class="mb-2">
-                            <div class="d-flex justify-content-between small">
-                                <span>{{ pos }}</span>
-                                <span>{{ count }} votes</span>
-                            </div>
-                            <div class="progress">
-                                {% set percent = (count / total_votes) * 100 %}
-                                <div class="progress-bar bg-success" style="width: {{ percent | round(0) }}%"></div>
-                            </div>
-                        </div>
-                    {% else %}
-                        <p class="text-muted">No vote data available yet.</p>
-                    {% endfor %}
+      <!-- Vote Distribution -->
+      <div class="col-md-6 mb-4">
+        <div class="card shadow-sm rounded-4" data-aos="fade-left">
+          <div class="card-header fw-semibold bg-light rounded-top-4">Vote Distribution by Position</div>
+          <div class="card-body">
+            {% if total_votes > 0 %}
+              {% for pos, count in position_data %}
+                {% set percent = (count / total_votes) * 100 %}
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between small fw-semibold">
+                    <span>{{ pos }}</span>
+                    <span>{{ percent | round(1) }}% ({{ count }})</span>
+                  </div>
+                  <div class="progress" role="progressbar" aria-valuenow="{{ percent | round(0) }}" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar bg-success" style="width: {{ percent | round(0) }}%"></div>
+                  </div>
                 </div>
-            </div>
+              {% endfor %}
+            {% else %}
+              <p class="text-muted text-center mb-0">No vote data available yet.</p>
+            {% endif %}
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block head_extra %}
 <style>
+.analytics-section {
+  background: #f8f9fb;
+  min-height: 100vh;
+}
 .donut-chart {
-    width: 120px;
-    height: 120px;
-    margin: 0 auto;
-    border-radius: 50%;
-    background: conic-gradient(#0d6efd calc(var(--percentage) * 1%), #0f579e 0);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    color: #0d6efd;
-    position: relative;
+  --percentage: 0;
+  width: 130px;
+  height: 130px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: conic-gradient(#0d6efd calc(var(--percentage) * 1%), #e9ecef 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #0d6efd;
+  position: relative;
+  font-size: 1.25rem;
 }
 .donut-chart::before {
-    content: "";
-    position: absolute;
-    width: 60%;
-    height: 60%;
-    background: #e6b0fc;
-    border-radius: 50%;
-    z-index: 1;
+  content: "";
+  position: absolute;
+  width: 65%;
+  height: 65%;
+  background: #fff;
+  border-radius: 50%;
+  z-index: 1;
 }
 .donut-chart span {
-    position: relative;
-    z-index: 2;
-    font-size: 1.25rem;
+  position: relative;
+  z-index: 2;
+}
+.progress {
+  height: 0.75rem;
+  background-color: #e9ecef;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+.progress-bar {
+  transition: width 0.6s ease;
 }
 </style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  AOS.init({ duration: 600, once: true, easing: 'ease-out-cubic' });
+</script>
 {% endblock %}

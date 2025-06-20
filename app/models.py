@@ -185,3 +185,13 @@ class VerificationRequest(db.Model):
 
     def __str__(self):
         return f"VerificationRequest by User {self.user_id} ({self.status}) on {self.submitted_at.isoformat() if self.submitted_at else 'unknown date'}"
+    
+
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    subject = db.Column(db.String(150), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    send_email = db.Column(db.Boolean, default=False)
+    election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=True)
+    location = db.Column(db.String(100), nullable=True)
