@@ -3,38 +3,55 @@
 {% block title %}Super Admin Dashboard{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
-    <div class="row">
-        <div class="col-md-3 mb-4">
-            <div class="list-group">
-                <a href="{{ url_for('admin_web.dashboard') }}" class="list-group-item list-group-item-action active">
-                    <i class="bi bi-speedometer2 me-2"></i> Dashboard
-                </a>
-                <a href="{{ url_for('admin_web.manage_users') }}" class="list-group-item list-group-item-action">
-                    <i class="bi bi-people me-2"></i> Manage Users
-                </a>
-                <a href="{{ url_for('admin_web.manage_elections') }}" class="list-group-item list-group-item-action">
-                    <i class="bi bi-check2-square me-2"></i> Manage Elections
-                </a>
-                <a href="{{ url_for('admin_web.view_analytics') }}" class="list-group-item list-group-item-action">
-                    <i class="bi bi-bar-chart me-2"></i> Analytics
-                </a>
-                <a href="{{ url_for('web_auth.logout') }}" class="list-group-item list-group-item-action text-danger">
-                    <i class="bi bi-box-arrow-right me-2"></i> Logout
-                </a>
+<div class="admin-dashboard-background py-5">
+    <div class="container-fluid" data-aos="fade-up">
+        <div class="row">
+            <!-- Sidebar Navigation -->
+            <div class="col-md-3 mb-4" data-aos="fade-right">
+                <div class="list-group shadow-sm rounded-3 overflow-hidden">
+                    <a href="{{ url_for('admin_web.dashboard') }}" class="list-group-item list-group-item-action active">
+                        <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('admin_web.manage_users') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-people me-2"></i> Manage Users
+                    </a>
+                    <a href="{{ url_for('admin_web.manage_elections') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-check2-square me-2"></i> Manage Elections
+                    </a>
+                    <a href="{{ url_for('admin_web.view_analytics') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-bar-chart me-2"></i> Analytics
+                    </a>
+                    <a href="{{ url_for('web_auth.logout') }}" class="list-group-item list-group-item-action text-danger">
+                        <i class="bi bi-box-arrow-right me-2"></i> Logout
+                    </a>
+                </div>
             </div>
-        </div>
 
-        <!-- Main Content -->
-        <div class="col-md-9">
-            <h2 class="mb-3">Welcome Super Admin, {{ current_user.full_name }}</h2>
-            <div class="row">
-                <div class="col-md-12 mb-4">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-primary text-white">
-                            Account Information
+            <!-- Main Content Area -->
+            <div class="col-md-9">
+                <h2 class="mb-4 fw-bold">Welcome Super Admin, <span class="text-primary">{{ current_user.full_name }}</span></h2>
+
+                <!-- Account Info Card With Profile -->
+                <div class="card shadow-lg mb-4 border-0 rounded-4" data-aos="zoom-in" data-aos-delay="100">
+                    <div class="card-header bg-gradient-primary text-white fw-semibold rounded-top-4">
+                        Account Information
+                    </div>
+                    <div class="card-body d-flex flex-column flex-md-row align-items-center gap-4">
+                        <!-- Profile Image -->
+                        <div class="text-center">
+                            <img src="{{ url_for('static', filename=current_user.profile_image_url or 'img/ALB_3588') }}"
+                                 alt="Profile Image"
+                                 class="rounded-circle border border-3 shadow-sm mb-2"
+                                 style="width: 120px; height: 120px; object-fit: cover;">
+                            <br>
+                            <button type="button" class="btn btn-sm btn-outline-secondary mt-2" data-bs-toggle="modal" data-bs-target="#updateProfileImageModal">
+                                Change Image
+                            </button>
                         </div>
-                        <div class="card-body">
+
+                        <!-- Info Details -->
+                        <div class="flex-grow-1">
+                            <p><strong>Name:</strong> {{ current_user.full_name }}</p>
                             <p><strong>Email:</strong> {{ current_user.email }}</p>
                             <p><strong>ID Number:</strong> {{ current_user.id_number or 'N/A' }}</p>
                             <p><strong>County:</strong> {{ current_user.county or 'N/A' }}</p>
@@ -43,37 +60,97 @@
                     </div>
                 </div>
 
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-secondary text-white">User Management</div>
-                        <div class="card-body">
-                            <p>Create, edit, or delete voter and admin accounts.</p>
-                            <a href="{{ url_for('admin_web.manage_users') }}" class="btn btn-outline-primary">Manage Users</a>
+                <!-- Management Cards -->
+                <div class="row">
+                    <div class="col-md-6 mb-4" data-aos="fade-up" data-aos-delay="150">
+                        <div class="card h-100 shadow border-0 rounded-4">
+                            <div class="card-header bg-gradient-secondary text-white fw-semibold rounded-top-4">User Management</div>
+                            <div class="card-body d-flex flex-column justify-content-between">
+                                <p>Manage voter and admin accounts with full access control.</p>
+                                <a href="{{ url_for('admin_web.manage_users') }}" class="btn btn-primary mt-3 w-100">Go to User Management</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-4" data-aos="fade-up" data-aos-delay="200">
+                        <div class="card h-100 shadow border-0 rounded-4">
+                            <div class="card-header bg-gradient-secondary text-white fw-semibold rounded-top-4">Election Management</div>
+                            <div class="card-body d-flex flex-column justify-content-between">
+                                <p>Configure elections, manage candidates, and assign positions.</p>
+                                <a href="{{ url_for('admin_web.manage_elections') }}" class="btn btn-primary mt-3 w-100">Manage Elections</a>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-secondary text-white">Election Management</div>
-                        <div class="card-body">
-                            <p>Configure elections, candidates, and positions.</p>
-                            <a href="{{ url_for('admin_web.manage_elections') }}" class="btn btn-outline-primary">Manage Elections</a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-12 mb-4">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-info text-white">Analytics & Reports</div>
-                        <div class="card-body">
-                            <p>Review voter turnout, vote distribution, and system insights.</p>
-                            <a href="{{ url_for('admin_web.view_analytics') }}" class="btn btn-outline-info">View Analytics</a>
-                        </div>
+                <!-- Analytics & Reports -->
+                <div class="card shadow border-0 rounded-4 mb-4" data-aos="fade-up" data-aos-delay="250">
+                    <div class="card-header bg-gradient-info text-white fw-semibold rounded-top-4">Analytics & Reports</div>
+                    <div class="card-body">
+                        <p>Visualize voter turnout, analyze voting trends, and download reports.</p>
+                        <a href="{{ url_for('admin_web.view_analytics') }}" class="btn btn-info text-white mt-2 w-100">View System Analytics</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Profile Image Upload Modal -->
+<div class="modal fade" id="updateProfileImageModal" tabindex="-1" aria-labelledby="updateProfileImageLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="POST" enctype="multipart/form-data" action="{{ url_for('admin_web.update_profile_image') }}">
+            {{ form.hidden_tag() }}
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="updateProfileImageLabel">Update Profile Image</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        {{ form.image.label(class="form-label") }}
+                        {{ form.image(class="form-control") }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block head_extra %}
+<style>
+.admin-dashboard-background {
+    background: linear-gradient(to bottom right, #f1f4f8, #e9ecef);
+    min-height: 100vh;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #0d6efd, #0a58ca);
+}
+.bg-gradient-secondary {
+    background: linear-gradient(135deg, #6c757d, #5a6268);
+}
+.bg-gradient-info {
+    background: linear-gradient(135deg, #17a2b8, #117a8b);
+}
+.card-header {
+    font-size: 1.1rem;
+}
+.card p {
+    font-size: 0.95rem;
+}
+.btn {
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.4rem 1rem rgba(0, 0, 0, 0.1);
+}
+</style>
 {% endblock %}

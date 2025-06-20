@@ -1,13 +1,14 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify, send_file
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify, send_file, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from app.forms.forms import LoginForm, RegistrationForm, ElectionForm, PositionForm
+from app.forms.forms import LoginForm, RegistrationForm, ElectionForm, PositionForm, ProfileImageForm
 from app.models import User, Election, Candidate, Vote, Position
 from app.extensions import db
 from app.enums import UserRole, ElectionStatusEnum
 from datetime import datetime, timedelta
+from werkzeug.utils import secure_filename
 from io import StringIO
 import csv
-
+import os
 # Blueprints
 web_auth_bp = Blueprint('web_auth', __name__)
 admin_web_bp = Blueprint('admin_web', __name__, url_prefix='/admin')
@@ -62,9 +63,10 @@ def logout():
 @admin_web_bp.route('/dashboard')
 @login_required
 def dashboard():
+    form = ProfileImageForm() 
     if not (current_user.is_superadmin or current_user.role == UserRole.admin.value):
         abort(403)
-    return render_template('admin/dashboard.html')
+    return render_template('admin/dashboard.html', form=form)
 
 # -------------------------
 # Manage Users
@@ -355,9 +357,9 @@ def deactivate_election(election_id):
     flash(f"Election '{election.title}' deactivated.", "info")
     return redirect(url_for('admin_web.manage_elections'))
 
-# -------------------------
-# View Analytics
-# -------------------------
+
+
+
 @admin_web_bp.route('/analytics')
 @login_required
 def view_analytics():
@@ -367,11 +369,24 @@ def view_analytics():
     total_users = User.query.count()
     total_votes = Vote.query.count()
     total_elections = Election.query.count()
+    voted_users = db.session.query(Vote.voter_id).distinct().count()
+    position_votes_query = (
+        db.session.query(Position.name, db.func.count(Vote.id))
+        .join(Vote, Vote.position_id == Position.id)
+        .group_by(Position.name)
+        .all()
+    )
+    position_data = list(position_votes_query)
 
     return render_template('admin/analytics.html',
-                           total_users=total_users,
-                           total_votes=total_votes,
-                           total_elections=total_elections)
+        total_users=total_users,
+        total_votes=total_votes,
+        total_elections=total_elections,
+        voted_users=voted_users,
+        position_data=position_data
+    )
+
+
 
 # -------------------------
 # Voter Dashboard
@@ -476,3 +491,20 @@ def delete_position(position_id):
     db.session.commit()
     flash('Position deleted.', 'info')
     return redirect(url_for('admin_web.manage_positions'))
+
+
+@admin_web_bp.route('/profile/image', methods=['GET', 'POST'])
+@login_required
+def update_profile_image():
+    form = ProfileImageForm()
+    if form.validate_on_submit():
+        image_file = form.image.data
+        filename = secure_filename(image_file.filename)
+        image_path = os.path.join(current_app.root_path, 'static', 'img', filename)
+        image_file.save(image_path)
+        current_user.profile_image_url = f'img/{filename}'
+        db.session.commit()
+        flash('Profile image updated successfully!', 'success')
+        return redirect(url_for('admin_web.dashboard'))
+
+    return render_template('admin/update_image.html', form=form)

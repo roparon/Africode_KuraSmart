@@ -1,12 +1,109 @@
 {% extends "base.html" %}
 
+{% block title %}System Analytics | KuraSmart{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h2>System Analytics</h2>
-    <ul class="list-group mt-3">
-        <li class="list-group-item">Total Users: {{ total_users }}</li>
-        <li class="list-group-item">Total Votes: {{ total_votes }}</li>
-        <li class="list-group-item">Total Elections: {{ total_elections }}</li>
-    </ul>
+<div class="container mt-4" data-aos="fade-up">
+    <h2 class="mb-4">System Analytics</h2>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary shadow-sm mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Users</h5>
+                    <p class="card-text fs-4">{{ total_users }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-success shadow-sm mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Votes</h5>
+                    <p class="card-text fs-4">{{ total_votes }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-info shadow-sm mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Elections</h5>
+                    <p class="card-text fs-4">{{ total_elections }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row">
+        <!-- Voter Turnout -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light fw-semibold">Voter Turnout</div>
+                <div class="card-body text-center">
+                    {% set turnout_pct = (voted_users / total_users) * 100 %}
+                    <div class="donut-chart" style="--percentage: {{ turnout_pct | round(0) }};">
+                        <span>{{ turnout_pct | round(0) }}%</span>
+                    </div>
+                    <p class="mt-2 text-muted">Voted: {{ voted_users }} / {{ total_users }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vote Distribution -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light fw-semibold">Vote Distribution by Position</div>
+                <div class="card-body">
+                    {% for pos, count in position_data %}
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small">
+                                <span>{{ pos }}</span>
+                                <span>{{ count }} votes</span>
+                            </div>
+                            <div class="progress">
+                                {% set percent = (count / total_votes) * 100 %}
+                                <div class="progress-bar bg-success" style="width: {{ percent | round(0) }}%"></div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No vote data available yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block head_extra %}
+<style>
+.donut-chart {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: conic-gradient(#0d6efd calc(var(--percentage) * 1%), #0f579e 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #0d6efd;
+    position: relative;
+}
+.donut-chart::before {
+    content: "";
+    position: absolute;
+    width: 60%;
+    height: 60%;
+    background: #e6b0fc;
+    border-radius: 50%;
+    z-index: 1;
+}
+.donut-chart span {
+    position: relative;
+    z-index: 2;
+    font-size: 1.25rem;
+}
+</style>
 {% endblock %}

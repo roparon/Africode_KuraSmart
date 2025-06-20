@@ -1,9 +1,16 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DateTimeLocalField, SelectField
+from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DateTimeLocalField, SelectField, FileField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
+from flask_wtf.file import FileField, FileAllowed
+
 from datetime import datetime, timedelta
 
 
+class ProfileImageForm(FlaskForm):
+    image = FileField('Upload Profile Image', validators=[
+        FileAllowed(['jpg', 'jpeg', 'png'], 'Only .jpg, .jpeg, .png allowed')
+    ])
+    submit = SubmitField('Update Image')
 
 
 class RegistrationForm(FlaskForm):
