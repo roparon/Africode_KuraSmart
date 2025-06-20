@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify, send_file
 from flask_login import login_user, logout_user, login_required, current_user
-from app.forms.forms import LoginForm, RegistrationForm, ElectionForm
+from app.forms.forms import LoginForm, RegistrationForm, ElectionForm, PositionForm
 from app.models import User, Election, Candidate, Vote, Position
 from app.extensions import db
 from app.enums import UserRole, ElectionStatusEnum
@@ -438,3 +438,41 @@ def delete_election(election_id):
     db.session.commit()
     flash("Election deleted!", "warning")
     return redirect(url_for('admin_web.manage_elections'))
+
+
+
+@admin_web_bp.route('/positions', methods=['GET', 'POST'])
+@login_required
+def manage_positions():
+    if current_user.role != 'admin':
+        abort(403)
+
+    form = PositionForm()
+    form.election_id.choices = [(e.id, e.title) for e in Election.query.all()]
+
+    if form.validate_on_submit():
+        position = Position(
+            name=form.name.data,
+            description=form.description.data,
+            election_id=form.election_id.data
+        )
+        db.session.add(position)
+        db.session.commit()
+        flash('Position created successfully.', 'success')
+        return redirect(url_for('admin.manage_positions'))
+
+    positions = Position.query.all()
+    return render_template('admin/positions.html', form=form, positions=positions)
+
+
+@admin_web_bp.route('/positions/delete/<int:position_id>', methods=['POST'])
+@login_required
+def delete_position(position_id):
+    if current_user.role != 'admin':
+        abort(403)
+
+    position = Position.query.get_or_404(position_id)
+    db.session.delete(position)
+    db.session.commit()
+    flash('Position deleted.', 'info')
+    return redirect(url_for('admin_web.manage_positions'))

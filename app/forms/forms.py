@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DateTimeLocalField
+from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DateTimeLocalField, SelectField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
 from datetime import datetime, timedelta
 
@@ -42,5 +42,12 @@ class ElectionForm(FlaskForm):
             raise ValidationError("End time must be after the start time.")
         elif field.data > self.start_date.data + timedelta(hours=12, minutes=30):
             raise ValidationError("Election duration cannot exceed 12 hours 30 minutes.")
+        
+
+class PositionForm(FlaskForm):
+    name = StringField('Position Name', validators=[DataRequired(), Length(min=2, max=100)])
+    description = TextAreaField('Description')
+    election_id = SelectField('Assign to Election', coerce=int)
+    submit = SubmitField('Save Position')
         
 
