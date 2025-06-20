@@ -170,6 +170,13 @@ class Vote(db.Model):
 
     def __str__(self):
         return f"Vote by User {self.voter_id} for Candidate {self.candidate_id} in Election {self.election_id}"
+    
+class Position(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text)
+    election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=True)
+    election = db.relationship('Election', backref='positions')
 
 class VerificationRequest(db.Model):
     __tablename__ = 'verification_requests'
