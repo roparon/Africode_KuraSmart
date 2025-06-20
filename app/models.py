@@ -29,6 +29,7 @@ class User(db.Model, UserMixin):
     role = db.Column(db.Enum(UserRole), default=UserRole.voter, nullable=False, index=True)
     username = db.Column(db.String(80), unique=True, nullable=True)
     id_number = db.Column(db.String(20), unique=True, nullable=True)
+    profile_image_url = db.Column(db.String(255), nullable=True)
     county = db.Column(db.String(100), nullable=True)
     constituency = db.Column(db.String(100), nullable=True)
     ward = db.Column(db.String(100), nullable=True)
