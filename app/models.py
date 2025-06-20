@@ -189,9 +189,8 @@ class VerificationRequest(db.Model):
 
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    subject = db.Column(db.String(150), nullable=False)
+    title = db.Column(db.String(150), nullable=False)
     message = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     send_email = db.Column(db.Boolean, default=False)
-    election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=True)
-    location = db.Column(db.String(100), nullable=True)
+
