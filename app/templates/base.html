@@ -27,6 +27,13 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 
+    <!-- Optional: Smooth icon transition -->
+    <style>
+        #theme-toggle i {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+    </style>
+
     {% block head_extra %}{% endblock %}
 </head>
 
@@ -123,22 +130,38 @@
         AOS.init({ duration: 800, easing: 'ease-in-out' });
     </script>
 
-    <!-- Theme Toggle -->
+    <!-- Theme Toggle Script -->
     <script>
-        document.getElementById('theme-toggle')?.addEventListener('click', () => {
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeIcon = themeToggleBtn?.querySelector('i');
+
+        themeToggleBtn?.addEventListener('click', () => {
             const html = document.documentElement;
-            const current = html.getAttribute('data-bs-theme');
-            const newTheme = current === 'dark' ? 'light' : 'dark';
+            const currentTheme = html.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-bs-theme', newTheme);
             localStorage.setItem('theme', newTheme);
+
+            // Animate icon switch
+            if (themeIcon) {
+                themeIcon.style.opacity = 0;
+                setTimeout(() => {
+                    themeIcon.classList.toggle('fa-moon', newTheme === 'dark');
+                    themeIcon.classList.toggle('fa-sun', newTheme === 'light');
+                    themeIcon.style.opacity = 1;
+                }, 150);
+            }
         });
 
         window.addEventListener('DOMContentLoaded', () => {
-            const saved = localStorage.getItem('theme');
-            if (saved) {
-                document.documentElement.setAttribute('data-bs-theme', saved);
-            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                document.documentElement.setAttribute('data-bs-theme', 'dark');
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const finalTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-bs-theme', finalTheme);
+
+            if (themeIcon) {
+                themeIcon.classList.add(finalTheme === 'dark' ? 'fa-moon' : 'fa-sun');
+                themeIcon.classList.remove(finalTheme === 'dark' ? 'fa-sun' : 'fa-moon');
             }
         });
     </script>
