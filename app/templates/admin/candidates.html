@@ -36,13 +36,17 @@
             <tr data-aos="zoom-in" data-aos-delay="{{ loop.index * 30 }}">
               <td>{{ c.id }}</td>
               <td>{{ c.full_name }}</td>
-              <td>{{ c.party or '—' }}</td>
+              <td>{{ c.party_name or '—' }}</td>
               <td>{{ c.position }}</td>
               <td>
-                <button class="btn btn-sm btn-warning me-1" onclick="openModal({{ c.id }}, '{{ c.full_name }}', '{{ c.party or '' }}', '{{ c.position }}')">
+                <button class="btn btn-sm btn-warning me-1"
+                        onclick="openModal({{ c.id }}, '{{ c.full_name }}', '{{ c.party_name or '' }}', '{{ c.position }}')">
                   <i class="bi bi-pencil-square"></i>
                 </button>
-                <form method="POST" action="{{ url_for('admin_web.delete_candidate', candidate_id=c.id) }}" class="d-inline" onsubmit="return confirm('Delete this candidate?');">
+                <form method="POST"
+                      action="{{ url_for('admin_web.delete_candidate', candidate_id=c.id) }}"
+                      class="d-inline"
+                      onsubmit="return confirm('Delete this candidate?');">
                   <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-trash-fill"></i></button>
                 </form>
               </td>
@@ -74,8 +78,8 @@
             {{ form.full_name(class="form-control") }}
           </div>
           <div class="mb-3">
-            {{ form.party.label(class="form-label") }}
-            {{ form.party(class="form-control") }}
+            {{ form.party_name.label(class="form-label") }}
+            {{ form.party_name(class="form-control") }}
           </div>
           <div class="mb-3">
             {{ form.position.label(class="form-label") }}
@@ -108,19 +112,18 @@
 <script>
   AOS.init({ duration: 600, once: true, easing: 'ease-out-cubic' });
 
-  function openModal(id = null, name = '', party = '', position = '') {
+  function openModal(id = null, name = '', party_name = '', position = '') {
     const form = document.getElementById('candidateForm');
     const title = document.getElementById('modalTitle');
 
-    // Set form action depending on context
     form.action = id
       ? `/admin/candidates/edit/${id}`
       : `/admin/candidates/create`;
 
-    // Set modal title and input values
     title.textContent = id ? 'Edit Candidate' : 'Add Candidate';
+
     form.full_name.value = name;
-    form.party.value = party;
+    form.party_name.value = party_name;
     form.position.value = position;
   }
 </script>

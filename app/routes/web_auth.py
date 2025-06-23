@@ -14,7 +14,6 @@ import os
 web_auth_bp = Blueprint('web_auth', __name__)
 admin_web_bp = Blueprint('admin_web', __name__, url_prefix='/admin')
 voter_bp = Blueprint('voter', __name__, url_prefix='/voter')
-
 # -----------------------------------
 # Registration, Login, Logout Routes
 # -----------------------------------
@@ -586,34 +585,50 @@ def manage_candidates():
     form = CandidateForm()
 
     return render_template('admin/candidates.html', candidates=candidates, form=form)
-@admin_web_bp.route('/candidates/create', methods=['GET', 'POST'])
+
+
+@admin_web_bp.route('/admin/candidates/create', methods=['GET', 'POST'])
 @login_required
 def create_candidate():
     if not current_user.is_superadmin:
         abort(403)
+
     form = CandidateForm()
-    # Get the latest election
-    election = Election.query.order_by(Election.created_at.desc()).first()
-    if not election:
-        flash("No active election found.", "danger")
-        return redirect(url_for('admin_web.dashboard'))
+
     if form.validate_on_submit():
-        try:
-            candidate = Candidate(
-                user_id=current_user.id,
-                election_id=election.id,
-                position_id=get_position_id(form.position.data),
-                full_name=form.full_name.data,
-                party_name=form.party_name.data,
-                position=form.position.data,
-            )
-            db.session.add(candidate)
-            db.session.commit()
-            flash("Candidate created successfully!", "success")
-            return redirect(url_for('admin_web.manage_candidates'))
-        except ValueError as e:
-            flash(str(e), "danger")
-    return render_template("admin/create_candidate.html", form=form)
+        # Fetch a matching position object if needed
+        position_name = form.position.data
+        position_obj = Position.query.filter_by(name=position_name).first()
+        if not position_obj:
+            flash("Selected position does not exist.", "danger")
+            return redirect(url_for('create_candidate'))
+
+        candidate = Candidate(
+            full_name=form.full_name.data,
+            party_name=form.party_name.data,
+            position=position_name,
+            position_id=position_obj.id,
+            user_id=current_user.id,  # assuming current user is the candidate creator
+            election_id=position_obj.election_id
+        )
+
+        db.session.add(candidate)
+        db.session.commit()
+        flash("Candidate successfully created.", "success")
+        return redirect(url_for('manage_candidates'))
+
+    return render_template('admin/create_candidate.html', form=form)
+
+#This is Helper Function
+
+def get_position_id(position_name, election_id):
+    """Get the Position ID by name and election_id. Create if it doesn't exist."""
+    position = Position.query.filter_by(name=position_name, election_id=election_id).first()
+    if not position:
+        position = Position(name=position_name, election_id=election_id)
+        db.session.add(position)
+        db.session.commit()
+    return position.id
 
 
 
