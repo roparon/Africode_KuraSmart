@@ -610,14 +610,15 @@ def create_candidate():
 
 
 # Edit candidate
-@admin_web_bp.route('/candidates/edit/<int:id>', methods=['GET', 'POST'])
+@admin_web_bp.route('/candidates/edit/<int:id>', methods=['POST'])
 @login_required
 def edit_candidate(id):
-    if not current_user.is_superadmin:
-        abort(403)
-
     candidate = Candidate.query.get_or_404(id)
     form = CandidateForm()
+
+    # Dynamically set position choices
+    positions = Position.query.filter_by(election_id=candidate.election_id).all()
+    form.position.choices = [(p.name, p.name) for p in positions]
 
     if form.validate_on_submit():
         candidate.full_name = form.full_name.data
@@ -625,11 +626,12 @@ def edit_candidate(id):
         candidate.position = form.position.data
         candidate.position_id = get_position_id(form.position.data, candidate.election_id)
         db.session.commit()
-        flash(f"Candidate {candidate.full_name} ({candidate.position}) updated!", "success")
+        flash("Candidate updated successfully!", "success")
     else:
         flash("Failed to update candidate. Please check the form fields.", "danger")
 
     return redirect(url_for('admin_web.manage_candidates'))
+
 
 
 # Delete candidate
