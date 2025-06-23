@@ -1,3 +1,4 @@
+<!-- app/templates/admin/candidates.html -->
 {% extends "base.html" %}
 {% block title %}Manage Candidates | KuraSmart{% endblock %}
 
@@ -43,10 +44,7 @@
                         onclick="openModal({{ c.id }}, '{{ c.full_name }}', '{{ c.party_name or '' }}', '{{ c.position }}')">
                   <i class="bi bi-pencil-square"></i>
                 </button>
-                <form method="POST"
-                      action="{{ url_for('admin_web.delete_candidate', candidate_id=c.id) }}"
-                      class="d-inline"
-                      onsubmit="return confirm('Delete this candidate?');">
+                <form method="POST" action="{{ url_for('admin_web.delete_candidate', candidate_id=c.id) }}" class="d-inline" onsubmit="return confirm('Delete this candidate?');">
                   <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-trash-fill"></i></button>
                 </form>
               </td>
@@ -112,7 +110,7 @@
 <script>
   AOS.init({ duration: 600, once: true, easing: 'ease-out-cubic' });
 
-  function openModal(id = null, name = '', party_name = '', position = '') {
+  function openModal(id = null, name = '', party = '', position = '') {
     const form = document.getElementById('candidateForm');
     const title = document.getElementById('modalTitle');
 
@@ -121,9 +119,8 @@
       : `/admin/candidates/create`;
 
     title.textContent = id ? 'Edit Candidate' : 'Add Candidate';
-
     form.full_name.value = name;
-    form.party_name.value = party_name;
+    form.party_name.value = party;
     form.position.value = position;
   }
 </script>

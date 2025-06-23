@@ -54,8 +54,6 @@ def create_app():
     from app.routes.notifications import notifications_bp
     from app.context_processors import inject_unread_notifs
     from app.routes.voter import voter_bp
-    from app.routes.web_auth import admin_web
-
 
 
 
@@ -77,7 +75,6 @@ def create_app():
     app.register_blueprint(main_bp)
     app.register_blueprint(notifications_bp)
     app.context_processor(inject_unread_notifs)
-    app.register_blueprint(admin_web)
 
 
 

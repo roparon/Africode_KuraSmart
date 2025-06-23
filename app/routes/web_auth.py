@@ -575,19 +575,8 @@ def delete_notification(notif_id):
 from app.forms.candidate_form import CandidateForm
 
 
-@admin_web_bp.route('/candidates', methods=['GET'])
-@login_required
-def manage_candidates():
-    if not current_user.is_superadmin:
-        abort(403)
-
-    candidates = Candidate.query.all()
-    form = CandidateForm()
-
-    return render_template('admin/candidates.html', candidates=candidates, form=form)
-
-
-@admin_web_bp.route('/admin/candidates/create', methods=['GET', 'POST'])
+# Create candidate
+@admin_web_bp.route('/candidates/create', methods=['GET', 'POST'])
 @login_required
 def create_candidate():
     if not current_user.is_superadmin:
@@ -596,69 +585,72 @@ def create_candidate():
     form = CandidateForm()
 
     if form.validate_on_submit():
-        # Fetch a matching position object if needed
         position_name = form.position.data
         position_obj = Position.query.filter_by(name=position_name).first()
         if not position_obj:
             flash("Selected position does not exist.", "danger")
-            return redirect(url_for('create_candidate'))
+            return redirect(url_for('admin_web.create_candidate'))
 
         candidate = Candidate(
             full_name=form.full_name.data,
             party_name=form.party_name.data,
             position=position_name,
             position_id=position_obj.id,
-            user_id=current_user.id,  # assuming current user is the candidate creator
+            user_id=current_user.id,
             election_id=position_obj.election_id
         )
 
         db.session.add(candidate)
         db.session.commit()
         flash("Candidate successfully created.", "success")
-        return redirect(url_for('manage_candidates'))
+        return redirect(url_for('admin_web.manage_candidates'))
 
     return render_template('admin/create_candidate.html', form=form)
 
-#This is Helper Function
-
-def get_position_id(position_name, election_id):
-    """Get the Position ID by name and election_id. Create if it doesn't exist."""
-    position = Position.query.filter_by(name=position_name, election_id=election_id).first()
-    if not position:
-        position = Position(name=position_name, election_id=election_id)
-        db.session.add(position)
-        db.session.commit()
-    return position.id
-
-
-
+# Edit candidate
 @admin_web_bp.route('/candidates/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_candidate(id):
     candidate = Candidate.query.get_or_404(id)
     form = CandidateForm(obj=candidate)
-    form.party_name.data = candidate.party_name  # Since it's custom
+    form.party_name.data = candidate.party_name
 
     if form.validate_on_submit():
         candidate.full_name = form.full_name.data
         candidate.party_name = form.party_name.data
         candidate.position = form.position.data
-        candidate.position_id = get_position_id(form.position.data)
+        candidate.position_id = get_position_id(form.position.data, candidate.election_id)
         db.session.commit()
         flash("Candidate updated successfully!", "success")
         return redirect(url_for('admin_web.manage_candidates'))
 
     return render_template("admin/edit_candidate.html", form=form, candidate=candidate)
 
-
-
+# Delete candidate
 @admin_web_bp.route('/candidates/delete/<int:candidate_id>', methods=['POST'])
 @login_required
 def delete_candidate(candidate_id):
     if not current_user.is_superadmin:
         abort(403)
-    cand = Candidate.query.get_or_404(candidate_id)
-    db.session.delete(cand)
+    candidate = Candidate.query.get_or_404(candidate_id)
+    db.session.delete(candidate)
     db.session.commit()
     flash('Candidate deleted.', 'warning')
     return redirect(url_for('admin_web.manage_candidates'))
+
+# View all candidates
+@admin_web_bp.route('/candidates')
+@login_required
+def manage_candidates():
+    candidates = Candidate.query.all()
+    form = CandidateForm()
+    return render_template('admin/candidates.html', candidates=candidates, form=form)
+
+# Helper function
+def get_position_id(position_name, election_id):
+    position = Position.query.filter_by(name=position_name, election_id=election_id).first()
+    if not position:
+        position = Position(name=position_name, election_id=election_id)
+        db.session.add(position)
+        db.session.commit()
+    return position.id
