@@ -121,15 +121,16 @@
   function openModal(id = null, name = '', party = '', position = '') {
     const form = document.getElementById('candidateForm');
     const title = document.getElementById('modalTitle');
-
+  
     form.action = id
       ? `/admin/candidates/edit/${id}`
       : `/admin/candidates/create`;
-
+  
     title.textContent = id ? 'Edit Candidate' : 'Add Candidate';
-    form.full_name.value = name;
-    form.party_name.value = party;
-    form.position.value = position;
+  
+    form.querySelector('[name="full_name"]').value = name;
+    form.querySelector('[name="party_name"]').value = party;
+    form.querySelector('[name="position"]').value = position;
   }
 </script>
 {% endblock %}

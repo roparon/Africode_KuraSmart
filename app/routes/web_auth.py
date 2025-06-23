@@ -610,13 +610,13 @@ def create_candidate():
 
 
 # Edit candidate
-@admin_web_bp.route('/candidates/edit/<int:id>', methods=['POST'])
+@admin_web_bp.route('/candidates/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_candidate(id):
     candidate = Candidate.query.get_or_404(id)
-    form = CandidateForm()
+    form = CandidateForm(obj=candidate)  # Prepopulate with candidate data
 
-    # Dynamically set position choices
+    # Set dynamic choices
     positions = Position.query.filter_by(election_id=candidate.election_id).all()
     form.position.choices = [(p.name, p.name) for p in positions]
 
@@ -625,12 +625,20 @@ def edit_candidate(id):
         candidate.party_name = form.party_name.data
         candidate.position = form.position.data
         candidate.position_id = get_position_id(form.position.data, candidate.election_id)
+
         db.session.commit()
         flash("Candidate updated successfully!", "success")
-    else:
-        flash("Failed to update candidate. Please check the form fields.", "danger")
+        return redirect(url_for('admin_web.manage_candidates'))
+    
+    if request.method == 'GET':
+        # This fills in the form fields on the edit page
+        form.full_name.data = candidate.full_name
+        form.party_name.data = candidate.party_name
+        form.position.data = candidate.position
 
-    return redirect(url_for('admin_web.manage_candidates'))
+    return render_template("admin/edit_candidate.html", form=form, candidate=candidate)
+
+
 
 
 
