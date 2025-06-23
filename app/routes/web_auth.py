@@ -613,9 +613,11 @@ def create_candidate():
 @admin_web_bp.route('/candidates/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_candidate(id):
+    if not current_user.is_superadmin:
+        abort(403)
+
     candidate = Candidate.query.get_or_404(id)
-    form = CandidateForm(obj=candidate)
-    form.party_name.data = candidate.party_name
+    form = CandidateForm()
 
     if form.validate_on_submit():
         candidate.full_name = form.full_name.data
@@ -623,10 +625,12 @@ def edit_candidate(id):
         candidate.position = form.position.data
         candidate.position_id = get_position_id(form.position.data, candidate.election_id)
         db.session.commit()
-        flash("Candidate updated successfully!", "success")
-        return redirect(url_for('admin_web.manage_candidates'))
+        flash(f"Candidate {candidate.full_name} ({candidate.position}) updated!", "success")
+    else:
+        flash("Failed to update candidate. Please check the form fields.", "danger")
 
-    return render_template("admin/edit_candidate.html", form=form, candidate=candidate)
+    return redirect(url_for('admin_web.manage_candidates'))
+
 
 # Delete candidate
 @admin_web_bp.route('/candidates/delete/<int:candidate_id>', methods=['POST'])
@@ -637,7 +641,9 @@ def delete_candidate(candidate_id):
     candidate = Candidate.query.get_or_404(candidate_id)
     db.session.delete(candidate)
     db.session.commit()
-    flash('Candidate deleted.', 'warning')
+    candidate_name = candidate.full_name
+    position = candidate.position
+    flash(f'Candidate {candidate_name} for {position} deleted successfully.', 'warning')
     return redirect(url_for('admin_web.manage_candidates'))
 
 # View all candidates
