@@ -576,7 +576,7 @@ from app.forms.candidate_form import CandidateForm
 
 
 # Create candidate
-@admin_web_bp.route('/admin/candidates/create', methods=['POST'])
+@admin_web_bp.route('/candidates/create', methods=['POST'])
 @login_required
 def create_candidate():
     if not current_user.is_superadmin:
