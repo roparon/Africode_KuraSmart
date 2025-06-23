@@ -614,11 +614,15 @@ def create_candidate():
 @login_required
 def edit_candidate(id):
     candidate = Candidate.query.get_or_404(id)
-    form = CandidateForm(obj=candidate)  # Prepopulate with candidate data
 
-    # Set dynamic choices
+    # Preload positions for the candidate's election
     positions = Position.query.filter_by(election_id=candidate.election_id).all()
-    form.position.choices = [(p.name, p.name) for p in positions]
+    choices = [(p.name, p.name) for p in positions]
+
+    form = CandidateForm()
+
+    # Assign choices before validation or rendering
+    form.position.choices = choices
 
     if form.validate_on_submit():
         candidate.full_name = form.full_name.data
@@ -629,14 +633,15 @@ def edit_candidate(id):
         db.session.commit()
         flash("Candidate updated successfully!", "success")
         return redirect(url_for('admin_web.manage_candidates'))
-    
+
+    # Only populate form with existing data on GET or failed POST
     if request.method == 'GET':
-        # This fills in the form fields on the edit page
         form.full_name.data = candidate.full_name
         form.party_name.data = candidate.party_name
         form.position.data = candidate.position
 
     return render_template("admin/edit_candidate.html", form=form, candidate=candidate)
+
 
 
 
