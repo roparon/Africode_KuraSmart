@@ -586,37 +586,55 @@ def manage_candidates():
     form = CandidateForm()
 
     return render_template('admin/candidates.html', candidates=candidates, form=form)
-
-
-@admin_web_bp.route('/candidates/create', methods=['GET','POST'])
+@admin_web_bp.route('/candidates/create', methods=['GET', 'POST'])
 @login_required
 def create_candidate():
     if not current_user.is_superadmin:
         abort(403)
     form = CandidateForm()
+    # Get the latest election
+    election = Election.query.order_by(Election.created_at.desc()).first()
+    if not election:
+        flash("No active election found.", "danger")
+        return redirect(url_for('admin_web.dashboard'))
     if form.validate_on_submit():
-        cand = Candidate(full_name=form.full_name.data,
-                         party=form.party.data,
-                         position_id=form.position.data)
-        db.session.add(cand)
-        db.session.commit()
-        flash('Candidate added!', 'success')
-        return redirect(url_for('admin_web.manage_candidates'))
-    return render_template('admin/candidate_form.html', form=form, title='Add Candidate')
+        try:
+            candidate = Candidate(
+                user_id=current_user.id,
+                election_id=election.id,
+                position_id=get_position_id(form.position.data),
+                full_name=form.full_name.data,
+                party_name=form.party_name.data,
+                position=form.position.data,
+            )
+            db.session.add(candidate)
+            db.session.commit()
+            flash("Candidate created successfully!", "success")
+            return redirect(url_for('admin_web.manage_candidates'))
+        except ValueError as e:
+            flash(str(e), "danger")
+    return render_template("admin/create_candidate.html", form=form)
+
+
 
 @admin_web_bp.route('/candidates/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_candidate(id):
     candidate = Candidate.query.get_or_404(id)
     form = CandidateForm(obj=candidate)
+    form.party_name.data = candidate.party_name  # Since it's custom
+
     if form.validate_on_submit():
         candidate.full_name = form.full_name.data
-        candidate.party = form.party.data
+        candidate.party_name = form.party_name.data
         candidate.position = form.position.data
+        candidate.position_id = get_position_id(form.position.data)
         db.session.commit()
-        flash('Candidate updated successfully!', 'success')
+        flash("Candidate updated successfully!", "success")
         return redirect(url_for('admin_web.manage_candidates'))
-    return render_template('admin/edit_candidate.html', form=form, candidate=candidate)
+
+    return render_template("admin/edit_candidate.html", form=form, candidate=candidate)
+
 
 
 @admin_web_bp.route('/candidates/delete/<int:candidate_id>', methods=['POST'])

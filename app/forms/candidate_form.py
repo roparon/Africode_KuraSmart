@@ -4,7 +4,7 @@ from wtforms.validators import DataRequired
 
 class CandidateForm(FlaskForm):
     full_name = StringField('Full Name', validators=[DataRequired()])
-    party = StringField('Party (optional)')
+    party_name = StringField('Party (optional)')
     position = SelectField(
         'Position',
         choices=[
@@ -17,3 +17,4 @@ class CandidateForm(FlaskForm):
         validators=[DataRequired()]
     )
     submit = SubmitField('Save')
+
