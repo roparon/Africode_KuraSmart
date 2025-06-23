@@ -576,7 +576,7 @@ from app.forms.candidate_form import CandidateForm
 
 
 # Create candidate
-@admin_web_bp.route('/candidates/create', methods=['GET', 'POST'])
+@admin_web_bp.route('/admin/candidates/create', methods=['POST'])
 @login_required
 def create_candidate():
     if not current_user.is_superadmin:
@@ -589,7 +589,7 @@ def create_candidate():
         position_obj = Position.query.filter_by(name=position_name).first()
         if not position_obj:
             flash("Selected position does not exist.", "danger")
-            return redirect(url_for('admin_web.create_candidate'))
+            return redirect(url_for('admin_web.manage_candidates'))
 
         candidate = Candidate(
             full_name=form.full_name.data,
@@ -605,7 +605,9 @@ def create_candidate():
         flash("Candidate successfully created.", "success")
         return redirect(url_for('admin_web.manage_candidates'))
 
-    return render_template('admin/create_candidate.html', form=form)
+    flash("Form validation failed.", "danger")
+    return redirect(url_for('admin_web.manage_candidates'))
+
 
 # Edit candidate
 @admin_web_bp.route('/candidates/edit/<int:id>', methods=['GET', 'POST'])
