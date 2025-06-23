@@ -39,7 +39,7 @@
               <td>{{ c.party or '—' }}</td>
               <td>{{ c.position }}</td>
               <td>
-                <button class="btn btn-sm btn-warning me-1" onclick="openModal({{ c.id }}, &quot;{{ c.full_name }}&quot;, &quot;{{ c.party }}&quot;, &quot;{{ c.position }}&quot;)">
+                <button class="btn btn-sm btn-warning me-1" onclick="openModal({{ c.id }}, '{{ c.full_name }}', '{{ c.party or '' }}', '{{ c.position }}')">
                   <i class="bi bi-pencil-square"></i>
                 </button>
                 <form method="POST" action="{{ url_for('admin_web.delete_candidate', candidate_id=c.id) }}" class="d-inline" onsubmit="return confirm('Delete this candidate?');">
@@ -63,8 +63,8 @@
   <div class="modal-dialog modal-dialog-centered">
     <form id="candidateForm" method="POST">
       {{ form.hidden_tag() }}
-      <div class="modal-content">
-        <div class="modal-header bg-gradient-success text-white">
+      <div class="modal-content shadow-lg rounded-4">
+        <div class="modal-header bg-gradient-success text-white rounded-top-4">
           <h5 class="modal-title" id="modalTitle">Add Candidate</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
@@ -94,30 +94,31 @@
 
 {% block head_extra %}
 <style>
-.admin-dashboard-background {
-  background: linear-gradient(to bottom right, #f8f9fa, #e9ecef);
-}
-.btn-warning:hover, .btn-danger:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 .3rem .7rem rgba(0,0,0,0.1);
-}
+  .admin-dashboard-background {
+    background: linear-gradient(to bottom right, #f8f9fa, #e9ecef);
+  }
+  .btn-warning:hover, .btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 .3rem .7rem rgba(0,0,0,0.1);
+  }
 </style>
 {% endblock %}
 
 {% block scripts %}
 <script>
-  AOS.init({ duration:600, once:true, easing:'ease-out-cubic' });
+  AOS.init({ duration: 600, once: true, easing: 'ease-out-cubic' });
 
-  function openModal(id=null, name='', party='', position='') {
+  function openModal(id = null, name = '', party = '', position = '') {
     const form = document.getElementById('candidateForm');
     const title = document.getElementById('modalTitle');
-    if (id) {
-      form.action = `/admin_web/candidates/edit/${id}`;
-      title.textContent = 'Edit Candidate';
-    } else {
-      form.action = `/admin_web/candidates/create`;
-      title.textContent = 'Add Candidate';
-    }
+
+    // Set form action depending on context
+    form.action = id
+      ? `/admin/candidates/edit/${id}`
+      : `/admin/candidates/create`;
+
+    // Set modal title and input values
+    title.textContent = id ? 'Edit Candidate' : 'Add Candidate';
     form.full_name.value = name;
     form.party.value = party;
     form.position.value = position;
