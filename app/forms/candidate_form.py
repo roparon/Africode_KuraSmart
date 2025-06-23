@@ -6,16 +6,16 @@ class CandidateForm(FlaskForm):
     full_name = StringField('Full Name', validators=[DataRequired()])
     party_name = StringField('Party (optional)')
     position = SelectField(
-        'Position',
-        choices=[
-            ('President', 'President'),
-            ('Governor', 'Governor'),
-            ('Senator', 'Senator'),
-            ('Women Rep', 'Women Representative'),
-            ('MP', 'Member of Parliament'),
-            ('MCA', 'Member of County Assembly')
-        ],
-        validators=[DataRequired()]
-    )
+            'Position',
+            choices=[
+                ('President', 'President'),
+                ('Governor', 'Governor'),
+                ('Senator', 'Senator'),
+                ('Women Representative', 'Women Representative'),
+                ('Member Of Parliament', 'Member Of Parliament'),
+                ('Member Of County Assembly', 'Member Of County Assembly')
+            ],
+            validators=[DataRequired()]
+            )
     submit = SubmitField('Save')
 
