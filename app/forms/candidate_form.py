@@ -11,6 +11,7 @@ class CandidateForm(FlaskForm):
             ('President', 'President'),
             ('Governor', 'Governor'),
             ('Senator', 'Senator'),
+            ('Women Rep', 'Women Representative'),
             ('MP', 'Member of Parliament'),
             ('MCA', 'Member of County Assembly')
         ],
