@@ -7,9 +7,10 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2 class="fw-bold"><i class="bi bi-people-fill me-2 text-success"></i>Candidate Management</h2>
-      <a href="{{ url_for('admin_web.create_candidate') }}" class="btn btn-success rounded-pill">
+      <!-- Modal trigger -->
+      <button class="btn btn-success rounded-pill" data-bs-toggle="modal" data-bs-target="#candidateModal">
         <i class="bi bi-plus-circle me-1"></i> Add Candidate
-      </a>
+      </button>
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -40,12 +41,12 @@
               <td>{{ c.position }}</td>
               <td>
                 <a href="{{ url_for('admin_web.edit_candidate', id=c.id) }}" class="btn btn-sm btn-info">
-                  <i class="bi bi-pencil-square"></i>
+                  <i class="bi bi-pencil-square">edith</i>
                 </a>
                 <form method="POST" action="{{ url_for('admin_web.delete_candidate', candidate_id=c.id) }}" class="d-inline" onsubmit="return confirm('Delete this candidate?');">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="btn btn-sm btn-danger">
-                    <i class="bi bi-trash3"></i>
+                    <i class="bi bi-trash3">Delete</i>
                   </button>
                 </form>
               </td>
@@ -58,6 +59,46 @@
         {% endif %}
       </div>
     </div>
+  </div>
+</div>
+<div class="modal fade" id="candidateModal" tabindex="-1" aria-labelledby="candidateModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" class="modal-content" action="{{ url_for('admin_web.manage_candidates') }}">
+      {{ form.hidden_tag() }}
+
+      <div class="modal-header">
+        <h5 class="modal-title" id="candidateModalLabel">Add New Candidate</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="mb-3">
+          {{ form.full_name.label(class="form-label") }}
+          {{ form.full_name(class="form-control", placeholder="Enter full name") }}
+          {% for error in form.full_name.errors %}
+            <div class="text-danger">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          {{ form.party_name.label(class="form-label") }}
+          {{ form.party_name(class="form-control", placeholder="Party (optional)") }}
+        </div>
+
+        <div class="mb-3">
+          {{ form.position.label(class="form-label") }}
+          {{ form.position(class="form-select") }}
+          {% for error in form.position.errors %}
+            <div class="text-danger">{{ error }}</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        {{ form.submit(class="btn btn-success") }}
+      </div>
+    </form>
   </div>
 </div>
 {% endblock %}
@@ -77,5 +118,11 @@
 {% block scripts %}
 <script>
   AOS.init({ duration: 600, once: true, easing: 'ease-out-cubic' });
+
+  // Reopen modal on validation error
+  {% if form.errors %}
+    const candidateModal = new bootstrap.Modal(document.getElementById('candidateModal'));
+    candidateModal.show();
+  {% endif %}
 </script>
 {% endblock %}

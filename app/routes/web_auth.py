@@ -570,43 +570,51 @@ def delete_notification(notif_id):
     db.session.commit()
     flash('Notification deleted.', 'warning')
     return redirect(url_for('admin_web.manage_notifications'))
-
-
 from app.forms.candidate_form import CandidateForm
 
 
-# Create candidate
-@admin_web_bp.route('/candidates/create', methods=['POST'])
-@login_required
-def create_candidate():
-    if not current_user.is_superadmin:
-        abort(403)
+# Helper: Get or create position ID
+def get_position_id(position_name, election_id):
+    position = Position.query.filter_by(name=position_name, election_id=election_id).first()
+    if not position:
+        position = Position(name=position_name, election_id=election_id)
+        db.session.add(position)
+        db.session.commit()
+    return position.id
 
+# View all candidates
+@admin_web_bp.route('/candidates', methods=['GET', 'POST'])
+@login_required
+def manage_candidates():
     form = CandidateForm()
 
+    # If submitted from modal
     if form.validate_on_submit():
+        if not current_user.is_superadmin:
+            abort(403)
+
         position_name = form.position.data
         position_obj = Position.query.filter_by(name=position_name).first()
         if not position_obj:
             flash("Selected position does not exist.", "danger")
+        else:
+            candidate = Candidate(
+                full_name=form.full_name.data,
+                party_name=form.party_name.data,
+                position=position_name,
+                position_id=position_obj.id,
+                user_id=current_user.id,
+                election_id=position_obj.election_id
+            )
+            db.session.add(candidate)
+            db.session.commit()
+            flash("Candidate successfully created.", "success")
             return redirect(url_for('admin_web.manage_candidates'))
+    elif request.method == 'POST':
+        flash("Form validation failed. Please check your input.", "danger")
 
-        candidate = Candidate(
-            full_name=form.full_name.data,
-            party_name=form.party_name.data,
-            position=position_name,
-            position_id=position_obj.id,
-            user_id=current_user.id,
-            election_id=position_obj.election_id
-        )
-
-        db.session.add(candidate)
-        db.session.commit()
-        flash("Candidate successfully created.", "success")
-        return redirect(url_for('admin_web.manage_candidates'))
-
-    flash("Form validation failed.", "danger")
-    return redirect(url_for('admin_web.manage_candidates'))
+    candidates = Candidate.query.all()
+    return render_template('admin/candidates.html', candidates=candidates, form=form)
 
 
 # Edit candidate
@@ -614,37 +622,24 @@ def create_candidate():
 @login_required
 def edit_candidate(id):
     candidate = Candidate.query.get_or_404(id)
-
-    # Preload positions for the candidate's election
-    positions = Position.query.filter_by(election_id=candidate.election_id).all()
-    choices = [(p.name, p.name) for p in positions]
-
+    if not current_user.is_superadmin:
+        abort(403)
     form = CandidateForm()
-
-    # Assign choices before validation or rendering
-    form.position.choices = choices
-
+    positions = Position.query.filter_by(election_id=candidate.election_id).all()
+    form.position.choices = [(p.name, p.name) for p in positions]
     if form.validate_on_submit():
         candidate.full_name = form.full_name.data
         candidate.party_name = form.party_name.data
         candidate.position = form.position.data
         candidate.position_id = get_position_id(form.position.data, candidate.election_id)
-
         db.session.commit()
         flash("Candidate updated successfully!", "success")
         return redirect(url_for('admin_web.manage_candidates'))
-
-    # Only populate form with existing data on GET or failed POST
     if request.method == 'GET':
         form.full_name.data = candidate.full_name
         form.party_name.data = candidate.party_name
         form.position.data = candidate.position
-
     return render_template("admin/edit_candidate.html", form=form, candidate=candidate)
-
-
-
-
 
 
 # Delete candidate
@@ -653,27 +648,9 @@ def edit_candidate(id):
 def delete_candidate(candidate_id):
     if not current_user.is_superadmin:
         abort(403)
+
     candidate = Candidate.query.get_or_404(candidate_id)
     db.session.delete(candidate)
     db.session.commit()
-    candidate_name = candidate.full_name
-    position = candidate.position
-    flash(f'Candidate {candidate_name} for {position} deleted successfully.', 'warning')
+    flash(f'Candidate {candidate.full_name} for {candidate.position} deleted successfully.', 'warning')
     return redirect(url_for('admin_web.manage_candidates'))
-
-# View all candidates
-@admin_web_bp.route('/candidates')
-@login_required
-def manage_candidates():
-    candidates = Candidate.query.all()
-    form = CandidateForm()
-    return render_template('admin/candidates.html', candidates=candidates, form=form)
-
-# Helper function
-def get_position_id(position_name, election_id):
-    position = Position.query.filter_by(name=position_name, election_id=election_id).first()
-    if not position:
-        position = Position(name=position_name, election_id=election_id)
-        db.session.add(position)
-        db.session.commit()
-    return position.id
