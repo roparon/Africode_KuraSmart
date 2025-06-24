@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm, csrf
 from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DateTimeLocalField, SelectField,BooleanField, FileField, HiddenField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
 from flask_wtf.file import FileField, FileAllowed
+from app.models import User
 
 from datetime import datetime, timedelta
 
@@ -68,5 +69,16 @@ class NotificationForm(FlaskForm):
     def validate_title(self, field):
         if len(field.data) < 5:
             raise ValidationError("Title must be at least 5 characters long.")
+        
+
+class ForgotPasswordForm(FlaskForm):
+    email = StringField("Email", validators=[DataRequired(), Email()])
+    submit = SubmitField("Request Password Reset")
+    
+    def validate_email(self, email):
+
+        user = User.query.filter_by(email=email.data).first()
+        if user is None:
+            raise ValidationError("There is no account with that email. You must register first.")
         
 
