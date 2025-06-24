@@ -44,7 +44,6 @@ KuraSmart Team
     send_email(user.email, subject, body)
 
 
-# These functions are better placed in your User model
 def get_reset_token(self, expires_sec=1800):
     s = Serializer(current_app.config['SECRET_KEY'])
     return s.dumps({'user_id': self.id})
