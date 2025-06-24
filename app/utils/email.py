@@ -8,7 +8,11 @@ from app.extensions import mail
 
 def send_email_async(app, msg):
     with app.app_context():
-        mail.send(msg)
+        try:
+            mail.send(msg)
+        except Exception as e:
+            print("EMAIL SEND ERROR:", e)
+
 
 def send_email(to, subject, body):
     app = current_app._get_current_object()
@@ -16,9 +20,10 @@ def send_email(to, subject, body):
         subject=subject,
         recipients=[to],
         body=body,
-        sender=app.config.get("MAIL_USERNAME")
+        sender=app.config.get("MAIL_DEFAULT_SENDER")
     )
     Thread(target=send_email_async, args=(app, msg)).start()
+
 
 def send_reset_email(user):
     token = user.get_reset_token()
@@ -35,9 +40,13 @@ Regards,
 KuraSmart Team
 """
     send_email(user.email, subject, body)
+
+
+# These functions are better placed in your User model
 def get_reset_token(self, expires_sec=1800):
     s = Serializer(current_app.config['SECRET_KEY'])
     return s.dumps({'user_id': self.id})
+
 
 @staticmethod
 def verify_reset_token(token):
