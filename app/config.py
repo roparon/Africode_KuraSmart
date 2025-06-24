@@ -19,7 +19,7 @@ class Config:
     MAIL_PORT = 587
     MAIL_USE_TLS = True
     MAIL_USERNAME = os.getenv('MAIL_USERNAME')
-    MAIL_PASSWORD = os.getenv('gzxoskowuujxyraq')
+    MAIL_PASSWORD = os.getenv('qwis vidv yngm qbxi')
     MAIL_DEFAULT_SENDER = MAIL_USERNAME
 
  
