@@ -88,17 +88,19 @@ class Election(db.Model):
 
 class Candidate(db.Model):
     __tablename__ = 'candidate'
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=False)
     position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)
-    full_name = db.Column(db.String(100), unique=True, nullable=False)
+    full_name = db.Column(db.String(100), nullable=False, unique=True)
     party_name = db.Column(db.String(100))
     position = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     manifesto = db.Column(db.Text)
     approved = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
     user = db.relationship('User', back_populates='candidates')
     election = db.relationship('Election', back_populates='candidates')
     position_rel = db.relationship('Position', back_populates='candidates')
@@ -118,15 +120,13 @@ class Candidate(db.Model):
             'approved': self.approved,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
-    __table_args__ = (
-        db.UniqueConstraint('full_name', 'election_id', name='uq_candidate_fullname_election'),
-    )
+
     def __repr__(self):
-        return (f"<Candidate id={self.id}, full_name='{self.full_name}', "
-                f"position='{self.position}', approved={self.approved}>")
+        return f"<Candidate id={self.id}, full_name='{self.full_name}', position='{self.position}', approved={self.approved}>"
 
     def __str__(self):
         return self.full_name
+
 
 class Position(db.Model):
     __tablename__ = 'position'
