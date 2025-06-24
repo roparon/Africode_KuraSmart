@@ -118,7 +118,9 @@ class Candidate(db.Model):
             'approved': self.approved,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
-
+    __table_args__ = (
+        db.UniqueConstraint('full_name', 'election_id', name='uq_candidate_fullname_election'),
+    )
     def __repr__(self):
         return (f"<Candidate id={self.id}, full_name='{self.full_name}', "
                 f"position='{self.position}', approved={self.approved}>")
