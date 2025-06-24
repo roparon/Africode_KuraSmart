@@ -23,6 +23,8 @@ def send_email(to, subject, body):
         sender=app.config.get("MAIL_DEFAULT_SENDER")
     )
     Thread(target=send_email_async, args=(app, msg)).start()
+    print("MAIL_PASSWORD:", repr(app.config.get("MAIL_PASSWORD")))
+
 
 
 def send_reset_email(user):
