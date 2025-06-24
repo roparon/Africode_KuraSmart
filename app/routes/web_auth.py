@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify, send_file, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from app.forms.forms import LoginForm, RegistrationForm, ElectionForm, PositionForm, ProfileImageForm, NotificationForm
+from app.forms.forms import LoginForm, RegistrationForm, ElectionForm, PositionForm, ProfileImageForm, NotificationForm, ForgotPasswordForm
 from app.models import User, Election, Candidate, Vote, Position, Notification
 from app.extensions import db
 from app.enums import UserRole, ElectionStatusEnum
@@ -48,6 +48,17 @@ def login():
             return redirect(url_for('voter.voter_dashboard'))
         flash('Invalid email or password.', 'danger')
     return render_template('login.html', form=form)
+
+@web_auth_bp.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    form = ForgotPasswordForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user:
+            send_reset_email(user)
+        flash("If that email is registered, instructions have been sent.", "info")
+        return redirect(url_for('web_auth.login'))
+    return render_template('auth/forgot_password.html', form=form)
 
 @web_auth_bp.route('/logout')
 @login_required

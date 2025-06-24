@@ -89,8 +89,6 @@ def login():
 def logout():
     logout_user()
     return jsonify({"message": "Logged out successfully."}), 200
-
-
 # ---- Profile (GET) ----
 @auth_bp.route('/me', methods=['GET'])
 @login_required

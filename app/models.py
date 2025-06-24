@@ -3,6 +3,8 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db
 from app.enums import ElectionStatusEnum
+from itsdangerous import URLSafeTimedSerializer as Serializer
+from flask import current_app
 from sqlalchemy.sql import func
 import enum
 from enum import Enum
@@ -126,6 +128,18 @@ class Candidate(db.Model):
 
     def __str__(self):
         return self.full_name
+    def get_reset_token(self, expires_sec=1800):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        return s.dumps({'user_id': self.id})
+
+@staticmethod
+def verify_reset_token(token):
+    s = Serializer(current_app.config['SECRET_KEY'])
+    try:
+        user_id = s.loads(token, max_age=1800)['user_id']
+    except Exception:
+        return None
+    return User.query.get(user_id)
 
 
 class Position(db.Model):
