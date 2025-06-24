@@ -37,7 +37,7 @@ class User(db.Model, UserMixin):
     sub_location = db.Column(db.String(100), nullable=True)
     is_verified = db.Column(db.Boolean, default=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    # Relationships
+
     candidates = db.relationship('Candidate', back_populates='user', lazy='dynamic')
     verification_requests = db.relationship('VerificationRequest', back_populates='user', lazy='dynamic')
     votes = db.relationship('Vote', back_populates='voter', lazy='dynamic')
@@ -59,6 +59,21 @@ class User(db.Model, UserMixin):
 
     def is_candidate(self):
         return self.role == UserRole.candidate
+
+    def get_reset_token(self, expires_sec=1800):
+        """Generate a password reset token valid for expires_sec seconds."""
+        s = Serializer(current_app.config['SECRET_KEY'])
+        return s.dumps({'user_id': self.id})
+
+    @staticmethod
+    def verify_reset_token(token, expires_sec=1800):
+        """Return the User if token is valid; otherwise None."""
+        try:
+            s = Serializer(current_app.config['SECRET_KEY'])
+            data = s.loads(token, max_age=expires_sec)
+            return User.query.get(data.get('user_id'))
+        except Exception:
+            return None
 
     def __repr__(self):
         return f"<User id={self.id}, email='{self.email}', role='{self.role.value}'>"

@@ -28,3 +28,25 @@ def verify_reset_token(token):
         return None
     return User.query.get(user_id)
 
+
+
+from flask import url_for, current_app
+from app.utils.email import send_email_async
+
+def send_reset_email(user):
+    token = user.get_reset_token()
+    reset_url = url_for('web_auth.reset_password', token=token, _external=True)
+    subject = "Password Reset Request - KuraSmart"
+    body = f"""Hi {user.full_name},
+
+To reset your password, click the following link:
+{reset_url}
+
+If you did not request this, you can safely ignore this email.
+
+Regards,
+KuraSmart Team
+"""
+    send_email_async(user.email, subject, body)
+
+

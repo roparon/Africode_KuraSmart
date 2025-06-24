@@ -1,11 +1,11 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify, send_file, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from app.forms.forms import LoginForm, RegistrationForm, ElectionForm, PositionForm, ProfileImageForm, NotificationForm, ForgotPasswordForm
+from app.forms.forms import LoginForm, RegistrationForm, ElectionForm, PositionForm, ProfileImageForm, NotificationForm, ResetPasswordForm, ForgotPasswordForm
 from app.models import User, Election, Candidate, Vote, Position, Notification
 from app.extensions import db
 from app.enums import UserRole, ElectionStatusEnum
 from datetime import datetime, timedelta
-from app.utils.email import send_email_async
+from app.utils.email import send_email_async, send_reset_email
 from werkzeug.utils import secure_filename
 from io import StringIO
 import csv
@@ -58,7 +58,24 @@ def forgot_password():
             send_reset_email(user)
         flash("If that email is registered, instructions have been sent.", "info")
         return redirect(url_for('web_auth.login'))
-    return render_template('auth/forgot_password.html', form=form)
+    return render_template('forgot_password.html', form=form)
+
+@web_auth_bp.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    user = User.verify_reset_token(token)
+    if not user:
+        flash("The reset link is invalid or has expired.", "danger")
+        return redirect(url_for('web_auth.forgot_password'))
+
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user.set_password(form.password.data)
+        db.session.commit()
+        flash("Your password has been updated! You can now log in.", "success")
+        return redirect(url_for('web_auth.login'))
+
+    return render_template('auth/reset_password.html', form=form)
+
 
 @web_auth_bp.route('/logout')
 @login_required

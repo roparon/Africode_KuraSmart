@@ -3,7 +3,6 @@ from wtforms import StringField, PasswordField, SubmitField, TextAreaField, Date
 from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
 from flask_wtf.file import FileField, FileAllowed
 from app.models import User
-
 from datetime import datetime, timedelta
 
 
@@ -74,11 +73,19 @@ class NotificationForm(FlaskForm):
 class ForgotPasswordForm(FlaskForm):
     email = StringField("Email", validators=[DataRequired(), Email()])
     submit = SubmitField("Request Password Reset")
-    
-    def validate_email(self, email):
 
-        user = User.query.filter_by(email=email.data).first()
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data.strip().lower()).first()
         if user is None:
-            raise ValidationError("There is no account with that email. You must register first.")
+            raise ValidationError("There is no account with this email. You must register first.")
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField("New Password", validators=[DataRequired()])
+    confirm_password = PasswordField(
+        "Confirm New Password",
+        validators=[DataRequired(), EqualTo("password", message="Passwords must match.")]
+    )
+    submit = SubmitField("Reset Password")
+
         
 
