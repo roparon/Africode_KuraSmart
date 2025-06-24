@@ -619,31 +619,38 @@ def manage_candidates():
 @login_required
 def edit_candidate(id):
     candidate = Candidate.query.get_or_404(id)
+
     if not current_user.is_superadmin:
         abort(403)
-    form = CandidateForm(obj=candidate)
+
+    form = CandidateForm(obj=candidate, original_candidate=candidate)
     positions = Position.query.filter_by(election_id=candidate.election_id).all()
     form.position.choices = [(p.name, p.name) for p in positions]
-    if form.validate_on_submit():
-        # Normalize the name for comparison
-        normalized_name = form.full_name.data.strip().lower()
-        existing = Candidate.query.filter(
-            db.func.lower(db.func.trim(Candidate.full_name)) == normalized_name
-        ).first()
 
-        if existing and existing.id != candidate.id:
-            flash("Another candidate with this name already exists.", "danger")
-            return render_template("admin/edit_candidate.html", form=form, candidate=candidate)
+    if form.validate_on_submit():
+        normalized_input = form.full_name.data.strip().lower()
+        current_name_normalized = candidate.full_name.strip().lower()
+
+        if normalized_input != current_name_normalized:
+            existing = Candidate.query.filter(
+                db.func.lower(db.func.trim(Candidate.full_name)) == normalized_input
+            ).first()
+            if existing:
+                flash("Another candidate with this name already exists.", "danger")
+                return render_template("admin/edit_candidate.html", form=form, candidate=candidate)
         candidate.full_name = form.full_name.data.strip().title()
         candidate.party_name = form.party_name.data.strip() if form.party_name.data else None
         candidate.position = form.position.data
         candidate.position_id = get_position_id(form.position.data, candidate.election_id)
+        candidate.manifesto = form.manifesto.data.strip() if form.manifesto.data else None
 
         db.session.commit()
-        flash("Candidate updated successfully!", "success")
+        flash(f"Candidate {candidate.full_name} for {candidate.position} updated successfully!", "success")
         return redirect(url_for('admin_web.manage_candidates'))
 
     return render_template("admin/edit_candidate.html", form=form, candidate=candidate)
+
+
 
 
 

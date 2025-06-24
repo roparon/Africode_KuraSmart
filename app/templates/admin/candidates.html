@@ -7,7 +7,6 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2 class="fw-bold"><i class="bi bi-people-fill me-2 text-success"></i>Candidate Management</h2>
-      <!-- Modal trigger -->
       <button class="btn btn-success rounded-pill" data-bs-toggle="modal" data-bs-target="#candidateModal">
         <i class="bi bi-plus-circle me-1"></i> Add Candidate
       </button>
@@ -30,7 +29,14 @@
         {% if candidates %}
         <table class="table table-hover align-middle text-center mb-0">
           <thead class="table-light">
-            <tr><th>ID</th><th>Name</th><th>Party</th><th>Position</th><th>Actions</th></tr>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Party</th>
+              <th>Position</th>
+              <th>Manifesto</th> <!-- ✅ Manifesto column -->
+              <th>Actions</th>
+            </tr>
           </thead>
           <tbody>
             {% for c in candidates %}
@@ -39,6 +45,13 @@
               <td>{{ c.full_name }}</td>
               <td>{{ c.party_name or '—' }}</td>
               <td>{{ c.position }}</td>
+              <td>
+                {% if c.manifesto %}
+                  {{ c.manifesto[:100] ~ '...' if c.manifesto|length > 100 else c.manifesto }}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
               <td>
                 <a href="{{ url_for('admin_web.edit_candidate', id=c.id) }}" class="btn btn-sm btn-outline-info">
                   <i class="bi bi-pencil-square">Edit</i>
@@ -98,7 +111,13 @@
             <small class="text-muted">Available: {{ form.position.choices | map(attribute=0) | join(', ') }}</small>
           {% endif %}
         </div>
-        
+        <div class="mb-3">
+          {{ form.manifesto.label(class="form-label") }}
+          {{ form.manifesto(class="form-control", rows=4, placeholder="Enter candidate's manifesto") }}
+          {% for error in form.manifesto.errors %}
+            <div class="text-danger">{{ error }}</div>
+          {% endfor %}
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
