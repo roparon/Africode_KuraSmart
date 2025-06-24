@@ -26,6 +26,10 @@
             </div>
 
             {{ form.submit(class="btn btn-primary w-30") }}
+
+            <div class="text-end mt-2">
+                <a href="{{ url_for('auth_bp.forgot_password') }}" class="text-decoration-none">Forgot Password?</a>
+            </div>
         </form>
     </div>
 </div>

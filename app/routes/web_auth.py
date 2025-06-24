@@ -662,7 +662,6 @@ def edit_candidate(id):
 def delete_candidate(candidate_id):
     if not current_user.is_superadmin:
         abort(403)
-
     candidate = Candidate.query.get_or_404(candidate_id)
     db.session.delete(candidate)
     db.session.commit()
