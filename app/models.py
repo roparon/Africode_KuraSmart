@@ -92,7 +92,7 @@ class Candidate(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=False)
     position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)
-    full_name = db.Column(db.String(100), nullable=False)
+    full_name = db.Column(db.String(100), unique=True, nullable=False)
     party_name = db.Column(db.String(100))
     position = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)

@@ -571,8 +571,6 @@ def delete_notification(notif_id):
     flash('Notification deleted.', 'warning')
     return redirect(url_for('admin_web.manage_notifications'))
 from app.forms.candidate_form import CandidateForm
-
-
 # Helper: Get or create position ID
 def get_position_id(position_name, election_id):
     position = Position.query.filter_by(name=position_name, election_id=election_id).first()
@@ -581,7 +579,6 @@ def get_position_id(position_name, election_id):
         db.session.add(position)
         db.session.commit()
     return position.id
-
 # View all candidates
 @admin_web_bp.route('/candidates', methods=['GET', 'POST'])
 @login_required
