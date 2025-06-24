@@ -72,12 +72,10 @@
   <div class="modal-dialog">
     <form method="POST" class="modal-content" action="{{ url_for('admin_web.manage_candidates') }}">
       {{ form.hidden_tag() }}
-
       <div class="modal-header">
         <h5 class="modal-title" id="candidateModalLabel">Add New Candidate</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-
       <div class="modal-body">
         <div class="mb-3">
           {{ form.full_name.label(class="form-label") }}
@@ -86,21 +84,22 @@
             <div class="text-danger">{{ error }}</div>
           {% endfor %}
         </div>
-
         <div class="mb-3">
           {{ form.party_name.label(class="form-label") }}
           {{ form.party_name(class="form-control", placeholder="Party (optional)") }}
         </div>
-
         <div class="mb-3">
           {{ form.position.label(class="form-label") }}
           {{ form.position(class="form-select") }}
           {% for error in form.position.errors %}
             <div class="text-danger">{{ error }}</div>
           {% endfor %}
+          {% if form.position.choices %}
+            <small class="text-muted">Available: {{ form.position.choices | map(attribute=0) | join(', ') }}</small>
+          {% endif %}
         </div>
+        
       </div>
-
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
         {{ form.submit(class="btn btn-success") }}

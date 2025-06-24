@@ -43,7 +43,6 @@
             <div class="text-danger">{{ error }}</div>
           {% endfor %}
           {% if form.position.choices %}
-            <small class="text-muted d-block mt-1">Available: {{ form.position.choices | map(attribute=0) | join(', ') }}</small>
           {% endif %}
         </div>
         <div class="d-flex justify-content-between">

@@ -625,10 +625,9 @@ def edit_candidate(id):
     if not current_user.is_superadmin:
         abort(403)
 
-    form = CandidateForm(obj=candidate)  # Preload candidate data into the form
+    form = CandidateForm(obj=candidate)
     positions = Position.query.filter_by(election_id=candidate.election_id).all()
-    form.position.choices = [(p.name, p.name) for p in positions]  # Set choices dynamically
-
+    form.position.choices = [(p.name, p.name) for p in positions]
     if form.validate_on_submit():
         candidate.full_name = form.full_name.data
         candidate.party_name = form.party_name.data
