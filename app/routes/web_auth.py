@@ -624,9 +624,11 @@ def edit_candidate(id):
     candidate = Candidate.query.get_or_404(id)
     if not current_user.is_superadmin:
         abort(403)
-    form = CandidateForm()
+
+    form = CandidateForm(obj=candidate)  # Preload candidate data into the form
     positions = Position.query.filter_by(election_id=candidate.election_id).all()
-    form.position.choices = [(p.name, p.name) for p in positions]
+    form.position.choices = [(p.name, p.name) for p in positions]  # Set choices dynamically
+
     if form.validate_on_submit():
         candidate.full_name = form.full_name.data
         candidate.party_name = form.party_name.data
@@ -635,10 +637,7 @@ def edit_candidate(id):
         db.session.commit()
         flash("Candidate updated successfully!", "success")
         return redirect(url_for('admin_web.manage_candidates'))
-    if request.method == 'GET':
-        form.full_name.data = candidate.full_name
-        form.party_name.data = candidate.party_name
-        form.position.data = candidate.position
+
     return render_template("admin/edit_candidate.html", form=form, candidate=candidate)
 
 

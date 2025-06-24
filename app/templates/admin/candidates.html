@@ -40,12 +40,12 @@
               <td>{{ c.party_name or '—' }}</td>
               <td>{{ c.position }}</td>
               <td>
-                <a href="{{ url_for('admin_web.edit_candidate', id=c.id) }}" class="btn btn-sm btn-info">
-                  <i class="bi bi-pencil-square">edith</i>
+                <a href="{{ url_for('admin_web.edit_candidate', id=c.id) }}" class="btn btn-sm btn-outline-info">
+                  <i class="bi bi-pencil-square">Edit</i>
                 </a>
                 <form method="POST" action="{{ url_for('admin_web.delete_candidate', candidate_id=c.id) }}" class="d-inline" onsubmit="return confirm('Delete this candidate?');">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="btn btn-sm btn-danger">
+                  <button type="submit" class="btn btn-sm btn-outline-danger">
                     <i class="bi bi-trash3">Delete</i>
                   </button>
                 </form>
@@ -61,7 +61,14 @@
     </div>
   </div>
 </div>
-<div class="modal fade" id="candidateModal" tabindex="-1" aria-labelledby="candidateModalLabel" aria-hidden="true">
+
+<!-- Modal with server-side controlled visibility -->
+<div class="modal fade {% if form.errors %}show d-block{% endif %}" 
+     id="candidateModal" 
+     tabindex="-1" 
+     aria-labelledby="candidateModalLabel" 
+     aria-hidden="{{ 'false' if form.errors else 'true' }}"
+     {% if form.errors %}style="display: block;"{% endif %}>
   <div class="modal-dialog">
     <form method="POST" class="modal-content" action="{{ url_for('admin_web.manage_candidates') }}">
       {{ form.hidden_tag() }}
@@ -101,6 +108,11 @@
     </form>
   </div>
 </div>
+
+{% if form.errors %}
+<!-- Manually add backdrop for modal -->
+<div class="modal-backdrop fade show"></div>
+{% endif %}
 {% endblock %}
 
 {% block head_extra %}
@@ -118,11 +130,5 @@
 {% block scripts %}
 <script>
   AOS.init({ duration: 600, once: true, easing: 'ease-out-cubic' });
-
-  // Reopen modal on validation error
-  {% if form.errors %}
-    const candidateModal = new bootstrap.Modal(document.getElementById('candidateModal'));
-    candidateModal.show();
-  {% endif %}
 </script>
 {% endblock %}
