@@ -1,14 +1,18 @@
+import os
+from dotenv import load_dotenv
+
+# ✅ Load environment variables before anything else
+load_dotenv()
+
 from flask import Flask
 from flask_login import current_user
 from flask_apscheduler import APScheduler
+from flask_mail import Mail
 from app.extensions import db, migrate, login_manager, CSRFProtect, mail
 from app.models import User, Notification
 from app.tasks.reminders import send_reminders
-from flask_mail import Mail
-
 
 mail = Mail()
-
 
 def create_app():
     app = Flask(__name__, template_folder='templates')
@@ -28,7 +32,7 @@ def create_app():
     scheduler.init_app(app)
     scheduler.start()
 
-    # Schedule the daily 9 AM reminder job
+    # Schedule the daily 9 AM reminder job
     scheduler.add_job(
         id='daily_election_reminder',
         func=send_reminders,
@@ -60,10 +64,6 @@ def create_app():
     from app.context_processors import inject_unread_notifs
     from app.routes.voter import voter_bp
 
-
-
-
-
     app.register_blueprint(auth_bp, url_prefix='/api/v1')
     app.register_blueprint(protected_bp, url_prefix='/api/v1')
     app.register_blueprint(verification_bp, url_prefix='/api/v1')
@@ -81,9 +81,6 @@ def create_app():
     app.register_blueprint(notifications_bp)
     app.context_processor(inject_unread_notifs)
 
-
-
-
     @app.context_processor
     def inject_unread_notifs():
         if current_user.is_authenticated:
@@ -91,7 +88,6 @@ def create_app():
         else:
             count = 0
         return {'unread_count': count}
-
 
     # CLI command registration
     try:
