@@ -4,6 +4,11 @@ from flask_apscheduler import APScheduler
 from app.extensions import db, migrate, login_manager, CSRFProtect, mail
 from app.models import User, Notification
 from app.tasks.reminders import send_reminders
+from flask_mail import Mail
+
+
+mail = Mail()
+
 
 def create_app():
     app = Flask(__name__, template_folder='templates')
