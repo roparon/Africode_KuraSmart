@@ -74,7 +74,7 @@ def reset_password(token):
         flash("Your password has been updated! You can now log in.", "success")
         return redirect(url_for('web_auth.login'))
 
-    return render_template('auth/reset_password.html', form=form)
+    return render_template('/reset_password.html', form=form)
 
 
 @web_auth_bp.route('/logout')
