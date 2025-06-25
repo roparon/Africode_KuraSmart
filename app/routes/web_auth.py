@@ -7,6 +7,7 @@ from app.enums import UserRole, ElectionStatusEnum
 from datetime import datetime, timedelta
 from app.utils.email import send_email_async, send_reset_email
 from app.utils.audit_utils import log_action
+from app.utils.decorators import superadmin_require
 from werkzeug.utils import secure_filename
 from io import StringIO
 import csv
@@ -684,6 +685,15 @@ def edit_candidate(id):
         return redirect(url_for('admin_web.manage_candidates'))
 
     return render_template("admin/edit_candidate.html", form=form, candidate=candidate)
+
+
+
+@admin_web_bp.route('/audit-logs')
+@login_required
+@superadmin_required
+def audit_logs():
+    logs = AuditLog.query.order_by(AuditLog.timestamp.desc()).limit(100).all()
+    return render_template('admin/audit_logs.html', logs=logs)
 
 
 
