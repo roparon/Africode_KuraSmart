@@ -6,6 +6,7 @@ from app.extensions import db
 from app.enums import UserRole, ElectionStatusEnum
 from datetime import datetime, timedelta
 from app.utils.email import send_email_async, send_reset_email
+from app.utils.audit_utils import log_action
 from werkzeug.utils import secure_filename
 from io import StringIO
 import csv
@@ -32,6 +33,7 @@ def register():
         return redirect(url_for('web_auth.login'))
     return render_template('register.html', form=form)
 
+
 @web_auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -42,12 +44,17 @@ def login():
                 flash('Your account is pending verification by an admin.', 'warning')
                 return redirect(url_for('web_auth.login'))
             login_user(user)
+            log_action("Logged in")
             flash(f'Welcome back, {user.full_name}!', 'success')
             if user.is_superadmin or user.role == UserRole.admin.value:
                 return redirect(url_for('admin_web.dashboard'))
             return redirect(url_for('voter.voter_dashboard'))
+        if user:
+            log_action("Failed login attempt", target_type="User", target_id=user.id)
         flash('Invalid email or password.', 'danger')
+
     return render_template('login.html', form=form)
+
 
 @web_auth_bp.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
@@ -79,6 +86,7 @@ def reset_password(token):
 @web_auth_bp.route('/logout')
 @login_required
 def logout():
+    log_action("Logged out")
     name = current_user.full_name
     logout_user()
     flash(f'{name}, you have logged out.', 'info')
