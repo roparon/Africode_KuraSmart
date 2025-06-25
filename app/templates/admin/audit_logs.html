@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Logs | KuraSmart{% endblock %}
+
+{% block content %}
+<div class="manage-elections-background py-5">
+  <div class="container" data-aos="fade-up">
+    <h2 class="mb-4 fw-bold"><i class="bi bi-clipboard-data me-2 text-secondary"></i>Audit Logs</h2>
+
+    <div class="card shadow-sm rounded-4" data-aos="fade-left">
+      <div class="card-header bg-gradient-secondary text-white fw-semibold rounded-top-4">Recent User & System Activities</div>
+      <div class="card-body">
+        {% if logs %}
+        <div class="table-responsive">
+          <table class="table align-middle table-hover text-center">
+            <thead class="table-dark">
+              <tr>
+                <th>Timestamp</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Target</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for log in logs %}
+              <tr data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
+                <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                <td>{{ log.user.full_name }}</td>
+                <td>{{ log.action }}</td>
+                <td>
+                  {% if log.target_type %}
+                    {{ log.target_type }} #{{ log.target_id }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td>{{ log.details or '—' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-center text-muted">No audit logs available.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block head_extra %}
+<style>
+.manage-elections-background {
+  background: #f8f9fb;
+  min-height: 100vh;
+}
+.bg-gradient-secondary {
+  background: linear-gradient(135deg, #6c757d, #495057);
+}
+.card {
+  border-radius: 0.75rem;
+}
+.table-hover tbody tr:hover {
+  background: #eef3f7;
+}
+.table td, .table th {
+  vertical-align: middle;
+  padding: 0.75rem;
+}
+.alert {
+  border-radius: 0.6rem;
+  font-size: 0.95rem;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  AOS.init({ duration: 600, once: true, easing: 'ease-out-cubic' });
+</script>
+{% endblock %}

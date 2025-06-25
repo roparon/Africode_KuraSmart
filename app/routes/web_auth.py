@@ -1,14 +1,15 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify, send_file, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from app.forms.forms import LoginForm, RegistrationForm, ElectionForm, PositionForm, ProfileImageForm, NotificationForm, ResetPasswordForm, ForgotPasswordForm
-from app.models import User, Election, Candidate, Vote, Position, Notification
+from app.models import User, Election, Candidate, Vote, Position, Notification, AuditLog
 from app.extensions import db
 from app.enums import UserRole, ElectionStatusEnum
 from datetime import datetime, timedelta
 from app.utils.email import send_email_async, send_reset_email
 from app.utils.audit_utils import log_action
-from app.utils.decorators import superadmin_require
+from app.utils.decorators import superadmin_required
 from werkzeug.utils import secure_filename
+from collections import defaultdict
 from io import StringIO
 import csv
 import os
@@ -100,10 +101,31 @@ def logout():
 @login_required
 def dashboard():
     form = ProfileImageForm() 
+
     if not (current_user.is_superadmin or current_user.role == UserRole.admin.value):
         abort(403)
-    return render_template('admin/dashboard.html', form=form)
 
+    # ✅ Voter statistics
+    total_voters = User.query.filter_by(role='voter').count()
+    voted_count = db.session.query(Vote.voter_id).distinct().count()
+    turnout_percent = round((voted_count / total_voters) * 100, 2) if total_voters else 0
+
+    # ✅ Election status
+    ongoing_elections = Election.query.filter(Election.status == 'active').all()
+    ending_soon = [
+        e for e in ongoing_elections
+        if e.end_date and e.end_date <= datetime.utcnow() + timedelta(hours=4)
+    ]
+
+    return render_template(
+        'admin/dashboard.html',
+        form=form,
+        total_voters=total_voters,
+        voted_count=voted_count,
+        turnout_percent=turnout_percent,
+        ongoing_elections=ongoing_elections,
+        ending_soon=ending_soon
+    )
 # -------------------------
 # Manage Users
 # -------------------------
@@ -490,7 +512,27 @@ def delete_election(election_id):
     flash("Election deleted!", "warning")
     return redirect(url_for('admin_web.manage_elections'))
 
+@admin_web_bp.route('/election-results')
+@login_required
+def election_results():
+    # Get selected election ID
+    election_id = request.args.get('election_id', type=int)
+    elections = Election.query.order_by(Election.title).all()
+    selected_election = Election.query.get(election_id) if election_id else elections[0]
+    # Gather results
+    vote_counts = defaultdict(int)
+    candidates = Candidate.query.filter_by(election_id=selected_election.id).all()
+    for vote in Vote.query.filter_by(election_id=selected_election.id).all():
+        vote_counts[vote.candidate_id] += 1
 
+    labels = [c.full_name for c in candidates]
+    counts = [vote_counts.get(c.id, 0) for c in candidates]
+
+    return render_template('admin/election_results.html',
+                           elections=elections,
+                           selected_election=selected_election,
+                           labels=labels,
+                           counts=counts)
 
 @admin_web_bp.route('/positions', methods=['GET', 'POST'])
 @login_required
