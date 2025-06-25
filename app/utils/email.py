@@ -10,19 +10,12 @@ def send_email_async(app, msg):
     with app.app_context():
         try:
             mail.send(msg)
-            print(f"✅ Email successfully sent to: {msg.recipients}")
         except Exception as e:
-            print("❌ EMAIL SEND ERROR:", e)
+            print("EMAIL SEND ERROR:", e)
 
 
 def send_email(to, subject, body):
     app = current_app._get_current_object()
-
-    # Debug print statements
-    print("🚀 Sending email to:", to)
-    print("📨 Email subject:", subject)
-    print("📝 Email body:\n", body)
-
     msg = Message(
         subject=subject,
         recipients=[to],
@@ -30,6 +23,8 @@ def send_email(to, subject, body):
         sender=app.config.get("MAIL_DEFAULT_SENDER")
     )
     Thread(target=send_email_async, args=(app, msg)).start()
+    # print("MAIL_PASSWORD:", repr(app.config.get("MAIL_PASSWORD")))
+
 
 
 def send_reset_email(user):
