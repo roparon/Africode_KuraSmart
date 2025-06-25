@@ -66,7 +66,6 @@ def reset_password(token):
     if not user:
         flash("The reset link is invalid or has expired.", "danger")
         return redirect(url_for('web_auth.forgot_password'))
-
     form = ResetPasswordForm()
     if form.validate_on_submit():
         user.set_password(form.password.data)
@@ -74,7 +73,7 @@ def reset_password(token):
         flash("Your password has been updated! You can now log in.", "success")
         return redirect(url_for('web_auth.login'))
 
-    return render_template('/reset_password.html', form=form)
+    return render_template('reset_password.html', form=form, token=token)
 
 
 @web_auth_bp.route('/logout')
