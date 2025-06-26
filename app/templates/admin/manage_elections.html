@@ -68,17 +68,16 @@
 
     <!-- Search Form (Fixed) -->
     <form method="GET" class="mb-4">
-      <div class="input-group shadow-sm rounded-pill overflow-hidden">
+      <div class="input-group shadow-sm rounded-pill bg-white w-75 mx-auto">
         <input type="text" name="search_title"
                class="form-control border-0 ps-4"
                placeholder="Search by Election Title"
                value="{{ search_title }}">
-        <button type="submit" class="btn btn-outline-secondary" aria-label="Search">
-          <i class="bi bi-search"></i>
+        <button type="submit" class="btn btn-outline-info rounded-circle" aria-label="Search">
+          <i class="bi bi-search">search</i>
         </button>
       </div>
     </form>
-
     <!-- Elections Table -->
     <div class="card shadow-sm rounded-4" data-aos="fade-left">
       <div class="card-header bg-gradient-secondary text-white fw-semibold rounded-top-4">Existing Elections</div>
