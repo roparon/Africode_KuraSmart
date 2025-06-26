@@ -68,17 +68,16 @@
 
     <!-- Search Form (Fixed) -->
     <form method="GET" class="mb-4">
-      <div class="input-group shadow-sm rounded-pill bg-white w-75 mx-auto">
+      <div class="input-group shadow-sm rounded-pill bg-white w-75 mx-left">
         <input type="text" name="search_title"
                class="form-control border-0 ps-4"
                placeholder="Search by Election Title"
                value="{{ search_title }}">
-        <button type="submit" class="btn btn-outline-info rounded-circle" aria-label="Search">
+        <button type="submit" class="btn btn-outline-success rounded-circle" aria-label="Search">
           <i class="bi bi-search">search</i>
         </button>
       </div>
     </form>
-    <!-- Elections Table -->
     <div class="card shadow-sm rounded-4" data-aos="fade-left">
       <div class="card-header bg-gradient-secondary text-white fw-semibold rounded-top-4">Existing Elections</div>
       <div class="card-body">
@@ -103,33 +102,33 @@
                 <td><span class="badge bg-{{ status_clr }} text-light">{{ status.title() }}</span></td>
                 <td>
                   <div class="btn-group" role="group">
-                    <a href="{{ url_for('admin_web.edit_election', election_id=election.id) }}" class="btn btn-sm btn-warning" title="Edit"><i class="bi bi-pencil-fill"></i></a>
+                    <a href="{{ url_for('admin_web.edit_election', election_id=election.id) }}" class="btn btn-sm btn-warning" title="Edit"><i class="bi bi-pencil-fill">edith</i></a>
                     <form method="POST" action="{{ url_for('admin_web.delete_election', election_id=election.id) }}" onsubmit="return confirm('Are you sure you want to delete this election?');">
                       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                      <button type="submit" class="btn btn-sm btn-danger" title="Delete"><i class="bi bi-trash-fill"></i></button>
+                      <button type="submit" class="btn btn-sm btn-danger" title="Delete"><i class="bi bi-trash-fill">delete</i></button>
                     </form>
                     {% if status == 'active' %}
                       <form method="POST" action="{{ url_for('admin_web.pause_election', election_id=election.id) }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-sm btn-secondary" title="Pause"><i class="bi bi-pause-fill"></i></button>
+                        <button type="submit" class="btn btn-sm btn-secondary" title="Pause"><i class="bi bi-pause-fill">pause</i></button>
                       </form>
                       <form method="POST" action="{{ url_for('admin_web.end_election', election_id=election.id) }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-sm btn-dark" title="End"><i class="bi bi-stop-fill"></i></button>
+                        <button type="submit" class="btn btn-sm btn-dark" title="End"><i class="bi bi-stop-fill">end</i></button>
                       </form>
                     {% elif status == 'paused' %}
                       <form method="POST" action="{{ url_for('admin_web.activate_election', election_id=election.id) }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-sm btn-success" title="Activate"><i class="bi bi-play-fill"></i></button>
+                        <button type="submit" class="btn btn-sm btn-success" title="Activate"><i class="bi bi-play-fill">activate</i></button>
                       </form>
                       <form method="POST" action="{{ url_for('admin_web.end_election', election_id=election.id) }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-sm btn-dark" title="End"><i class="bi bi-stop-fill"></i></button>
+                        <button type="submit" class="btn btn-sm btn-dark" title="End"><i class="bi bi-stop-fill">end</i></button>
                       </form>
                     {% elif status == 'inactive' %}
                       <form method="POST" action="{{ url_for('admin_web.activate_election', election_id=election.id) }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-sm btn-success" title="Activate"><i class="bi bi-play-fill"></i></button>
+                        <button type="submit" class="btn btn-sm btn-success" title="Activate"><i class="bi bi-play-fill">activate</i></button>
                       </form>
                     {% endif %}
                   </div>
