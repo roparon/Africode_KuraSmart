@@ -4,7 +4,9 @@
 {% block content %}
 <div class="manage-elections-background py-5">
   <div class="container" data-aos="fade-up">
-    <h2 class="mb-4 fw-bold"><i class="bi bi-check2-square me-2 text-primary"></i>Manage Elections</h2>
+    <h2 class="mb-4 fw-bold">
+      <i class="bi bi-check2-square me-2 text-primary"></i>Manage Elections
+    </h2>
 
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -13,7 +15,7 @@
           <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
             <i class="bi bi-{{ 'check-circle-fill' if category == 'success' else 'exclamation-triangle-fill' }} me-2"></i>
             {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
           </div>
         {% endfor %}
       {% endif %}
@@ -21,7 +23,9 @@
 
     <!-- Create Election Form -->
     <div class="card shadow-sm mb-5 rounded-4" data-aos="fade-right">
-      <div class="card-header bg-gradient-primary text-white fw-semibold rounded-top-4">Create New Election</div>
+      <div class="card-header bg-gradient-primary text-white fw-semibold rounded-top-4">
+        Create New Election
+      </div>
       <div class="card-body">
         <form method="POST">
           {{ form.hidden_tag() }}
@@ -35,6 +39,9 @@
           <div class="mb-3">
             {{ form.description.label(class="form-label") }}
             {{ form.description(class="form-control", rows=3) }}
+            {% for e in form.description.errors %}
+              <div class="text-danger small">{{ e }}</div>
+            {% endfor %}
           </div>
           <div class="row">
             <div class="col-md-6 mb-3">
@@ -59,10 +66,17 @@
       </div>
     </div>
 
-    <!-- Search Form -->
-    <form method="GET" class="input-group mb-4 shadow-sm rounded-pill overflow-hidden">
-      <input type="text" name="search_title" class="form-control border-0 ps-3" placeholder="Search by Election Title" value="{{ search_title }}">
-      <button class="btn btn-outline-secondary px-4" type="submit" aria-label="Close"><i class="bi bi-search"></i></button>
+    <!-- Search Form (Fixed) -->
+    <form method="GET" class="mb-4">
+      <div class="input-group shadow-sm rounded-pill overflow-hidden">
+        <input type="text" name="search_title"
+               class="form-control border-0 ps-4"
+               placeholder="Search by Election Title"
+               value="{{ search_title }}">
+        <button type="submit" class="btn btn-outline-secondary" aria-label="Search">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
     </form>
 
     <!-- Elections Table -->
@@ -172,6 +186,12 @@
 .badge {
   font-size: 0.85rem;
   padding: 0.45em 0.75em;
+}
+.input-group > .form-control {
+  min-width: 0;
+}
+.input-group > .btn {
+  white-space: nowrap;
 }
 </style>
 {% endblock %}
