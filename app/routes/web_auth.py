@@ -278,9 +278,7 @@ def bulk_delete_users():
     db.session.commit()
     return jsonify({'message': f'{len(users)} user(s) deleted'}), 200
 
-# -------------------------
 # Export Users to CSV
-# -------------------------
 @admin_web_bp.route('/users/export', methods=['GET'])
 @login_required
 def export_users_csv():
