@@ -278,6 +278,37 @@ def bulk_delete_users():
     db.session.commit()
     return jsonify({'message': f'{len(users)} user(s) deleted'}), 200
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # -------------------------
 # Export Users to CSV
 # -------------------------
