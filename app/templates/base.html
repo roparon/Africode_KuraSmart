@@ -91,13 +91,12 @@
                 </ul>
 
                 <!-- Theme Toggle Button -->
-                <button id="theme-toggle" class="btn btn-outline-light ms-2" title="Toggle theme">
+                <span id="theme-toggle" class="text-light ms-2" title="Toggle theme" style="cursor: pointer;">
                     <i class="fas fa-moon"></i>
-                </button>
+                  </span>
             </div>
         </div>
     </nav>
-
     <!-- Flash Messages -->
     <div class="container mt-3">
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -113,7 +112,7 @@
     </div>
 
     <!-- Main Content -->
-    <main class="container py-4 flex-grow-1">
+    <main class="container py-1 flex-grow-1">
         {% block content %}{% endblock %}
     </main>
 
