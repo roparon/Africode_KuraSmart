@@ -240,7 +240,6 @@ def unverify_user(user_id):
         flash(f'Verification revoked for {user.full_name}.', 'warning')
     return redirect(url_for('admin_web.manage_users'))
 
-# -------------------------
 # Delete Single User
 # -------------------------
 @admin_web_bp.route('/users/<int:user_id>/delete', methods=['POST'])
@@ -260,7 +259,6 @@ def delete_user(user_id):
     flash(f"Deleted {user.full_name}", "warning")
     return redirect(url_for('admin_web.manage_users'))
 
-# -------------------------
 # Bulk Delete Users
 # -------------------------
 @admin_web_bp.route('/users/bulk-delete', methods=['POST'])
@@ -311,8 +309,6 @@ def export_users_csv():
         as_attachment=True,
         download_name='users_export.csv'
     )
-
-# -------------------------
 # Manage Elections
 # -------------------------
 @admin_web_bp.route('/manage-elections', methods=['GET', 'POST'])
@@ -424,8 +420,6 @@ def deactivate_election(election_id):
     db.session.commit()
     flash(f"Election '{election.title}' deactivated.", "info")
     return redirect(url_for('admin_web.manage_elections'))
-
-
 
 
 @admin_web_bp.route('/analytics')
@@ -599,7 +593,6 @@ def update_profile_image():
     return redirect(url_for('admin_web.dashboard'))
 
 
-
 @admin_web_bp.route('/notifications', methods=['GET', 'POST'])
 @login_required
 def manage_notifications():
@@ -626,7 +619,6 @@ def manage_notifications():
 
     notifications = Notification.query.order_by(Notification.created_at.desc()).all()
     return render_template('admin/notifications.html', form=form, notifications=notifications)
-
 
 @admin_web_bp.route('/notifications/edit/<int:notif_id>', methods=['GET', 'POST'])
 @login_required
@@ -739,19 +731,12 @@ def edit_candidate(id):
     return render_template("admin/edit_candidate.html", form=form, candidate=candidate)
 
 
-
 @admin_web_bp.route('/audit-logs')
 @login_required
 @superadmin_required
 def audit_logs():
     logs = AuditLog.query.order_by(AuditLog.timestamp.desc()).limit(100).all()
     return render_template('admin/audit_logs.html', logs=logs)
-
-
-
-
-
-
 
 # Delete candidate
 @admin_web_bp.route('/candidates/delete/<int:candidate_id>', methods=['POST'])
