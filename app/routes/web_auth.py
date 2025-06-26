@@ -48,14 +48,24 @@ def login():
             login_user(user)
             log_action("Logged in")
             flash(f'Welcome back, {user.full_name}!', 'success')
-            if user.is_superadmin or user.role == UserRole.admin.value:
+            if user.is_super_admin():
+                return redirect(url_for('superadmin.dashboard'))  # adjust as needed
+            elif user.is_admin():
                 return redirect(url_for('admin_web.dashboard'))
-            return redirect(url_for('voter.voter_dashboard'))
+            elif user.is_candidate():
+                return redirect(url_for('candidate.dashboard'))
+            elif user.is_voter():
+                return redirect(url_for('voter.voter_dashboard'))
+            else:
+                flash("Your account role is not recognized.", "danger")
+                return redirect(url_for('web_auth.login'))
         if user:
             log_action("Failed login attempt", target_type="User", target_id=user.id)
+
         flash('Invalid email or password.', 'danger')
 
     return render_template('login.html', form=form)
+
 
 
 @web_auth_bp.route('/forgot_password', methods=['GET', 'POST'])
