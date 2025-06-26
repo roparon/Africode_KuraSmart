@@ -49,7 +49,7 @@ def login():
             log_action("Logged in")
             flash(f'Welcome back, {user.full_name}!', 'success')
             if user.is_super_admin():
-                return redirect(url_for('superadmin.dashboard'))  # adjust as needed
+                return redirect(url_for('admin_web.dashboard'))  # adjust as needed
             elif user.is_admin():
                 return redirect(url_for('admin_web.dashboard'))
             elif user.is_candidate():
