@@ -279,7 +279,6 @@ def bulk_delete_users():
     return jsonify({'message': f'{len(users)} user(s) deleted'}), 200
 
 
-
 # -------------------------
 # Export Users to CSV
 # -------------------------
