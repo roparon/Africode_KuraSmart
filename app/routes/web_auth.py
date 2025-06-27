@@ -300,6 +300,18 @@ def unverify_user(user_id):
         flash(f'Verification revoked for {user.full_name}.', 'warning')
     return redirect(url_for('admin_web.manage_users'))
 
+@admin_web_bp.route('/admin/approve-all-users', methods=['POST'])
+@login_required
+def approve_all_users():
+    pending_users = User.query.filter_by(is_approved=False).all()
+    for user in pending_users:
+        user.is_approved = True
+    db.session.commit()
+    
+    flash(f'All {len(pending_users)} pending users have been approved.', 'success')
+    return redirect(url_for('pending_users'))
+
+
 # Delete Single User
 # -------------------------
 @admin_web_bp.route('/users/<int:user_id>/delete', methods=['POST'])

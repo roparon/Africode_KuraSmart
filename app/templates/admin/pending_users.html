@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% block head %}
-  <!-- Glass UI CSS -->
   <link rel="stylesheet" href="https://unpkg.com/glass-ui/dist/glass-ui.min.css" />
   <style>
     .glass-table thead {
@@ -26,6 +25,14 @@
 <section class="gi-container gi-py-4">
   <h2 class="gi-text-2xl gi-font-semibold gi-text-white gi-mb-4">Pending User Approvals</h2>
 
+  {% if users %}
+  <form method="POST" action="{{ url_for('admin_web.approve_all_users') }}" class="gi-mb-4">
+    <button type="submit" class="glass-button gi-shadow-lg">
+      <i class="bi bi-check-circle"></i> Approve All Users
+    </button>
+  </form>
+  {% endif %}
+
   <div class="gi-overflow-x-auto">
     <table class="glass-table gi-w-full gi-text-white">
       <thead>
@@ -33,7 +40,7 @@
           <th class="gi-p-3 gi-text-left">Full Name</th>
           <th class="gi-p-3 gi-text-left">Email</th>
           <th class="gi-p-3 gi-text-left">Role</th>
-          <th class="gi-p-3 gi-text-left">Action</th>
+          <th class="gi-p-3 gi-text-left">Status</th>
         </tr>
       </thead>
       <tbody>
@@ -41,11 +48,9 @@
         <tr class="gi-border-b gi-border-gray-700">
           <td class="gi-p-3">{{ user.full_name }}</td>
           <td class="gi-p-3">{{ user.email }}</td>
-          <td class="gi-p-3 gi-capitalize">{{ user.role.replace('_', ' ') }}</td>
+          <td class="gi-p-3 gi-capitalize">{{ user.role.name.replace('_', ' ') }}</td>
           <td class="gi-p-3">
-            <button class="glass-button gi-shadow-lg" onclick="openApproveModal('{{ user.id }}', '{{ user.full_name|escapejs }}')">
-              Approve
-            </button>
+            <span class="gi-text-sm gi-text-gray-300">Pending</span>
           </td>
         </tr>
         {% else %}
@@ -59,42 +64,4 @@
     </table>
   </div>
 </section>
-
-<footer class="gi-text-center gi-text-gray-400 gi-mt-6">
-  &copy; 2021 Glass UI by KingStudio
-</footer>
-
-<!-- Approval Modal -->
-<div id="approveModal" class="gi-fixed gi-inset-0 gi-bg-black gi-bg-opacity-50 gi-flex gi-items-center gi-justify-center gi-hidden">
-  <div class="gi-bg-white gi-rounded-lg gi-shadow-lg gi-max-w-md gi-w-full gi-p-6">
-    <h3 class="gi-text-xl gi-font-semibold gi-mb-4">Confirm Approval</h3>
-    <p id="approveModalText" class="gi-mb-6">Are you sure you want to approve this user?</p>
-    <div class="gi-flex gi-justify-end gi-gap-2">
-      <button class="glass-button" onclick="closeApproveModal()">Cancel</button>
-      <form id="approveForm" method="POST" class="gi-inline">
-        <button type="submit" class="glass-button gi-shadow-lg">Yes, Approve</button>
-      </form>
-    </div>
-  </div>
-</div>
-
-<script>
-  function openApproveModal(userId, userName) {
-    document.getElementById('approveModalText').textContent = `Approve user "${userName}"?`;
-    const form = document.getElementById('approveForm');
-    form.action = `/admin/approve-user/${userId}`;
-    document.getElementById('approveModal').classList.remove('gi-hidden');
-  }
-
-  function closeApproveModal() {
-    document.getElementById('approveModal').classList.add('gi-hidden');
-  }
-
-  // Close modal clicking outside content
-  document.getElementById('approveModal').addEventListener('click', (e) => {
-    if (e.target.id === 'approveModal') {
-      closeApproveModal();
-    }
-  });
-</script>
 {% endblock %}
