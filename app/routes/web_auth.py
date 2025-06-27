@@ -29,7 +29,7 @@ def register():
         username = form.username.data.strip() if form.username.data else ''
         national_id = form.national_id.data.strip() if form.national_id.data else ''
 
-        # Validate email uniqueness
+        # Check for existing email
         if User.query.filter_by(email=email).first():
             flash('Email is already registered.', 'danger')
             return render_template('register.html', form=form)
@@ -52,8 +52,8 @@ def register():
                 location=form.location.data,
                 sub_location=form.sub_location.data,
                 voting_type='formal',
-                role=UserRole.voter.value,  # ✅ FIXED
-                is_verified=False  # require admin approval
+                role=UserRole.voter.value,       # Enum value stored as string
+                is_verified=True                 # ✅ Auto-verify voters
             )
 
         else:  # Informal voter logic
@@ -66,8 +66,8 @@ def register():
                 email=email,
                 username=username,
                 voting_type='informal',
-                role=UserRole.voter.value,  # ✅ FIXED
-                is_verified=True  # auto-verify informal voters
+                role=UserRole.voter.value,
+                is_verified=True
             )
 
         # Set password securely
@@ -79,9 +79,9 @@ def register():
 
         flash(f"Registration successful for {user.full_name or user.username}!", 'success')
 
-        # Notify formal voters of pending approval
-        if user.voting_type == 'formal':
-            flash("Your account is pending verification by an admin.", "info")
+        # Inform the user if verification is normally needed
+        if user.role in [UserRole.admin.value, UserRole.candidate.value]:
+            flash("Your account is pending admin approval.", "info")
 
         return redirect(url_for('web_auth.login'))
 
