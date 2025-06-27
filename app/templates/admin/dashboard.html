@@ -120,8 +120,15 @@
                                 <p>Manage voter and admin accounts with full access control.</p>
                                 <a href="{{ url_for('admin_web.manage_users') }}" class="btn btn-outline-info mt-3 w-100">Manage Users</a>
                             </div>
+                                                <div class="col-md-6 mb-4" data-aos="fade-up" data-aos-delay="200">
+                        <a href="{{ url_for('admin_web.manage_users') }}" class="btn btn-outline-primary rounded-pill shadow-sm">
+                            <i class="bi bi-person-check me-1"></i> Review Pending Users
+                        </a>
+                    </div>
                         </div>
                     </div>
+
+
                     <div class="col-md-6 mb-4" data-aos="fade-up" data-aos-delay="250">
                         <div class="card h-100 shadow border-0 rounded-4">
                           <div class="card-header bg-gradient-success text-success fw-semibold rounded-top-4">
