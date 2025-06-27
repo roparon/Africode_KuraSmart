@@ -272,6 +272,20 @@ def verify_user(user_id):
     flash(f"User {user.full_name} has been verified.", "success")
     return redirect(url_for('admin_web.manage_users'))
 
+@admin_web_bp.route('/pending-users')
+@login_required
+def pending_users():
+    if not current_user.is_admin() and not current_user.is_super_admin():
+        abort(403)
+
+    users = User.query.filter(
+        User.is_verified == False,
+        User.role.in_(['admin', 'candidate'])
+    ).order_by(User.full_name).all()
+
+    return render_template('admin/pending_users.html', users=users)
+
+
 @admin_web_bp.route('/users/<int:user_id>/unverify', methods=['POST'])
 @login_required
 def unverify_user(user_id):
