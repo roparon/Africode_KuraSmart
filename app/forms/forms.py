@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm, csrf
-from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DateTimeLocalField, SelectField,BooleanField, FileField, HiddenField
+from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DateTimeLocalField, SelectField,BooleanField, FileField, HiddenField, BooleanField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError,  Email as EmailValidator
 from flask_wtf.file import FileField, FileAllowed
 from app.models import User
@@ -13,18 +13,47 @@ class ProfileImageForm(FlaskForm):
     submit = SubmitField('Update Image')
 
 
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField, SelectField, DateField
+from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional
+
 class RegistrationForm(FlaskForm):
-    full_name = StringField('Full Name', validators=[DataRequired(), Length(min=2, max=100)])
+    # Voting type selector
+    voting_type = SelectField(
+        'Voting Type',
+        choices=[('formal', 'Formal (National ID required)'), ('informal', 'Informal')],
+        validators=[DataRequired()]
+    )
+    # Common
+    full_name = StringField(
+        'Full Name (as it appears on your National ID)',
+        validators=[DataRequired(), Length(min=3, max=120)]
+    )
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
     confirm_password = PasswordField('Confirm Password', validators=[
         DataRequired(), EqualTo('password', message='Passwords must match')
     ])
+    # Informal voter
+    username = StringField('Username', validators=[Optional(), Length(min=3, max=80)])
+    # Formal voter ID fields
+    national_id = StringField('National ID', validators=[Optional(), Length(min=6, max=20)])
+    dob = DateField('Date of Birth (YYYY-MM-DD)', format='%Y-%m-%d', validators=[Optional()])
+    gender = SelectField('Gender', choices=[
+        ('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')
+    ], validators=[Optional()])
+    county = StringField('County', validators=[Optional(), Length(min=2, max=100)])
+    sub_county = StringField('Sub-county', validators=[Optional(), Length(min=2, max=100)])
+    division = StringField('Division', validators=[Optional(), Length(min=2, max=100)])
+    location = StringField('Location', validators=[Optional(), Length(min=2, max=100)])
+    sub_location = StringField('Sub-location', validators=[Optional(), Length(min=2, max=100)])
+
     submit = SubmitField('Register')
 
 class LoginForm(FlaskForm):
     identifier = StringField('Email or Username', validators=[DataRequired(), Length(min=3)])
     password = PasswordField('Password', validators=[DataRequired()])
+    remember = BooleanField('Remember Me')
     submit = SubmitField('Login')
 
     def validate_identifier(self, field):
@@ -33,7 +62,6 @@ class LoginForm(FlaskForm):
         except ValidationError:
             if len(field.data.strip()) < 3:
                 raise ValidationError("Enter a valid email or username.")
-
 
 class VerificationRequestForm(FlaskForm):
     submit = SubmitField("Submit Verification Request", validators=[DataRequired()])

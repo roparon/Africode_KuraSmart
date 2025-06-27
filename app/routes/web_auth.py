@@ -81,7 +81,7 @@ def login():
             if user.voting_type == 'formal' and not user.is_verified:
                 flash('Your formal voter account is pending verification.', 'warning')
                 return redirect(url_for('web_auth.login'))
-            login_user(user)
+            login_user(user, remember=form.remember.data)
             log_action("Logged in", target_type="User", target_id=user.id)
             flash(f"Welcome back, {user.full_name}!", 'success')
             # Redirect based on role
