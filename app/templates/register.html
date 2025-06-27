@@ -4,19 +4,30 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6">
+    <div class="col-md-8">
         <h2 class="mb-4 text-center">Create Your Account</h2>
         <form method="POST" novalidate>
             {{ form.hidden_tag() }}
 
+            <!-- Voting Type -->
+            <div class="mb-3">
+                {{ form.voting_type.label(class="form-label") }}
+                {{ form.voting_type(class="form-select", id="votingTypeSelect") }}
+                {% for error in form.voting_type.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <!-- Full Name -->
             <div class="mb-3">
                 {{ form.full_name.label(class="form-label") }}
-                {{ form.full_name(class="form-control", placeholder="Aron Rop") }}
+                {{ form.full_name(class="form-control", placeholder="Your full name as on ID") }}
                 {% for error in form.full_name.errors %}
                     <div class="text-danger small">{{ error }}</div>
                 {% endfor %}
             </div>
 
+            <!-- Email -->
             <div class="mb-3">
                 {{ form.email.label(class="form-label") }}
                 {{ form.email(class="form-control", placeholder="you@example.com") }}
@@ -25,6 +36,67 @@
                 {% endfor %}
             </div>
 
+            <!-- Username (informal only) -->
+            <div class="mb-3 informal-only d-none">
+                {{ form.username.label(class="form-label") }}
+                {{ form.username(class="form-control", placeholder="Choose a username") }}
+                {% for error in form.username.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <!-- National ID -->
+            <div class="mb-3 formal-only d-none">
+                {{ form.national_id.label(class="form-label") }}
+                {{ form.national_id(class="form-control", placeholder="National ID Number") }}
+                {% for error in form.national_id.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <!-- Date of Birth -->
+            <div class="mb-3 formal-only d-none">
+                {{ form.dob.label(class="form-label") }}
+                {{ form.dob(class="form-control", placeholder="YYYY-MM-DD") }}
+                {% for error in form.dob.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <!-- Gender -->
+            <div class="mb-3 formal-only d-none">
+                {{ form.gender.label(class="form-label") }}
+                {{ form.gender(class="form-select") }}
+                {% for error in form.gender.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <!-- Location Fields -->
+            <div class="row formal-only d-none">
+                <div class="col-md-6 mb-3">
+                    {{ form.county.label(class="form-label") }}
+                    {{ form.county(class="form-control") }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.sub_county.label(class="form-label") }}
+                    {{ form.sub_county(class="form-control") }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.division.label(class="form-label") }}
+                    {{ form.division(class="form-control") }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.location.label(class="form-label") }}
+                    {{ form.location(class="form-control") }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.sub_location.label(class="form-label") }}
+                    {{ form.sub_location(class="form-control") }}
+                </div>
+            </div>
+
+            <!-- Password -->
             <div class="mb-3">
                 {{ form.password.label(class="form-label") }}
                 {{ form.password(class="form-control", placeholder="Enter password") }}
@@ -33,6 +105,7 @@
                 {% endfor %}
             </div>
 
+            <!-- Confirm Password -->
             <div class="mb-3">
                 {{ form.confirm_password.label(class="form-label") }}
                 {{ form.confirm_password(class="form-control", placeholder="Repeat password") }}
@@ -41,7 +114,10 @@
                 {% endfor %}
             </div>
 
-            {{ form.submit(class="btn btn-success w-100") }}
+            <!-- Submit -->
+            <div class="d-grid">
+                {{ form.submit(class="btn btn-success") }}
+            </div>
         </form>
 
         <div class="text-center mt-3">
@@ -49,4 +125,23 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const votingType = document.getElementById("votingTypeSelect");
+        const formalFields = document.querySelectorAll(".formal-only");
+        const informalFields = document.querySelectorAll(".informal-only");
+
+        function toggleFields() {
+            const isFormal = votingType.value === 'formal';
+            formalFields.forEach(f => f.classList.toggle('d-none', !isFormal));
+            informalFields.forEach(f => f.classList.toggle('d-none', isFormal));
+        }
+
+        votingType.addEventListener("change", toggleFields);
+        toggleFields(); // run on page load
+    });
+</script>
 {% endblock %}

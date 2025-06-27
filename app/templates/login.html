@@ -8,7 +8,7 @@
         <h2 class="mb-4 text-center">Login to KuraSmart</h2>
         <form action="{{ url_for('web_auth.login') }}" method="POST" novalidate>
             {{ form.hidden_tag() }}
-            <!-- Identifier Field (Email or Username) -->
+
             <div class="mb-3">
                 {{ form.identifier.label(class="form-label") }}
                 {{ form.identifier(class="form-control", placeholder="Enter your email or username") }}
@@ -16,7 +16,7 @@
                     <div class="text-danger small">{{ error }}</div>
                 {% endfor %}
             </div>
-            <!-- Password Field -->
+
             <div class="mb-3">
                 {{ form.password.label(class="form-label") }}
                 {{ form.password(class="form-control", placeholder="Your password") }}
@@ -24,12 +24,12 @@
                     <div class="text-danger small">{{ error }}</div>
                 {% endfor %}
             </div>
-            <!-- Remember Me Checkbox -->
+
             <div class="form-check mb-3">
                 {{ form.remember(class="form-check-input") }}
                 {{ form.remember.label(class="form-check-label") }}
             </div>
-            <!-- Submit and Forgot Password -->
+
             <div class="d-flex justify-content-between align-items-center mt-3">
                 {{ form.submit(class="btn btn-primary") }}
                 <a href="{{ url_for('web_auth.forgot_password') }}" class="text-decoration-none">Forgot Password?</a>

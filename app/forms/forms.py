@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm, csrf
-from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DateTimeLocalField, SelectField,BooleanField, FileField, HiddenField, BooleanField
-from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError,  Email as EmailValidator
+from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DateTimeLocalField, SelectField,BooleanField, FileField, HiddenField, BooleanField, DateField
+from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError,  Email as EmailValidator, Optional
 from flask_wtf.file import FileField, FileAllowed
 from app.models import User
 from datetime import datetime, timedelta
@@ -13,42 +13,47 @@ class ProfileImageForm(FlaskForm):
     submit = SubmitField('Update Image')
 
 
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, SelectField, DateField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional
-
 class RegistrationForm(FlaskForm):
-    # Voting type selector
     voting_type = SelectField(
         'Voting Type',
         choices=[('formal', 'Formal (National ID required)'), ('informal', 'Informal')],
         validators=[DataRequired()]
     )
-    # Common
+
     full_name = StringField(
-        'Full Name (as it appears on your National ID)',
-        validators=[DataRequired(), Length(min=3, max=120)]
+        'Full Name (as on your National ID)',
+        validators=[Optional(), Length(min=2, max=100)]
     )
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
     confirm_password = PasswordField('Confirm Password', validators=[
         DataRequired(), EqualTo('password', message='Passwords must match')
     ])
-    # Informal voter
     username = StringField('Username', validators=[Optional(), Length(min=3, max=80)])
-    # Formal voter ID fields
     national_id = StringField('National ID', validators=[Optional(), Length(min=6, max=20)])
-    dob = DateField('Date of Birth (YYYY-MM-DD)', format='%Y-%m-%d', validators=[Optional()])
+    dob = DateField('Date of Birth', format='%Y-%m-%d', validators=[Optional()])
     gender = SelectField('Gender', choices=[
         ('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')
     ], validators=[Optional()])
-    county = StringField('County', validators=[Optional(), Length(min=2, max=100)])
-    sub_county = StringField('Sub-county', validators=[Optional(), Length(min=2, max=100)])
-    division = StringField('Division', validators=[Optional(), Length(min=2, max=100)])
-    location = StringField('Location', validators=[Optional(), Length(min=2, max=100)])
-    sub_location = StringField('Sub-location', validators=[Optional(), Length(min=2, max=100)])
-
+    county = StringField('County', validators=[Optional()])
+    sub_county = StringField('Sub-county', validators=[Optional()])
+    division = StringField('Division', validators=[Optional()])
+    location = StringField('Location', validators=[Optional()])
+    sub_location = StringField('Sub-location', validators=[Optional()])
     submit = SubmitField('Register')
+
+    def validate(self):
+        rv = FlaskForm.validate(self)
+        if not rv:
+            return False
+
+        # Formal voter: full_name must be required
+        if self.voting_type.data == 'formal' and not self.full_name.data.strip():
+            self.full_name.errors.append("Full name is required for formal voters.")
+            return False
+
+        return True
+
 
 class LoginForm(FlaskForm):
     identifier = StringField('Email or Username', validators=[DataRequired(), Length(min=3)])
