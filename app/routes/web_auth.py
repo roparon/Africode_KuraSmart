@@ -23,32 +23,69 @@ voter_bp = Blueprint('voter', __name__, url_prefix='/voter')
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
+        voting_type = form.voting_type.data.lower()
+        # Check if email exists
         if User.query.filter_by(email=form.email.data).first():
             flash('Email is already registered.', 'danger')
             return render_template('register.html', form=form)
-        user = User(full_name=form.full_name.data, email=form.email.data, role=UserRole.voter.value)
+        if voting_type == 'formal':
+            # Check National ID
+            if User.query.filter_by(national_id=form.national_id.data).first():
+                flash('This National ID is already registered.', 'danger')
+                return render_template('register.html', form=form)
+            user = User(
+                full_name=form.full_name.data.strip(),
+                email=form.email.data.strip(),
+                national_id=form.national_id.data.strip(),
+                dob=form.dob.data,
+                gender=form.gender.data,
+                county=form.county.data,
+                sub_county=form.sub_county.data,
+                division=form.division.data,
+                location=form.location.data,
+                sub_location=form.sub_location.data,
+                voting_type='formal',
+                role=UserRole.voter
+            )
+        else:  # Informal
+            if User.query.filter_by(username=form.username.data).first():
+                flash('Username is already taken.', 'danger')
+                return render_template('register.html', form=form)
+            user = User(
+                full_name=form.full_name.data.strip(),
+                email=form.email.data.strip(),
+                username=form.username.data.strip(),
+                voting_type='informal',
+                role=UserRole.voter
+            )
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        flash(f'Welcome {user.full_name}! Registration successful.', 'success')
+        flash(f'Registration successful for {user.full_name}!', 'success')
         return redirect(url_for('web_auth.login'))
     return render_template('register.html', form=form)
+
 
 
 @web_auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
-        if user and user.check_password(form.password.data):
-            if not user.is_verified:
-                flash('Your account is pending verification by an admin.', 'warning')
+        identifier = form.identifier.data.strip()
+        password = form.password.data
+        # Allow login via email or username
+        user = User.query.filter(
+            (User.email == identifier) | (User.username == identifier)
+        ).first()
+        if user and user.check_password(password):
+            if not user.is_verified and user.voting_type == 'formal':
+                flash('Your formal voting account is pending admin verification.', 'warning')
                 return redirect(url_for('web_auth.login'))
             login_user(user)
-            log_action("Logged in")
+            log_action("Logged in", target_type="User", target_id=user.id)
             flash(f'Welcome back, {user.full_name}!', 'success')
             if user.is_super_admin():
-                return redirect(url_for('admin_web.dashboard'))  # adjust as needed
+                return redirect(url_for('admin_web.dashboard'))
             elif user.is_admin():
                 return redirect(url_for('admin_web.dashboard'))
             elif user.is_candidate():
@@ -56,14 +93,13 @@ def login():
             elif user.is_voter():
                 return redirect(url_for('voter.voter_dashboard'))
             else:
-                flash("Your account role is not recognized.", "danger")
+                flash("Unknown user role.", "danger")
                 return redirect(url_for('web_auth.login'))
         if user:
             log_action("Failed login attempt", target_type="User", target_id=user.id)
-
-        flash('Invalid email or password.', 'danger')
-
+        flash('Invalid credentials.', 'danger')
     return render_template('login.html', form=form)
+
 
 
 

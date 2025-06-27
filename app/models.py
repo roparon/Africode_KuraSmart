@@ -22,32 +22,49 @@ class ElectionStatus(Enum):
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
+
+    # Identity
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     full_name = db.Column(db.String(120), nullable=False)
+    username = db.Column(db.String(80), unique=True, nullable=True)  # Informal only
     password_hash = db.Column(db.String(128), nullable=False)
+
+    # Voting type
+    voting_type = db.Column(db.String(10), nullable=False, default="informal")  # 'formal' or 'informal'
+
+    # Formal voting fields (Kenyan ID)
+    national_id = db.Column(db.String(20), unique=True, nullable=True)
+    dob = db.Column(db.Date, nullable=True)
+    gender = db.Column(db.String(10), nullable=True)
+
+    # Location as per Kenyan ID
+    county = db.Column(db.String(100), nullable=True)
+    sub_county = db.Column(db.String(100), nullable=True)
+    division = db.Column(db.String(100), nullable=True)
+    location = db.Column(db.String(100), nullable=True)
+    sub_location = db.Column(db.String(100), nullable=True)
+
+    # System & status
+    profile_image_url = db.Column(db.String(255), nullable=True)
+    is_verified = db.Column(db.Boolean, default=False, index=True)
     is_superadmin = db.Column(db.Boolean, default=False)
     role = db.Column(db.Enum(UserRole), default=UserRole.voter, nullable=False, index=True)
-    username = db.Column(db.String(80), unique=True, nullable=True)
-    id_number = db.Column(db.String(20), unique=True, nullable=True)
-    profile_image_url = db.Column(db.String(255), nullable=True)
-    county = db.Column(db.String(100), nullable=True)
-    constituency = db.Column(db.String(100), nullable=True)
-    ward = db.Column(db.String(100), nullable=True)
-    sub_location = db.Column(db.String(100), nullable=True)
-    is_verified = db.Column(db.Boolean, default=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Relationships
     candidates = db.relationship('Candidate', back_populates='user', lazy='dynamic')
     verification_requests = db.relationship('VerificationRequest', back_populates='user', lazy='dynamic')
     votes = db.relationship('Vote', back_populates='voter', lazy='dynamic')
 
+    # Password logic
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+    # Role checks
     def is_admin(self):
         return self.role in [UserRole.admin, UserRole.super_admin]
 
@@ -60,14 +77,13 @@ class User(db.Model, UserMixin):
     def is_candidate(self):
         return self.role == UserRole.candidate
 
+    # Token helpers
     def get_reset_token(self, expires_sec=1800):
-        """Generate a password reset token valid for expires_sec seconds."""
         s = Serializer(current_app.config['SECRET_KEY'])
         return s.dumps({'user_id': self.id})
 
     @staticmethod
     def verify_reset_token(token, expires_sec=1800):
-        """Return the User if token is valid; otherwise None."""
         try:
             s = Serializer(current_app.config['SECRET_KEY'])
             data = s.loads(token, max_age=expires_sec)
@@ -76,10 +92,11 @@ class User(db.Model, UserMixin):
             return None
 
     def __repr__(self):
-        return f"<User id={self.id}, email='{self.email}', role='{self.role.value}'>"
+        return f"<User id={self.id}, email='{self.email}', role='{self.role.value}', voting_type='{self.voting_type}'>"
 
     def __str__(self):
         return self.full_name
+
 
 class Election(db.Model):
     __tablename__ = 'election'
