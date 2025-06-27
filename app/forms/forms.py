@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm, csrf
 from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DateTimeLocalField, SelectField,BooleanField, FileField, HiddenField
-from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
+from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError,  Email as EmailValidator
 from flask_wtf.file import FileField, FileAllowed
 from app.models import User
 from datetime import datetime, timedelta
@@ -23,9 +23,16 @@ class RegistrationForm(FlaskForm):
     submit = SubmitField('Register')
 
 class LoginForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email()])
+    identifier = StringField('Email or Username', validators=[DataRequired(), Length(min=3)])
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Login')
+
+    def validate_identifier(self, field):
+        try:
+            EmailValidator()(self, field)
+        except ValidationError:
+            if len(field.data.strip()) < 3:
+                raise ValidationError("Enter a valid email or username.")
 
 
 class VerificationRequestForm(FlaskForm):
