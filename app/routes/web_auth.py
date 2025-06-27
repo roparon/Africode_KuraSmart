@@ -21,25 +21,19 @@ voter_bp = Blueprint('voter', __name__, url_prefix='/voter')
 @web_auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
-
     if form.validate_on_submit():
         voting_type = form.voting_type.data.lower()
         email = form.email.data.strip()
         full_name = form.full_name.data.strip() if form.full_name.data else ''
         username = form.username.data.strip() if form.username.data else ''
         national_id = form.national_id.data.strip() if form.national_id.data else ''
-
-        # Check for existing email
         if User.query.filter_by(email=email).first():
             flash('Email is already registered.', 'danger')
             return render_template('register.html', form=form)
-
-        # Formal voter logic
         if voting_type == 'formal':
             if User.query.filter_by(national_id=national_id).first():
                 flash('This National ID is already registered.', 'danger')
                 return render_template('register.html', form=form)
-
             user = User(
                 full_name=full_name,
                 email=email,
@@ -52,11 +46,10 @@ def register():
                 location=form.location.data,
                 sub_location=form.sub_location.data,
                 voting_type='formal',
-                role=UserRole.voter.value,       # Enum value stored as string
-                is_verified=True                 # ✅ Auto-verify voters
+                role=UserRole.voter.value,
+                is_verified=True
             )
-
-        else:  # Informal voter logic
+        else:
             if User.query.filter_by(username=username).first():
                 flash('Username is already taken.', 'danger')
                 return render_template('register.html', form=form)
@@ -69,22 +62,13 @@ def register():
                 role=UserRole.voter.value,
                 is_verified=True
             )
-
-        # Set password securely
         user.set_password(form.password.data)
-
-        # Save to database
         db.session.add(user)
         db.session.commit()
-
         flash(f"Registration successful for {user.full_name or user.username}!", 'success')
-
-        # Inform the user if verification is normally needed
         if user.role in [UserRole.admin.value, UserRole.candidate.value]:
             flash("Your account is pending admin approval.", "info")
-
         return redirect(url_for('web_auth.login'))
-
     return render_template('register.html', form=form)
 
 
