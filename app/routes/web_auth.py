@@ -96,34 +96,34 @@ def login():
     if form.validate_on_submit():
         identifier = form.identifier.data.strip()
         password = form.password.data
-        # Lookup by email or username
         user = User.query.filter(
             (User.email == identifier) | (User.username == identifier)
         ).first()
-        if user and user.check_password(password):
-            # Formal users must be verified
-            if user.voting_type == 'formal' and not user.is_verified:
-                flash('Your formal voter account is pending verification.', 'warning')
-                return redirect(url_for('web_auth.login'))
-            # Login with remember option
-            login_user(user, remember=form.remember.data)
-            log_action("Logged in", target_type="User", target_id=user.id)
-            flash(f"Welcome back, {user.full_name}!", 'success')
-            # Role-based redirection
-            if user.is_super_admin():
-                return redirect(url_for('admin_web.dashboard'))
-            elif user.is_admin():
-                return redirect(url_for('admin_web.dashboard'))
-            elif user.is_candidate():
-                return redirect(url_for('candidate.dashboard'))
-            elif user.is_voter():
-                return redirect(url_for('voter.voter_dashboard'))
-            else:
-                flash("Your role is not recognized.", "danger")
-                return redirect(url_for('web_auth.login'))
         if user:
-            log_action("Failed login attempt", target_type="User", target_id=user.id)
-        flash('Invalid credentials. Please try again.', 'danger')
+            if user.check_password(password):
+                # Formal users must be verified
+                if user.voting_type == 'formal' and not user.is_verified:
+                    flash('Your formal voter account is pending verification.', 'warning')
+                    return redirect(url_for('web_auth.login'))
+                login_user(user, remember=form.remember.data)
+                log_action("Logged in", target_type="User", target_id=user.id)
+                flash(f"Welcome back, {user.full_name}!", 'success')
+                if user.is_super_admin():
+                    return redirect(url_for('admin_web.dashboard'))
+                elif user.is_admin():
+                    return redirect(url_for('admin_web.dashboard'))
+                elif user.is_candidate():
+                    return redirect(url_for('candidate.dashboard'))
+                elif user.is_voter():
+                    return redirect(url_for('voter.voter_dashboard'))
+                else:
+                    flash("Your role is not recognized.", "danger")
+                    return redirect(url_for('web_auth.login'))
+            else:
+                log_action("Failed login attempt", target_type="User", target_id=user.id)
+                flash('Incorrect password. Please try again.', 'danger')
+        else:
+            flash('No account found with that email or username.', 'danger')
     return render_template('login.html', form=form)
 
 
