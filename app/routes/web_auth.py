@@ -18,7 +18,6 @@ web_auth_bp = Blueprint('web_auth', __name__)
 admin_web_bp = Blueprint('admin_web', __name__, url_prefix='/admin')
 voter_bp = Blueprint('voter', __name__, url_prefix='/voter')
 # Registration, Login, Logout Routes
-# -----------------------------------
 @web_auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
@@ -53,7 +52,7 @@ def register():
                 location=form.location.data,
                 sub_location=form.sub_location.data,
                 voting_type='formal',
-                role=UserRole.voter,
+                role=UserRole.voter.value,  # ✅ FIXED
                 is_verified=False  # require admin approval
             )
 
@@ -67,7 +66,7 @@ def register():
                 email=email,
                 username=username,
                 voting_type='informal',
-                role=UserRole.voter,
+                role=UserRole.voter.value,  # ✅ FIXED
                 is_verified=True  # auto-verify informal voters
             )
 
