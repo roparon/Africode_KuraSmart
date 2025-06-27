@@ -6,6 +6,7 @@ from app.enums import ElectionStatusEnum
 from itsdangerous import URLSafeTimedSerializer as Serializer
 from flask import current_app
 from sqlalchemy.sql import func
+from sqlalchemy import Enum as SQLAlchemyEnum
 import enum
 from enum import Enum
 
@@ -14,6 +15,8 @@ class UserRole(enum.Enum):
     candidate = "candidate"
     admin = "admin"
     super_admin = "super_admin"
+role = db.Column(SQLAlchemyEnum(UserRole, name='userrole'), nullable=False)
+
 
 class ElectionStatus(Enum):
     ACTIVE = "active"
