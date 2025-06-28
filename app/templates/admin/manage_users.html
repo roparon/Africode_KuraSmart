@@ -7,11 +7,14 @@
   <h3 class="text-center mb-4">
     <i class="bi bi-people-fill"></i> Manage Users
   </h3>
-  <a href="{{ url_for('admin_web.pending_users') }}" class="btn btn-outline-primary rounded-pill shadow-sm">
-  <i class="bi bi-person-check me-1"></i> Review Pending Users
-</a>
 
-
+  {% if current_user.is_super_admin %}
+    <div class="mb-3">
+      <a href="{{ url_for('admin_web.create_user') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle-fill"></i> Create User
+      </a>
+    </div>
+  {% endif %}
   <!-- Flash Messages -->
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
