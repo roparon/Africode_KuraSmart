@@ -1,63 +1,106 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard | KuraSmart{% endblock %}
+{% block title %}Voter Dashboard | KuraSmart{% endblock %}
 
 {% block content %}
+<style>
+    .card {
+        transition: transform 0.2s ease-in-out;
+    }
+    .card:hover {
+        transform: scale(1.02);
+    }
+    .card-title {
+        font-weight: 600;
+    }
+    .card-text {
+        color: #555;
+    }
+    .btn {
+        margin-top: 10px;
+    }
+</style>
+
 <div class="container mt-5">
-    <h2 class="mb-4 text-center">Welcome to KuraSmart Dashboard</h2>
+    <h2 class="mb-4 text-center">Welcome, {{ user.full_name or user.username }}!</h2>
+
+    <!-- Profile Summary -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">🧾 Profile Summary</h5>
+            <p><strong>Email:</strong> {{ user.email }}</p>
+            <p><strong>Voter Type:</strong> {{ user.voting_type|capitalize }}</p>
+            <p><strong>Status:</strong> 
+                {% if user.is_verified %}<span class="text-success">Verified</span>
+                {% else %}<span class="text-danger">Not Verified</span>{% endif %}
+            </p>
+            <a href="{{ url_for('auth_bp.update_profile') }}" class="btn btn-sm btn-outline-secondary">Update Profile</a>
+        </div>
+    </div>
 
     <div class="row g-4">
-        <!-- Voter Statistics -->
-        <div class="col-md-4">
+        <!-- Cast Vote -->
+        <div class="col-md-6 col-lg-4">
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-body text-center">
-                    <h5 class="card-title">📋 Voter Registry</h5>
-                    <p class="card-text">Manage verified and informal voters.</p>
-                    <a href="{{ url_for('voter.index') }}" class="btn btn-outline-primary">Manage Voters</a>
+                    <h5 class="card-title">🗳️ Cast Your Vote</h5>
+                    <p class="card-text">Vote in current elections you're eligible for.</p>
+                    <a href="{{ url_for('admin_web.manage_elections') }}" class="btn btn-outline-success">Vote Now</a>
                 </div>
             </div>
         </div>
 
-        <!-- Elections -->
-        <div class="col-md-4">
+        <!-- Upcoming Elections -->
+        <div class="col-md-6 col-lg-4">
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-body text-center">
-                    <h5 class="card-title">🗳️ Elections</h5>
-                    <p class="card-text">Create, view, and manage elections.</p>
-                    <a href="{{ url_for('election.index') }}" class="btn btn-outline-success">View Elections</a>
+                    <h5 class="card-title">📅 Upcoming Elections</h5>
+                    <p class="card-text">View all scheduled elections.</p>
+                    <a href="{{ url_for('admin_web.manage_elections') }}" class="btn btn-outline-info">Upcoming Elections</a>
                 </div>
             </div>
         </div>
 
-        <!-- Results -->
-        <div class="col-md-4">
+        <!-- Voting History -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body text-center">
+                    <h5 class="card-title">🕘 Voting History</h5>
+                    <p class="card-text">See your past voting participation.</p>
+                    <a href="{{ url_for('admin_web.election_results') }}" class="btn btn-outline-dark">View History</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="col-md-6 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body text-center">
+                    <h5 class="card-title">🔔 Notifications</h5>
+                    <p class="card-text">Check updates and announcements.</p>
+                    <a href="{{ url_for('voter.user_notifications') }}" class="btn btn-outline-primary">View Notifications</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Election Results -->
+        <div class="col-md-6 col-lg-6">
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-body text-center">
                     <h5 class="card-title">📊 Results</h5>
-                    <p class="card-text">Monitor real-time voting results.</p>
-                    <a href="{{ url_for('results.index') }}" class="btn btn-outline-info">View Results</a>
+                    <p class="card-text">See official election results.</p>
+                    <a href="{{ url_for('admin_web.election_results') }}" class="btn btn-outline-success">See Results</a>
                 </div>
             </div>
         </div>
 
-        <!-- Role-Based Access -->
-        <div class="col-md-6">
+        <!-- Help & Support -->
+        <div class="col-md-12 col-lg-12">
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-body text-center">
-                    <h5 class="card-title">👥 User Roles</h5>
-                    <p class="card-text">Assign roles: Voter, Admin, Super Admin.</p>
-                    <a href="{{ url_for('admin.roles') }}" class="btn btn-outline-warning">Manage Roles</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- System Logs or Analytics -->
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-body text-center">
-                    <h5 class="card-title">🔍 Logs & Security</h5>
-                    <p class="card-text">View audit logs and login events.</p>
-                    <a href="{{ url_for('admin.logs') }}" class="btn btn-outline-dark">View Logs</a>
+                    <h5 class="card-title">🆘 Help & Support</h5>
+                    <p class="card-text">Need help with voting? Find answers here.</p>
+                    <a href="{{ url_for('main.index') }}#support" class="btn btn-outline-secondary">Help Center</a>
                 </div>
             </div>
         </div>

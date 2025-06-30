@@ -5,7 +5,7 @@ from app.models import User, Election, Candidate, Vote, Position, Notification, 
 from app.extensions import db
 from app.enums import UserRole, ElectionStatusEnum
 from datetime import datetime, timedelta
-from app.utils.email import send_email_async, send_reset_email
+from app.utils.email import send_email, send_reset_email
 from app.utils.audit_utils import log_action
 from app.utils.decorators import superadmin_required
 from werkzeug.utils import secure_filename
@@ -17,7 +17,8 @@ import os
 web_auth_bp = Blueprint('web_auth', __name__)
 admin_web_bp = Blueprint('admin_web', __name__, url_prefix='/admin')
 voter_bp = Blueprint('voter', __name__, url_prefix='/voter')
-# Registration, Login, Logout Routes
+
+
 @web_auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
@@ -673,16 +674,16 @@ def manage_notifications():
     if form.validate_on_submit():
         subject = form.title.data
         message = form.message.data
-        send_email = form.send_email.data
+        should_send_email = form.send_email.data
 
-        notif = Notification(subject=subject, message=message, send_email=send_email)
+        notif = Notification(subject=subject, message=message, send_email=should_send_email)
         db.session.add(notif)
         db.session.commit()
 
-        if send_email:
+        if should_send_email:
             users = User.query.all()
             for u in users:
-                send_email_async(u.email, subject, message)
+                send_email(u.email, subject, message)
 
         flash('Notification sent successfully!', 'success')
         return redirect(url_for('admin_web.manage_notifications'))
