@@ -358,7 +358,6 @@ def bulk_delete_users():
 def export_users_csv():
     if not (current_user.is_superadmin or current_user.role == UserRole.admin.value):
         abort(403)
-
     users = User.query.order_by(User.full_name).all()
     si = StringIO()
     cw = csv.writer(si)
@@ -372,7 +371,6 @@ def export_users_csv():
             user.role,
             'Yes' if user.is_verified else 'No'
         ])
-
     si.seek(0)
     return send_file(
         StringIO(si.getvalue()),
