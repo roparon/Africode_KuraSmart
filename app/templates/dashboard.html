@@ -38,6 +38,28 @@
         </div>
     </div>
 
+    <!-- Active Elections -->
+    <div class="card mb-5 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">🗳️ Active Elections</h5>
+            {% if elections %}
+                <ul class="list-group list-group-flush">
+                    {% for election in elections %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ election.title }}</strong><br>
+                                <small class="text-muted">Ends {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <a href="{{ url_for('vote_bp.cast_vote', election_id=election.id) }}" class="btn btn-sm btn-outline-primary">Vote</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No elections currently available.</p>
+            {% endif %}
+        </div>
+    </div>
+
     <div class="row g-4">
         <!-- Cast Vote -->
         <div class="col-md-6 col-lg-4">
@@ -56,7 +78,7 @@
                 <div class="card-body text-center">
                     <h5 class="card-title">📅 Upcoming Elections</h5>
                     <p class="card-text">View all scheduled elections.</p>
-                    <a href="{{ url_for('admin_web.manage_elections') }}" class="btn btn-outline-info">Upcoming Elections</a>
+                    <a href="{{ url_for('vote_bp.upcoming_elections') }}" class="btn btn-outline-info">Upcoming Elections</a>
                 </div>
             </div>
         </div>

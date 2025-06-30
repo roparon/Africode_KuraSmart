@@ -385,15 +385,12 @@ def export_users_csv():
 def manage_elections():
     if not (current_user.is_superadmin or current_user.role == UserRole.admin.value):
         abort(403)
-
     form = ElectionForm()
     now = datetime.now()
     current_datetime = now.strftime('%Y-%m-%dT%H:%M')
-
     if form.validate_on_submit():
         start = form.start_date.data
         end = form.end_date.data
-
         if start < now:
             flash('Start date must be in the future or now.', 'danger')
         elif end <= start:
@@ -412,7 +409,6 @@ def manage_elections():
             db.session.commit()
             flash('Election created and set to INACTIVE.', 'success')
             return redirect(url_for('admin_web.manage_elections'))
-
     # Auto-update status based on time
     elections = Election.query.all()
     for election in elections:
@@ -426,7 +422,6 @@ def manage_elections():
     search_title = request.args.get("search_title", "").strip()
     elections = Election.query.filter(Election.title.ilike(f"{search_title}%")) if search_title else Election.query
     elections = elections.order_by(Election.start_date.desc()).all()
-
     return render_template('admin/manage_elections.html',
                            elections=elections,
                            form=form,
