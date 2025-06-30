@@ -6,9 +6,14 @@ from app.extensions import db
 voter_bp = Blueprint('voter', __name__)
 
 
-@voter_bp.route('/dashboard')
-def voter_dashboard():
-    return render_template('voter/dashboard.html')
+@voter_bp.route('/')
+def index():
+    return render_template('voter/index.html')
+
+
+# @voter_bp.route('/dashboard')
+# def voter_dashboard():
+#     return render_template('voter/dashboard.html')
 
 @voter_bp.route('/notifications')
 @login_required
