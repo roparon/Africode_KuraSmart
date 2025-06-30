@@ -78,7 +78,9 @@
                 <div class="card-body text-center">
                     <h5 class="card-title">📅 Upcoming Elections</h5>
                     <p class="card-text">View all scheduled elections.</p>
-                    <a href="{{ url_for('vote_bp.upcoming_elections') }}" class="btn btn-outline-info">Upcoming Elections</a>
+                    {% for election in elections %}
+                    <a href="{{ url_for('vote_bp.get_election_results', election_id=election.id) }}" class="btn btn-outline-info">Upcoming Elections</a>
+                    {% endfor %}
                 </div>
             </div>
         </div>
