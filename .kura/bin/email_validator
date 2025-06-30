@@ -1,4 +1,4 @@
-#!/home/rop/My_Project/Africode_KuraSmart/.kura/bin/python3
+#!/home/rop/My_Project/Africode_KuraSmart/.kura/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys
