@@ -7,45 +7,57 @@ from app.extensions import db
 
 voter_bp = Blueprint('voter', __name__)
 
-
 @voter_bp.route('/dashboard')
 @login_required
 def voter_dashboard():
     if current_user.role != UserRole.voter.value:
         abort(403)
-    elections = Election.query.filter(
-        and_(
-            Election.start_date <= datetime.utcnow(),
-            Election.end_date >= datetime.utcnow(),
-            Election.status == 'active'
-        )
-    ).all()
-
-    return render_template('voter/dashboard.html', elections=elections, user=current_user)
-
+    try:
+        elections = Election.query.filter(
+            and_(
+                Election.start_date <= datetime.utcnow(),
+                Election.end_date >= datetime.utcnow(),
+                Election.status == 'active'
+            )
+        ).all()
+        return render_template('voter/dashboard.html', elections=elections, user=current_user)
+    except Exception as e:
+        flash(f"Error loading dashboard: {str(e)}", "danger")
+        return redirect(url_for('main.index'))  # or a safe fallback
 
 @voter_bp.route('/notifications')
 @login_required
 def user_notifications():
-    notifs = Notification.query.order_by(Notification.created_at.desc()).limit(20).all()
-    return render_template('voter/notifications.html', notifications=notifs)
-
+    try:
+        notifs = Notification.query.order_by(Notification.created_at.desc()).limit(20).all()
+        return render_template('voter/notifications.html', notifications=notifs)
+    except Exception as e:
+        flash(f"Error loading notifications: {str(e)}", "danger")
+        return redirect(url_for('voter.voter_dashboard'))
 
 @voter_bp.route('/notifications/mark_read/<int:notif_id>', methods=['POST'])
 @login_required
 def mark_read(notif_id):
-    notif = Notification.query.filter_by(id=notif_id).first_or_404()
-    if not notif.read:
-        notif.read = True
-        db.session.commit()
-        flash('Notification marked as read.', 'success')
+    try:
+        notif = Notification.query.filter_by(id=notif_id).first_or_404()
+        if not notif.read:
+            notif.read = True
+            db.session.commit()
+            flash('Notification marked as read.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error marking notification as read: {str(e)}", "danger")
     return redirect(url_for('voter.user_notifications'))
 
 @voter_bp.route('/notifications/delete/<int:notif_id>', methods=['POST'])
 @login_required
 def delete_notification(notif_id):
-    notif = Notification.query.filter_by(id=notif_id).first_or_404()
-    db.session.delete(notif)
-    db.session.commit()
-    flash('Notification deleted.', 'warning')
+    try:
+        notif = Notification.query.filter_by(id=notif_id).first_or_404()
+        db.session.delete(notif)
+        db.session.commit()
+        flash('Notification deleted.', 'warning')
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error deleting notification: {str(e)}", "danger")
     return redirect(url_for('voter.user_notifications'))

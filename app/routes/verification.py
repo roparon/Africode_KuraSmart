@@ -9,19 +9,18 @@ verification_bp = Blueprint('verification_bp', __name__)
 @login_required
 def request_verification():
     user = current_user
-
     if not user:
         return jsonify({'error': 'User not found'}), 404
-
     if user.is_verified:
         return jsonify({'message': 'User already verified'}), 400
-
-    existing = VerificationRequest.query.filter_by(user_id=user.id).first()
-    if existing:
-        return jsonify({'message': 'Verification request already submitted'}), 400
-
-    verification = VerificationRequest(user_id=user.id)
-    db.session.add(verification)
-    db.session.commit()
-
-    return jsonify({'message': 'Verification request submitted'}), 201
+    try:
+        existing = VerificationRequest.query.filter_by(user_id=user.id).first()
+        if existing:
+            return jsonify({'message': 'Verification request already submitted'}), 400
+        verification = VerificationRequest(user_id=user.id)
+        db.session.add(verification)
+        db.session.commit()
+        return jsonify({'message': 'Verification request submitted'}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to submit verification request', 'details': str(e)}), 500
