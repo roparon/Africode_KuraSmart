@@ -44,7 +44,9 @@
     <!-- Active Elections -->
     <div class="card mb-5 shadow-sm">
         <div class="card-body">
-            <h5 class="card-title">🗳️ Active Elections</h5>
+            <h5 class="card-title">🗳️ Active Elections</h5><p style="color: red;">DEBUG: Number of elections passed = {{ elections|length }}</p>
+<p style="color: red;">Election titles: {% for e in elections %}{{ e.title }} | {% endfor %}</p>
+
             {% if elections %}
                 <ul class="list-group list-group-flush">
                     {% for election in elections %}

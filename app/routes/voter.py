@@ -13,10 +13,6 @@ voter_bp = Blueprint('voter', __name__)
 def voter_dashboard():
     if current_user.role != UserRole.voter.value:
         abort(403)
-
-    from datetime import datetime
-    from sqlalchemy import and_
-
     elections = Election.query.filter(
         and_(
             Election.start_date <= datetime.utcnow(),
