@@ -22,10 +22,10 @@
 </style>
 
 <div class="container mt-5">
-    <h2 class="mb-4 text-center">Welcome, {{ user.full_name or user.username }}!</h2>
+    <h2 class="mb-4 text-center" style="background-color: #EDC9AF;">Welcome, {{ user.full_name or user.username }}!</h2>
 
     <!-- Profile Summary -->
-    <div class="card mb-4 shadow-sm">
+    <div class="card mb-4 shadow-sm" style="background-color: #EDC9AF;">
         <div class="card-body">
             <h5 class="card-title">🧾 Profile Summary</h5>
             <p><strong>Email:</strong> {{ user.email }}</p>
@@ -42,14 +42,12 @@
     </div>
 
     <!-- Active Elections -->
-    <div class="card mb-5 shadow-sm">
+    <div class="card mb-4 shadow-sm" style="background-color: #EDC9AF;">
         <div class="card-body">
-            <h5 class="card-title">🗳️ Active Elections</h5><p style="color: red;">DEBUG: Number of elections passed = {{ elections|length }}</p>
-<p style="color: red;">Election titles: {% for e in elections %}{{ e.title }} | {% endfor %}</p>
-
-            {% if elections %}
+            <h5 class="card-title">🟢 Active Elections</h5>
+            {% if active_elections %}
                 <ul class="list-group list-group-flush">
-                    {% for election in elections %}
+                    {% for election in active_elections %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
                                 <strong>{{ election.title }}</strong><br>
@@ -64,29 +62,56 @@
                     {% endfor %}
                 </ul>
             {% else %}
-                <p class="text-muted">No elections currently available.</p>
+                <p class="text-muted">No active elections available.</p>
             {% endif %}
         </div>
     </div>
 
-    <div class="row g-4">
-        <!-- Cast Vote Cards for Each Active Election -->
-        {% for election in elections %}
-        <div class="col-md-6 col-lg-4">
-            <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-body text-center">
-                    <h5 class="card-title">🗳️ Cast Your Vote</h5>
-                    <p class="card-text">Vote in <strong>{{ election.title }}</strong> — ends {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}.</p>
-                    {% if user.is_verified %}
-                        <a href="{{ url_for('voter_bp.cast_vote_page', election_id=election.id) }}" class="btn btn-outline-success">Vote Now</a>
-                    {% else %}
-                        <span class="text-danger">Verify Account to Vote</span>
-                    {% endif %}
-                </div>
-            </div>
+    <!-- Upcoming Elections -->
+    <div class="card mb-4 shadow-sm" style="background-color: #EDC9AF;">
+        <div class="card-body">
+            <h5 class="card-title">🕒 Upcoming Elections</h5>
+            {% if upcoming_elections %}
+                <ul class="list-group list-group-flush">
+                    {% for election in upcoming_elections %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ election.title }}</strong><br>
+                                <small class="text-muted">Starts {{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No upcoming elections.</p>
+            {% endif %}
         </div>
-        {% endfor %}
+    </div>
 
+    <!-- Ended Elections -->
+    <div class="card mb-5 shadow-sm" style="background-color: #EDC9AF;">
+        <div class="card-body">
+            <h5 class="card-title">🔴 Ended Elections</h5>
+            {% if ended_elections %}
+                <ul class="list-group list-group-flush">
+                    {% for election in ended_elections %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ election.title }}</strong><br>
+                                <small class="text-muted">Ended {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <a href="{{ url_for('admin_web.election_results', election_id=election.id) }}" class="btn btn-sm btn-outline-dark">View Results</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No ended elections.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Dashboard Actions -->
+    <div class="row g-4" style="background-color: #EDC9AF;">
         <!-- Voting History -->
         <div class="col-md-6 col-lg-4">
             <div class="card border-0 shadow-sm rounded-3">
@@ -109,19 +134,8 @@
             </div>
         </div>
 
-        <!-- Election Results -->
-        <div class="col-md-6 col-lg-6">
-            <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-body text-center">
-                    <h5 class="card-title">📊 Results</h5>
-                    <p class="card-text">See official election results.</p>
-                    <a href="{{ url_for('admin_web.election_results') }}" class="btn btn-outline-success">See Results</a>
-                </div>
-            </div>
-        </div>
-
         <!-- Help & Support -->
-        <div class="col-md-6 col-lg-6">
+        <div class="col-md-6 col-lg-4">
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-body text-center">
                     <h5 class="card-title">🆘 Help & Support</h5>
