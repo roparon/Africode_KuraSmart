@@ -12,18 +12,21 @@ voter_bp = Blueprint('voter', __name__)
 def voter_dashboard():
     if current_user.role != UserRole.voter.value:
         abort(403)
+
     try:
+        now = datetime.utcnow()
         elections = Election.query.filter(
             and_(
-                Election.start_date <= datetime.utcnow(),
-                Election.end_date >= datetime.utcnow(),
-                Election.status == 'active'
+                Election.start_date <= now,
+                Election.end_date >= now,
+                Election.active == True
             )
-        ).all()
+        ).order_by(Election.created_at.desc()).all()
+
         return render_template('voter/dashboard.html', elections=elections, user=current_user)
     except Exception as e:
         flash(f"Error loading dashboard: {str(e)}", "danger")
-        return redirect(url_for('main.index'))  # or a safe fallback
+        return redirect(url_for('main.index')) # or a safe fallback
 
 @voter_bp.route('/notifications')
 @login_required
