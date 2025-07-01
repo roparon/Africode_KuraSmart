@@ -11,12 +11,13 @@ from flask_mail import Mail
 from app.extensions import db, migrate, login_manager, CSRFProtect, mail
 from app.models import User, Notification
 from app.tasks.reminders import send_reminders
+from config import Config
 
 mail = Mail()
 
 def create_app():
     app = Flask(__name__, template_folder='templates')
-    app.config.from_object('Config')
+    app.config.from_object(Config)
 
     # Initialize core extensions
     db.init_app(app)
