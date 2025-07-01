@@ -31,8 +31,11 @@
             <p><strong>Email:</strong> {{ user.email }}</p>
             <p><strong>Voter Type:</strong> {{ user.voting_type|capitalize }}</p>
             <p><strong>Status:</strong> 
-                {% if user.is_verified %}<span class="text-success">Verified</span>
-                {% else %}<span class="text-danger">Not Verified</span>{% endif %}
+                {% if user.is_verified %}
+                    <span class="text-success">Verified</span>
+                {% else %}
+                    <span class="text-danger">Not Verified</span>
+                {% endif %}
             </p>
             <a href="{{ url_for('auth_bp.update_profile') }}" class="btn btn-sm btn-outline-secondary">Update Profile</a>
         </div>
@@ -50,7 +53,11 @@
                                 <strong>{{ election.title }}</strong><br>
                                 <small class="text-muted">Ends {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</small>
                             </div>
-                            <a href="{{ url_for('vote_bp.cast_vote', election_id=election.id) }}" class="btn btn-sm btn-outline-primary">Vote</a>
+                            {% if user.is_verified %}
+                                <a href="{{ url_for('voter_bp.cast_vote_page', election_id=election.id) }}" class="btn btn-sm btn-outline-primary">Vote</a>
+                            {% else %}
+                                <span class="text-danger">Verify Account to Vote</span>
+                            {% endif %}
                         </li>
                     {% endfor %}
                 </ul>
@@ -61,29 +68,23 @@
     </div>
 
     <div class="row g-4">
-        <!-- Cast Vote -->
+        <!-- Cast Vote Cards for Each Active Election -->
+        {% for election in elections %}
         <div class="col-md-6 col-lg-4">
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-body text-center">
                     <h5 class="card-title">🗳️ Cast Your Vote</h5>
-                    <p class="card-text">Vote in current elections you're eligible for.</p>
-                    <a href="{{ url_for('vote_bp.cast_vote_page', election_id=election.id) }}" class="btn btn-outline-success">Vote Now</a>
+                    <p class="card-text">Vote in <strong>{{ election.title }}</strong> — ends {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}.</p>
+                    {% if user.is_verified %}
+                        <a href="{{ url_for('voter_bp.cast_vote_page', election_id=election.id) }}" class="btn btn-outline-success">Vote Now</a>
+                    {% else %}
+                        <span class="text-danger">Verify Account to Vote</span>
+                    {% endif %}
                 </div>
             </div>
         </div>
+        {% endfor %}
 
-        <!-- Upcoming Elections -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-body text-center">
-                    <h5 class="card-title">📅 Upcoming Elections</h5>
-                    <p class="card-text">View all scheduled elections.</p>
-                    {% for election in elections %}
-                    <a href="{{ url_for('vote_bp.get_election_results', election_id=election.id) }}" class="btn btn-outline-info">Upcoming Elections</a>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
         <!-- Voting History -->
         <div class="col-md-6 col-lg-4">
             <div class="card border-0 shadow-sm rounded-3">
@@ -96,7 +97,7 @@
         </div>
 
         <!-- Notifications -->
-        <div class="col-md-6 col-lg-6">
+        <div class="col-md-6 col-lg-4">
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-body text-center">
                     <h5 class="card-title">🔔 Notifications</h5>
@@ -118,7 +119,7 @@
         </div>
 
         <!-- Help & Support -->
-        <div class="col-md-12 col-lg-12">
+        <div class="col-md-6 col-lg-6">
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-body text-center">
                     <h5 class="card-title">🆘 Help & Support</h5>
