@@ -14,6 +14,8 @@ from collections import defaultdict
 from io import StringIO
 import csv
 import os
+
+
 # Blueprints
 web_auth_bp = Blueprint('web_auth', __name__)
 admin_web_bp = Blueprint('admin_web', __name__, url_prefix='/admin')
@@ -173,7 +175,6 @@ def dashboard():
 
     if not (current_user.is_superadmin or current_user.role == UserRole.admin.value):
         abort(403)
-
     try:
         total_voters = User.query.filter_by(role='voter').count()
         voted_count = db.session.query(Vote.voter_id).distinct().count()
@@ -184,7 +185,6 @@ def dashboard():
             e for e in ongoing_elections
             if e.end_date and e.end_date <= datetime.utcnow() + timedelta(hours=4)
         ]
-
         return render_template(
             'admin/dashboard.html',
             form=form,
