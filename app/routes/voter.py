@@ -6,27 +6,42 @@ from sqlalchemy import and_
 from app.extensions import db
 
 voter_bp = Blueprint('voter', __name__)
-
 @voter_bp.route('/dashboard')
 @login_required
 def voter_dashboard():
     if current_user.role != UserRole.voter.value:
         abort(403)
-
     try:
         now = datetime.utcnow()
-        elections = Election.query.filter(
+        # Active elections: currently running
+        active_elections = Election.query.filter(
             and_(
                 Election.start_date <= now,
                 Election.end_date >= now,
                 Election.active == True
             )
         ).order_by(Election.created_at.desc()).all()
-
-        return render_template('voter/dashboard.html', elections=elections, user=current_user)
+        # Upcoming (pending) elections: not started yet
+        upcoming_elections = Election.query.filter(
+            and_(
+                Election.start_date > now,
+                Election.active == True
+            )
+        ).order_by(Election.start_date.asc()).all()
+        # Ended elections
+        ended_elections = Election.query.filter(
+            Election.end_date < now
+        ).order_by(Election.end_date.desc()).all()
+        return render_template(
+            'voter/dashboard.html',
+            user=current_user,
+            active_elections=active_elections,
+            upcoming_elections=upcoming_elections,
+            ended_elections=ended_elections
+        )
     except Exception as e:
         flash(f"Error loading dashboard: {str(e)}", "danger")
-        return redirect(url_for('main.index')) # or a safe fallback
+        return redirect(url_for('main.index'))
 
 @voter_bp.route('/notifications')
 @login_required
