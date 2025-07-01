@@ -34,8 +34,6 @@ class Config:
         "pool_timeout": 30,
         "pool_recycle": 1800
     }
-
-    # ------------------------
     # Session & Flask-Login
     # ------------------------
     SESSION_COOKIE_SECURE = False  # Set to True in production (HTTPS required)
