@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify, send_file, current_app
 from flask_login import login_user, logout_user, login_required, current_user
+from app.forms.candidate_form import CandidateForm
 from app.forms.forms import LoginForm, RegistrationForm, ElectionForm, PositionForm, ProfileImageForm, NotificationForm, ResetPasswordForm, ForgotPasswordForm
 from app.models import User, Election, Candidate, Vote, Position, Notification, AuditLog
 from app.extensions import db
@@ -841,6 +842,15 @@ def manage_candidates():
         db.session.rollback()
         flash(f"Error managing candidates: {e}", "danger")
         return redirect(url_for('admin_web.manage_candidates'))
+    
+
+def get_position_id(position_name, election_id):
+    position = Position.query.filter_by(name=position_name, election_id=election_id).first()
+    if not position:
+        position = Position(name=position_name, election_id=election_id)
+        db.session.add(position)
+        db.session.commit()
+    return position.id
 
 @admin_web_bp.route('/candidates/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
