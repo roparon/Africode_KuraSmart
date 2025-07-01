@@ -3,6 +3,8 @@ from flask_login import login_required, current_user
 from app.extensions import db
 from app.models import Vote, User, Election, Candidate
 from datetime import datetime
+from sqlalchemy.orm import joinedload
+
 
 vote_bp = Blueprint('vote_bp', __name__, url_prefix='/api/v1/votes')
 
@@ -65,36 +67,46 @@ def get_results(election_id):
         return jsonify({"error": f"Failed to fetch results: {str(e)}"}), 500
 
 
-# List all votes (admin only)
+# List all votes (admin only)from sqlalchemy.orm import joinedload
+
 @vote_bp.route('', methods=['GET'])
 @login_required
 def list_all_votes():
     if not current_user.is_admin():
         return jsonify({"error": "Admin access required"}), 403
+
     try:
         voter_id = request.args.get('voter_id', type=int)
         election_id = request.args.get('election_id', type=int)
 
-        query = Vote.query
+        query = Vote.query.options(
+            joinedload(Vote.candidate),
+            joinedload(Vote.election)
+        )
+
         if voter_id:
             query = query.filter_by(voter_id=voter_id)
         if election_id:
             query = query.filter_by(election_id=election_id)
 
         votes = query.all()
+
         results = []
         for vote in votes:
             results.append({
                 "vote_id": vote.id,
                 "voter_id": vote.voter_id,
                 "election_id": vote.election_id,
+                "election_title": vote.election.title if vote.election else None,
                 "candidate_id": vote.candidate_id,
+                "candidate_name": vote.candidate.full_name if vote.candidate else None,
                 "timestamp": vote.created_at.isoformat()
             })
 
         return jsonify(results), 200
     except Exception as e:
         return jsonify({"error": f"Failed to list votes: {str(e)}"}), 500
+
 
 
 # Get election analytics (admin only)
