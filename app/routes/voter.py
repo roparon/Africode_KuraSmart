@@ -13,7 +13,10 @@ voter_bp = Blueprint('voter', __name__)
 def voter_dashboard():
     if current_user.role != UserRole.voter.value:
         abort(403)
-    # Load elections that are currently active
+
+    from datetime import datetime
+    from sqlalchemy import and_
+
     elections = Election.query.filter(
         and_(
             Election.start_date <= datetime.utcnow(),
@@ -21,20 +24,9 @@ def voter_dashboard():
             Election.status == 'active'
         )
     ).all()
-    # Load this voter's past votes
-    votes = Vote.query.filter_by(voter_id=current_user.id).all()
-    vote_records = []
-    for vote in votes:
-        vote_records.append({
-            "candidate_name": Candidate.query.get(vote.candidate_id).full_name,
-            "position_name": Position.query.get(vote.position_id).name,
-            "election_title": Election.query.get(vote.election_id).title,
-            "voted_at": vote.created_at.strftime("%Y-%m-%d %H:%M")
-        })
-    return render_template('voter/dashboard.html',
-                           user=current_user,
-                           elections=elections,
-                           vote_records=vote_records)
+
+    return render_template('voter/dashboard.html', elections=elections, user=current_user)
+
 
 @voter_bp.route('/notifications')
 @login_required
