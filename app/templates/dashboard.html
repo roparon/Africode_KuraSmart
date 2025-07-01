@@ -67,7 +67,7 @@
                 <div class="card-body text-center">
                     <h5 class="card-title">🗳️ Cast Your Vote</h5>
                     <p class="card-text">Vote in current elections you're eligible for.</p>
-                    <a href="{{ url_for('admin_web.manage_elections') }}" class="btn btn-outline-success">Vote Now</a>
+                    <a href="{{ url_for('vote_bp.cast_vote_page', election_id=election.id) }}" class="btn btn-outline-success">Vote Now</a>
                 </div>
             </div>
         </div>

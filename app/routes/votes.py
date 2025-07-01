@@ -7,26 +7,22 @@ from datetime import datetime
 vote_bp = Blueprint('vote_bp', __name__, url_prefix='/api/v1/votes')
 
 
-@vote_bp.route('', methods=['POST'])
+
+#casting vote
+@vote_bp.route('/cast_vote/<int:election_id>', methods=['POST'])
 @login_required
-def cast_vote():
+def cast_vote(election_id):
     data = request.get_json()
-    election_id = data.get('election_id')
     candidate_id = data.get('candidate_id')
-
-    if not election_id or not candidate_id:
-        return jsonify({"error": "election_id and candidate_id are required"}), 400
-
-    election = Election.query.get(election_id)
-    candidate = Candidate.query.get(candidate_id)
-
-    if not election or not candidate:
-        return jsonify({"error": "Invalid election or candidate"}), 404
-
+    if not candidate_id:
+        return jsonify({"error": "candidate_id is required"}), 400
+    election = Election.query.get_or_404(election_id)
+    candidate = Candidate.query.get_or_404(candidate_id)
+    if candidate.election_id != election.id:
+        return jsonify({"error": "Candidate does not belong to this election"}), 400
     existing_vote = Vote.query.filter_by(voter_id=current_user.id, election_id=election_id).first()
     if existing_vote:
         return jsonify({"error": "You have already voted in this election"}), 403
-
     vote = Vote(
         voter_id=current_user.id,
         election_id=election_id,
@@ -36,6 +32,7 @@ def cast_vote():
     db.session.add(vote)
     db.session.commit()
     return jsonify({"message": "Vote cast successfully"}), 201
+
 
 
 @vote_bp.route('/results/<int:election_id>', methods=['GET'])
