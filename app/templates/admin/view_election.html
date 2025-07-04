@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Election Details{% endblock %}
+
+{% block content %}
+<div class="container py-5" data-aos="fade-up">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold mb-0">
+      <i class="bi bi-eye me-2 text-primary"></i>
+      {{ election.title }}
+    </h2>
+    <a href="{{ url_for('admin_web.manage_elections') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Back
+    </a>
+  </div>
+
+  <div class="card shadow-sm rounded-4 mb-4">
+    <div class="card-body">
+      <p><strong>Description:</strong> {{ election.description or '—' }}</p>
+      <p><strong>Start Date:</strong> {{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</p>
+      <p><strong>End Date:</strong> {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</p>
+      <p>
+        {% set status_clr = {'inactive':'secondary','active':'success','paused':'warning','ended':'danger'}.get(election.status.value,'dark') %}
+        <strong>Status:</strong>
+        <span class="badge bg-{{ status_clr }} text-light">{{ election.status.value.title() }}</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="card shadow-sm rounded-4">
+    <div class="card-header bg-gradient-secondary text-white fw-semibold rounded-top-4">
+      Candidates
+    </div>
+    <div class="card-body">
+      {% if candidates %}
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead class="table-dark">
+              <tr>
+                <th>Name</th>
+                <th>Party</th>
+                <th>Position</th>
+                <th>Manifesto</th>
+                {% if election.status.value in ['active', 'ended'] %}
+                  <th>Votes</th>
+                  <th>Difference</th>
+                  <th>%</th>
+                  <th>Chart</th>
+                {% endif %}
+              </tr>
+            </thead>
+            <tbody>
+              {% set sorted_candidates = candidates|sort(attribute='vote_count', reverse=True) %}
+              {% set top_vote = sorted_candidates[0].vote_count if sorted_candidates else 0 %}
+              {% for cand in sorted_candidates %}
+                {% set is_leader = cand.vote_count == top_vote and top_vote > 0 %}
+                {% set vote_percent = (cand.vote_count / total_votes * 100) if total_votes > 0 else 0 %}
+                <tr class="{% if is_leader %}table-success fw-bold{% endif %}">
+                  <td>
+                    {{ cand.full_name }}
+                    {% if is_leader %}
+                      <span class="badge bg-success ms-2">Leader</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ cand.party_name or '—' }}</td>
+                  <td>{{ cand.position }}</td>
+                  <td style="white-space:pre-wrap;">{{ cand.manifesto }}</td>
+                  {% if election.status.value in ['active', 'ended'] %}
+                    <td>{{ cand.vote_count }}</td>
+                    {% if is_leader %}
+                      <td>—</td>
+                    {% else %}
+                      <td>{{ top_vote - cand.vote_count }} behind</td>
+                    {% endif %}
+                    <td>{{ vote_percent|round(2) }}%</td>
+                    <td>
+                      <div class="progress" style="height: 20px;">
+                        <div class="progress-bar bg-info" role="progressbar" style="width: {{ vote_percent }}%;" aria-valuenow="{{ vote_percent }}" aria-valuemin="0" aria-valuemax="100">
+                          {{ vote_percent|round(1) }}%
+                        </div>
+                      </div>
+                    </td>
+                  {% endif %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-center text-muted">No candidates found for this election.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

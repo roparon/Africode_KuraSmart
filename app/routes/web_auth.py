@@ -4,6 +4,7 @@ from app.forms.candidate_form import CandidateForm
 from app.forms.forms import LoginForm, RegistrationForm, ElectionForm, PositionForm, ProfileImageForm, NotificationForm, ResetPasswordForm, ForgotPasswordForm
 from app.models import User, Election, Candidate, Vote, Position, Notification, AuditLog
 from app.extensions import db
+from sqlalchemy import func
 from app.enums import UserRole, ElectionStatusEnum
 from datetime import datetime, timedelta
 from app.utils.email import send_email, send_reset_email
@@ -435,6 +436,7 @@ def manage_elections():
         if form.validate_on_submit():
             start = form.start_date.data
             end = form.end_date.data
+
             if start < now:
                 flash('Start date must be in the future or now.', 'danger')
             elif end <= start:
@@ -442,6 +444,7 @@ def manage_elections():
             elif (end - start) > timedelta(hours=12):
                 flash('Election cannot exceed 12 hours.', 'danger')
             else:
+                # Create the election
                 election = Election(
                     title=form.title.data,
                     description=form.description.data,
@@ -451,10 +454,24 @@ def manage_elections():
                 )
                 db.session.add(election)
                 db.session.commit()
-                flash('Election created and set to INACTIVE.', 'success')
+
+                # Add candidates for this election
+                for cand_form in form.candidates.entries:
+                    candidate = Candidate(
+                        full_name=cand_form.form.full_name.data,
+                        party_name=cand_form.form.party_name.data,
+                        manifesto=cand_form.form.manifesto.data,
+                        position_id=cand_form.form.position.data,  # ✅ Expecting an integer ID
+                        election_id=election.id,
+                        user_id=current_user.id  # ✅ Track the creator (admin)
+                    )
+                    db.session.add(candidate)
+                db.session.commit()
+
+                flash('Election and candidates created.', 'success')
                 return redirect(url_for('admin_web.manage_elections'))
 
-        # Auto-update status based on time
+        # Update election statuses
         elections = Election.query.all()
         for election in elections:
             if election.status not in [ElectionStatusEnum.ENDED, ElectionStatusEnum.PAUSED]:
@@ -464,19 +481,28 @@ def manage_elections():
                     election.status = ElectionStatusEnum.ENDED
         db.session.commit()
 
+        # Search functionality
         search_title = request.args.get("search_title", "").strip()
-        elections = Election.query.filter(Election.title.ilike(f"{search_title}%")) if search_title else Election.query
-        elections = elections.order_by(Election.start_date.desc()).all()
-        return render_template('admin/manage_elections.html',
-                               elections=elections,
-                               form=form,
-                               current_datetime=current_datetime,
-                               search_title=search_title,
-                               now=now)
+        elections_query = Election.query
+        if search_title:
+            elections_query = elections_query.filter(Election.title.ilike(f"{search_title}%"))
+        elections = elections_query.order_by(Election.start_date.desc()).all()
+
+        return render_template(
+            'admin/manage_elections.html',
+            elections=elections,
+            form=form,
+            current_datetime=current_datetime,
+            search_title=search_title,
+            now=now
+        )
+
     except Exception as e:
         db.session.rollback()
         flash('Error managing elections: ' + str(e), 'danger')
         return redirect(url_for('admin_web.dashboard'))
+
+
 
 
 @admin_web_bp.route('/elections/<int:election_id>/activate', methods=['POST'])
@@ -496,6 +522,7 @@ def activate_election(election_id):
         db.session.rollback()
         flash(f"Error activating election: {e}", "danger")
     return redirect(url_for('admin_web.manage_elections'))
+
 
 @admin_web_bp.route('/elections/<int:election_id>/pause', methods=['POST'])
 @login_required
@@ -552,6 +579,29 @@ def deactivate_election(election_id):
     return redirect(url_for('admin_web.manage_elections'))
 
 
+@admin_web_bp.route("/elections/<int:election_id>")
+def view_election(election_id):
+    election = Election.query.get_or_404(election_id)
+    candidates = Candidate.query.filter_by(election_id=election_id).all()
+    vote_counts = (
+        db.session.query(Vote.candidate_id, func.count(Vote.id).label("vote_count"))
+        .filter(Vote.election_id == election_id)
+        .group_by(Vote.candidate_id)
+        .all()
+    )
+    vote_count_map = {cid: count for cid, count in vote_counts}
+    for candidate in candidates:
+        candidate.vote_count = vote_count_map.get(candidate.id, 0)
+    total_votes = sum(vote_count_map.values())
+    return render_template(
+        "admin/view_election.html",
+        election=election,
+        candidates=candidates,
+        total_votes=total_votes,
+    )
+
+
+
 
 @admin_web_bp.route('/analytics')
 @login_required
@@ -606,37 +656,36 @@ def voter_dashboard():
         return redirect(url_for('main.index'))
 
 
-# -------------------------
 @admin_web_bp.route('/elections/<int:election_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_election(election_id):
     if not current_user.is_superadmin:
         abort(403)
+
     try:
         election = Election.query.get_or_404(election_id)
+
+        # Automatically mark as ENDED if the time has passed
         now = datetime.now()
         if election.status != ElectionStatusEnum.ENDED and now >= election.end_date:
             election.status = ElectionStatusEnum.ENDED
             db.session.commit()
 
         form = ElectionForm(obj=election)
+
         if form.validate_on_submit():
-            election.title = form.title.data
-            election.description = form.description.data
-            election.start_date = form.start_date.data
-            election.end_date = form.end_date.data
-            new_status = request.form.get('status')
-            if new_status in [e.value for e in ElectionStatusEnum]:
-                election.status = ElectionStatusEnum(new_status)
+            form.populate_obj(election)
             db.session.commit()
             flash("Election updated!", "success")
             return redirect(url_for('admin_web.manage_elections'))
 
         return render_template('admin/edit_election.html', form=form, election=election)
+
     except Exception as e:
         db.session.rollback()
         flash(f"Error editing election: {e}", "danger")
         return redirect(url_for('admin_web.manage_elections'))
+
 
 @admin_web_bp.route('/elections/<int:election_id>/delete', methods=['POST'])
 @login_required

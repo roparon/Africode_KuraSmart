@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block content %}
 <div class="container mt-4">
     <h2 class="mb-4">Edit Election</h2>
@@ -53,15 +52,8 @@
 
                 {% if current_user.is_superadmin %}
                 <div class="mb-3">
-                    <label for="status" class="form-label">Status</label>
-                    <select name="status" title="Select election status" class="form-select" required>
-                        {% for status in ['inactive', 'active', 'paused', 'ended'] %}
-                            <option value="{{ status }}"
-                                {% if election.status.value == status %}selected{% endif %}>
-                                {{ status.title() }}
-                            </option>
-                        {% endfor %}
-                    </select>
+                    {{ form.status.label(class="form-label") }}
+                    {{ form.status(class="form-select") }}
                 </div>
                 {% endif %}
 

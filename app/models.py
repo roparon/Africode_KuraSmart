@@ -132,7 +132,7 @@ class Candidate(db.Model):
     position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)
     full_name = db.Column(db.String(100), nullable=False, unique=True)
     party_name = db.Column(db.String(100))
-    position = db.Column(db.String(100), nullable=False)
+    position = db.Column(db.String(100), nullable=True)
     description = db.Column(db.Text)
     manifesto = db.Column(db.Text)
     approved = db.Column(db.Boolean, default=False)
