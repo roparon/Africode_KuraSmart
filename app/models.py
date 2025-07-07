@@ -131,7 +131,7 @@ class Candidate(db.Model):
     election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=False)
     position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)
 
-    full_name = db.Column(db.String(100), nullable=False)  # Removed unique=True
+    full_name = db.Column(db.String(100), nullable=False)
     party_name = db.Column(db.String(100))
     position = db.Column(db.String(100), nullable=True)
     description = db.Column(db.Text)

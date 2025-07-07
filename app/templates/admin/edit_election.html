@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Edit Election{% endblock %}
+{% block title %}Edit Election{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -8,6 +8,7 @@
     <i class="bi bi-pencil-square me-2 text-warning"></i>
     Edit Election
   </h2>
+
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for category, message in messages %}
@@ -19,16 +20,31 @@
       {% endfor %}
     {% endif %}
   {% endwith %}
+
+  {% if form.errors %}
+    <div class="alert alert-danger">
+      <ul class="mb-0">
+        {% for field, errors in form.errors.items() %}
+          {% for error in errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
   <div class="card shadow-sm" data-aos="fade-up">
     <div class="card-header fw-bold">Update Election Details</div>
     <div class="card-body">
       <form method="POST" id="election-form" novalidate>
         {{ form.hidden_tag() }}
+
         <div class="mb-3">
           {{ form.title.label(class="form-label") }}
           {{ form.title(class="form-control", placeholder="Enter election title") }}
           {% for e in form.title.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
         </div>
+
         <div class="mb-3">
           {{ form.description.label(class="form-label") }}
           {{ form.description(class="form-control", rows=3, placeholder="Optional description") }}
@@ -55,6 +71,7 @@
           {% for e in form.status.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
         </div>
         {% endif %}
+
         <h5 class="mt-4">Candidates</h5>
         <div id="candidates-list">
           {% for cand_form in form.candidates %}
@@ -83,6 +100,7 @@
           {% endfor %}
         </div>
         <button type="button" class="btn btn-success btn-sm" id="add-candidate-btn">Add Candidate</button>
+
         <div class="d-flex justify-content-between mt-4">
           <a href="{{ url_for('admin_web.manage_elections') }}" class="btn btn-secondary">
             <i class="bi bi-arrow-left-circle me-1"></i> Cancel
@@ -106,23 +124,27 @@
 
 {% block scripts %}
 <script>
-AOS.init({duration:600, once:true, easing:'ease-out-cubic'});
+AOS.init({ duration: 600, once: true, easing: 'ease-out-cubic' });
+
 document.addEventListener('DOMContentLoaded', () => {
-  const list   = document.getElementById('candidates-list');
+  const list = document.getElementById('candidates-list');
   const addBtn = document.getElementById('add-candidate-btn');
-  let total    = {{ form.candidates|length }};
+  let total = {{ form.candidates|length }};
   const blank = list.querySelector('.candidate-entry').cloneNode(true);
-  blank.querySelectorAll('input,textarea,select').forEach(el => { if (el.type !== 'hidden') el.value = ''; });
+
+  blank.querySelectorAll('input,textarea,select').forEach(el => {
+    if (el.type !== 'hidden') el.value = '';
+  });
 
   addBtn.addEventListener('click', () => {
     const clone = blank.cloneNode(true);
     clone.querySelectorAll('[name]').forEach(el => {
       el.name = el.name.replace(/candidates-\d+-/, `candidates-${total}-`);
-      el.id   = el.id.replace(/candidates-\d+-/, `candidates-${total}-`);
+      el.id = el.id.replace(/candidates-\d+-/, `candidates-${total}-`);
       if (el.type !== 'hidden') el.value = '';
     });
     list.appendChild(clone);
-    total += 1;
+    total++;
   });
 
   list.addEventListener('click', e => {
