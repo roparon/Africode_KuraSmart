@@ -63,8 +63,6 @@
               {% endfor %}
             </div>
           </div>
-
-          {# ---------- Candidates Section ---------- #}
           <div class="mb-3">
             <h5>Add Candidates</h5>
             <div id="candidates-list">
@@ -99,6 +97,13 @@
             </div>
             <button type="button" class="btn btn-success btn-sm" id="add-candidate-btn">Add Candidate</button>
           </div>
+          {# ---------- Status field ---------- #}
+          <div class="mb-3">
+            {{ form.status.label(class="form-label") }}
+            {{ form.status(class="form-select") }}
+            {% for e in form.status.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+
           {# ---------- End Candidates Section ---------- #}
 
           <div class="text-end">

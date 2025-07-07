@@ -433,43 +433,70 @@ def manage_elections():
         now = datetime.now()
         current_datetime = now.strftime('%Y-%m-%dT%H:%M')
 
-        if form.validate_on_submit():
-            start = form.start_date.data
-            end = form.end_date.data
+        if request.method == "POST" and form.validate_on_submit():
+            # Check election exists by title (you could use ID instead)
+            election = Election.query.filter_by(title=form.title.data).first()
 
-            if start < now:
-                flash('Start date must be in the future or now.', 'danger')
-            elif end <= start:
-                flash('End date must be after start.', 'danger')
-            elif (end - start) > timedelta(hours=12):
-                flash('Election cannot exceed 12 hours.', 'danger')
-            else:
-                # Create the election
+            if not election:
                 election = Election(
                     title=form.title.data,
                     description=form.description.data,
-                    start_date=start,
-                    end_date=end,
-                    status=ElectionStatusEnum.INACTIVE
+                    start_date=form.start_date.data,
+                    end_date=form.end_date.data,
+                    status=form.status.data
                 )
                 db.session.add(election)
                 db.session.commit()
+            else:
+                election.description = form.description.data
+                election.start_date = form.start_date.data
+                election.end_date = form.end_date.data
+                election.status = form.status.data
 
-                # Add candidates for this election
-                for cand_form in form.candidates.entries:
+            # Process candidates
+            for cand_form in form.candidates.entries:
+                full_name = cand_form.form.full_name.data.strip()
+                existing = Candidate.query.filter_by(
+                    full_name=full_name,
+                    election_id=election.id
+                ).first()
+
+                if cand_form.form.original_candidate:
+                    # Update
+                    candidate = cand_form.form.original_candidate
+                    candidate.full_name = full_name
+                    candidate.party_name = cand_form.form.party_name.data
+                    candidate.manifesto = cand_form.form.manifesto.data
+                    candidate.position = cand_form.form.position.data
+                elif not existing:
+                    # New
                     candidate = Candidate(
-                        full_name=cand_form.form.full_name.data,
+                        full_name=full_name,
                         party_name=cand_form.form.party_name.data,
                         manifesto=cand_form.form.manifesto.data,
-                        position_id=cand_form.form.position.data,  # ✅ Expecting an integer ID
+                        position=cand_form.form.position.data,
                         election_id=election.id,
-                        user_id=current_user.id  # ✅ Track the creator (admin)
+                        user_id=current_user.id
                     )
                     db.session.add(candidate)
-                db.session.commit()
 
-                flash('Election and candidates created.', 'success')
-                return redirect(url_for('admin_web.manage_elections'))
+            db.session.commit()
+            flash("Election and candidates saved successfully.", "success")
+            return redirect(url_for("admin_web.manage_elections"))
+
+        elif request.method == "GET" and request.args.get("edit"):
+            # Load form for editing
+            election_id = request.args.get("edit")
+            election = Election.query.get_or_404(election_id)
+            form = ElectionForm(obj=election)
+            form.status.data = election.status.value  # Ensure correct status enum
+            form.candidates.entries.clear()
+            for candidate in election.candidates:
+                cand_form = CandidateForm(
+                    obj=candidate,
+                    original_candidate=candidate
+                )
+                form.candidates.append_entry(cand_form)
 
         # Update election statuses
         elections = Election.query.all()
@@ -481,7 +508,6 @@ def manage_elections():
                     election.status = ElectionStatusEnum.ENDED
         db.session.commit()
 
-        # Search functionality
         search_title = request.args.get("search_title", "").strip()
         elections_query = Election.query
         if search_title:
@@ -489,7 +515,7 @@ def manage_elections():
         elections = elections_query.order_by(Election.start_date.desc()).all()
 
         return render_template(
-            'admin/manage_elections.html',
+            "admin/manage_elections.html",
             elections=elections,
             form=form,
             current_datetime=current_datetime,
@@ -499,8 +525,9 @@ def manage_elections():
 
     except Exception as e:
         db.session.rollback()
-        flash('Error managing elections: ' + str(e), 'danger')
-        return redirect(url_for('admin_web.dashboard'))
+        flash(f"Error managing elections: {e}", "danger")
+        return redirect(url_for("admin_web.dashboard"))
+
 
 
 
@@ -656,35 +683,76 @@ def voter_dashboard():
         return redirect(url_for('main.index'))
 
 
+
+
 @admin_web_bp.route('/elections/<int:election_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_election(election_id):
     if not current_user.is_superadmin:
         abort(403)
-
     try:
         election = Election.query.get_or_404(election_id)
-
-        # Automatically mark as ENDED if the time has passed
         now = datetime.now()
         if election.status != ElectionStatusEnum.ENDED and now >= election.end_date:
             election.status = ElectionStatusEnum.ENDED
             db.session.commit()
-
         form = ElectionForm(obj=election)
-
+        if request.method == "GET":
+            form.candidates.entries = []
+            for candidate in election.candidates:
+                form.candidates.append_entry({
+                    "full_name": candidate.full_name,
+                    "party_name": candidate.party_name,
+                    "manifesto": candidate.manifesto,
+                    "position": candidate.position
+                })
         if form.validate_on_submit():
             form.populate_obj(election)
+            existing_candidates = {
+                (c.full_name.strip().lower(), c.position.strip().lower()): c
+                for c in election.candidates
+            }
+            form_keys = set()
+            for entry in form.candidates.entries:
+                data = entry.data
+                name = data['full_name'].strip()
+                position_name = data['position'].strip()
+                key = (name.lower(), position_name.lower())
+                form_keys.add(key)
+                position = Position.query.filter_by(name=position_name).first()
+                if not position:
+                    position = Position(name=position_name)
+                    db.session.add(position)
+                    db.session.flush()
+                if key in existing_candidates:
+                    candidate = existing_candidates[key]
+                    candidate.party_name = data.get('party_name')
+                    candidate.manifesto = data.get('manifesto')
+                    candidate.position_id = position.id
+                    candidate.position = position_name
+                else:
+                    new_candidate = Candidate(
+                        user_id=current_user.id,
+                        election_id=election.id,
+                        position_id=position.id,
+                        full_name=name,
+                        party_name=data.get('party_name'),
+                        manifesto=data.get('manifesto'),
+                        position=position_name
+                    )
+                    db.session.add(new_candidate)
+            for key, candidate in existing_candidates.items():
+                if key not in form_keys:
+                    db.session.delete(candidate)
             db.session.commit()
-            flash("Election updated!", "success")
+            flash("Election updated successfully!", "success")
             return redirect(url_for('admin_web.manage_elections'))
-
-        return render_template('admin/edit_election.html', form=form, election=election)
-
+        return render_template("admin/edit_election.html", form=form, election=election)
     except Exception as e:
         db.session.rollback()
         flash(f"Error editing election: {e}", "danger")
         return redirect(url_for('admin_web.manage_elections'))
+
 
 
 @admin_web_bp.route('/elections/<int:election_id>/delete', methods=['POST'])

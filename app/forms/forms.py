@@ -80,21 +80,28 @@ from app.models import ElectionStatusEnum  # adjust this import to your actual p
 
 
 class ElectionForm(FlaskForm):
-    title = StringField('Title', validators=[DataRequired()])
-    description = TextAreaField('Description')
-    start_date = DateTimeLocalField('Start Date', format='%Y-%m-%dT%H:%M', validators=[DataRequired()])
-    end_date = DateTimeLocalField('End Date', format='%Y-%m-%dT%H:%M', validators=[DataRequired()])
-    candidates = FieldList(FormField(CandidateForm), min_entries=1)
+    """Parent form that holds both election data and N candidates."""
+    title = StringField("Title", validators=[DataRequired()])
+    description = TextAreaField("Description")
 
-    status = SelectField(
-        'Status',
-        choices=[(e.value, e.name.title()) for e in ElectionStatusEnum],
-        validators=[DataRequired()],
-        coerce=str
+    start_date = DateTimeLocalField(
+        "Start Date", format="%Y-%m-%dT%H:%M", validators=[DataRequired()]
+    )
+    end_date = DateTimeLocalField(
+        "End Date", format="%Y-%m-%dT%H:%M", validators=[DataRequired()]
     )
 
-    submit = SubmitField('Save Changes')
+    status = SelectField(
+        "Status",
+        choices=[(e.value, e.name.title()) for e in ElectionStatusEnum],
+        validators=[DataRequired()],
+        coerce=str,  # change to int if your Enum values are ints
+    )
+    candidates = FieldList(FormField(CandidateForm), min_entries=1)
 
+    submit = SubmitField("Save Changes")
+
+    # ── Validators ──────────────────────────────────────────────────────────
     def validate_start_date(self, field):
         if field.data < datetime.now():
             raise ValidationError("Start date cannot be in the past.")
@@ -102,8 +109,8 @@ class ElectionForm(FlaskForm):
     def validate_end_date(self, field):
         if field.data <= self.start_date.data:
             raise ValidationError("End time must be after the start time.")
-        elif field.data > self.start_date.data + timedelta(hours=12, minutes=30):
-            raise ValidationError("Election duration cannot exceed 12 hours 30 minutes.")
+        if field.data > self.start_date.data + timedelta(hours=12, minutes=30):
+            raise ValidationError("Election duration cannot exceed 12 h 30 min.")
 class PositionForm(FlaskForm):
     name = StringField('Position Name', validators=[DataRequired(), Length(min=2, max=100)])
     description = TextAreaField('Description')

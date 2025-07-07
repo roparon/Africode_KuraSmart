@@ -130,18 +130,22 @@ class Candidate(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=False)
     position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)
-    full_name = db.Column(db.String(100), nullable=False, unique=True)
+
+    full_name = db.Column(db.String(100), nullable=False)  # Removed unique=True
     party_name = db.Column(db.String(100))
     position = db.Column(db.String(100), nullable=True)
     description = db.Column(db.Text)
     manifesto = db.Column(db.Text)
     approved = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
     user = db.relationship('User', back_populates='candidates')
     election = db.relationship('Election', back_populates='candidates')
     position_rel = db.relationship('Position', back_populates='candidates')
     votes = db.relationship('Vote', back_populates='candidate', lazy='dynamic')
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'election_id', 'position_id', name='unique_candidate_combination'),
+    )
 
     def to_dict(self):
         return {
@@ -163,18 +167,19 @@ class Candidate(db.Model):
 
     def __str__(self):
         return self.full_name
+
     def get_reset_token(self, expires_sec=1800):
         s = Serializer(current_app.config['SECRET_KEY'])
         return s.dumps({'user_id': self.id})
 
-@staticmethod
-def verify_reset_token(token):
-    s = Serializer(current_app.config['SECRET_KEY'])
-    try:
-        user_id = s.loads(token, max_age=1800)['user_id']
-    except Exception:
-        return None
-    return User.query.get(user_id)
+    @staticmethod
+    def verify_reset_token(token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token, max_age=1800)['user_id']
+        except Exception:
+            return None
+        return User.query.get(user_id)
 
 
 class Position(db.Model):

@@ -1,67 +1,136 @@
 {% extends "base.html" %}
+
+{% block title %}Edit Election{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
-    <h2 class="mb-4">Edit Election</h2>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-    <div class="card shadow-sm">
-        <div class="card-header fw-bold">Update Election Details</div>
-        <div class="card-body">
-            <form method="POST">
-                {{ form.hidden_tag() }}
-
-                <div class="mb-3">
-                    {{ form.title.label(class="form-label") }}
-                    {{ form.title(class="form-control", placeholder="Enter election title") }}
-                    {% for error in form.title.errors %}
-                        <div class="text-danger small">{{ error }}</div>
-                    {% endfor %}
-                </div>
-
-                <div class="mb-3">
-                    {{ form.description.label(class="form-label") }}
-                    {{ form.description(class="form-control", rows=3, placeholder="Optional description") }}
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        {{ form.start_date.label(class="form-label") }}
-                        {{ form.start_date(class="form-control") }}
-                        {% for error in form.start_date.errors %}
-                            <div class="text-danger small">{{ error }}</div>
-                        {% endfor %}
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        {{ form.end_date.label(class="form-label") }}
-                        {{ form.end_date(class="form-control") }}
-                        {% for error in form.end_date.errors %}
-                            <div class="text-danger small">{{ error }}</div>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                {% if current_user.is_superadmin %}
-                <div class="mb-3">
-                    {{ form.status.label(class="form-label") }}
-                    {{ form.status(class="form-select") }}
-                </div>
-                {% endif %}
-
-                <div class="d-flex justify-content-between">
-                    <a href="{{ url_for('admin_web.manage_elections') }}" class="btn btn-secondary">Cancel</a>
-                    {{ form.submit(class="btn btn-primary") }}
-                </div>
-            </form>
+  <h2 class="mb-4">
+    <i class="bi bi-pencil-square me-2 text-warning"></i>
+    Edit Election
+  </h2>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+          <i class="bi bi-{{ 'check-circle-fill' if category == 'success' else 'exclamation-triangle-fill' }} me-2"></i>
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  <div class="card shadow-sm" data-aos="fade-up">
+    <div class="card-header fw-bold">Update Election Details</div>
+    <div class="card-body">
+      <form method="POST" id="election-form" novalidate>
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+          {{ form.title.label(class="form-label") }}
+          {{ form.title(class="form-control", placeholder="Enter election title") }}
+          {% for e in form.title.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+          {{ form.description.label(class="form-label") }}
+          {{ form.description(class="form-control", rows=3, placeholder="Optional description") }}
+          {% for e in form.description.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            {{ form.start_date.label(class="form-label") }}
+            {{ form.start_date(class="form-control") }}
+            {% for e in form.start_date.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.end_date.label(class="form-label") }}
+            {{ form.end_date(class="form-control") }}
+            {% for e in form.end_date.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+        </div>
+
+        {% if current_user.is_superadmin %}
+        <div class="mb-3">
+          {{ form.status.label(class="form-label") }}
+          {{ form.status(class="form-select") }}
+          {% for e in form.status.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        {% endif %}
+        <h5 class="mt-4">Candidates</h5>
+        <div id="candidates-list">
+          {% for cand_form in form.candidates %}
+          <div class="card my-3 p-3 candidate-entry">
+            <div class="row g-2">
+              <div class="col-md-6">
+                {{ cand_form.full_name.label(class="form-label") }}
+                {{ cand_form.full_name(class="form-control") }}
+                {% for e in cand_form.full_name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+              </div>
+              <div class="col-md-6">
+                {{ cand_form.party_name.label(class="form-label") }}
+                {{ cand_form.party_name(class="form-control") }}
+              </div>
+              <div class="col-md-6">
+                {{ cand_form.position.label(class="form-label mt-2") }}
+                {{ cand_form.position(class="form-select") }}
+              </div>
+              <div class="col-md-6">
+                {{ cand_form.manifesto.label(class="form-label mt-2") }}
+                {{ cand_form.manifesto(class="form-control", rows=2) }}
+              </div>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm remove-candidate mt-3">Remove</button>
+          </div>
+          {% endfor %}
+        </div>
+        <button type="button" class="btn btn-success btn-sm" id="add-candidate-btn">Add Candidate</button>
+        <div class="d-flex justify-content-between mt-4">
+          <a href="{{ url_for('admin_web.manage_elections') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left-circle me-1"></i> Cancel
+          </a>
+          {{ form.submit(class="btn btn-primary") }}
+        </div>
+      </form>
     </div>
+  </div>
 </div>
+{% endblock %}
+
+{% block head_extra %}
+<style>
+  .card, .btn, .alert { border-radius: .75rem; }
+  .btn { transition: transform .2s, box-shadow .2s; }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15); }
+  .candidate-entry { background:#f8f9fb; border-radius:.75rem; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+AOS.init({duration:600, once:true, easing:'ease-out-cubic'});
+document.addEventListener('DOMContentLoaded', () => {
+  const list   = document.getElementById('candidates-list');
+  const addBtn = document.getElementById('add-candidate-btn');
+  let total    = {{ form.candidates|length }};
+  const blank = list.querySelector('.candidate-entry').cloneNode(true);
+  blank.querySelectorAll('input,textarea,select').forEach(el => { if (el.type !== 'hidden') el.value = ''; });
+
+  addBtn.addEventListener('click', () => {
+    const clone = blank.cloneNode(true);
+    clone.querySelectorAll('[name]').forEach(el => {
+      el.name = el.name.replace(/candidates-\d+-/, `candidates-${total}-`);
+      el.id   = el.id.replace(/candidates-\d+-/, `candidates-${total}-`);
+      if (el.type !== 'hidden') el.value = '';
+    });
+    list.appendChild(clone);
+    total += 1;
+  });
+
+  list.addEventListener('click', e => {
+    if (e.target.classList.contains('remove-candidate')) {
+      const card = e.target.closest('.candidate-entry');
+      if (list.children.length > 1) card.remove();
+    }
+  });
+});
+</script>
 {% endblock %}
