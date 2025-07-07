@@ -231,9 +231,7 @@ def manage_users():
         return redirect(url_for('admin_web.dashboard'))
 
 
-# -------------------------
 # Update User Field (name/email)
-# -------------------------
 @admin_web_bp.route('/users/<int:user_id>/edit', methods=['POST'])
 @login_required
 def update_user_field(user_id):
@@ -261,9 +259,7 @@ def update_user_field(user_id):
         return jsonify({'error': 'Server error'}), 500
 
 
-# -------------------------
 # Change User Role
-# -------------------------
 @admin_web_bp.route('/users/<int:user_id>/role', methods=['POST'])
 @login_required
 def update_user_role(user_id):
@@ -285,7 +281,6 @@ def update_user_role(user_id):
         db.session.rollback()
         current_app.logger.error(f"Failed to update user role: {e}")
         flash("Could not update user role. Please try again.", "danger")
-
     return redirect(url_for('admin_web.manage_users'))
 
 # -------------------------
@@ -296,7 +291,6 @@ def update_user_role(user_id):
 def verify_user(user_id):
     if not current_user.is_superadmin:
         abort(403)
-
     try:
         user = User.query.get_or_404(user_id)
         user.is_verified = True
@@ -306,7 +300,6 @@ def verify_user(user_id):
         db.session.rollback()
         current_app.logger.error(f"Failed to verify user: {e}")
         flash("Verification failed. Please try again.", "danger")
-
     return redirect(url_for('admin_web.manage_users'))
 
 
@@ -315,12 +308,10 @@ def verify_user(user_id):
 def pending_users():
     if not current_user.is_admin() and not current_user.is_super_admin():
         abort(403)
-
     users = User.query.filter(
         User.is_verified == False,
         User.role.in_(['admin', 'candidate'])
     ).order_by(User.full_name).all()
-
     return render_template('admin/pending_users.html', users=users)
 
 
@@ -329,7 +320,6 @@ def pending_users():
 def unverify_user(user_id):
     if not current_user.is_superadmin:
         abort(403)
-
     try:
         user = User.query.get_or_404(user_id)
         if not user.is_verified:
@@ -344,8 +334,6 @@ def unverify_user(user_id):
         flash("Could not unverify user.", "danger")
     return redirect(url_for('admin_web.manage_users'))
 
-
-
 # Delete Single User
 # -------------------------
 @admin_web_bp.route('/users/<int:user_id>/delete', methods=['POST'])
@@ -353,7 +341,6 @@ def unverify_user(user_id):
 def delete_user(user_id):
     if not current_user.is_superadmin:
         abort(403)
-
     try:
         user = User.query.get_or_404(user_id)
         if user.id == current_user.id:
@@ -378,7 +365,6 @@ def bulk_delete_users():
         data = request.get_json()
         ids = data.get('user_ids', [])
         users = User.query.filter(User.id.in_(ids)).all()
-
         for user in users:
             if user.id != current_user.id:
                 db.session.delete(user)
@@ -396,13 +382,11 @@ def bulk_delete_users():
 def export_users_csv():
     if not (current_user.is_superadmin or current_user.role == UserRole.admin.value):
         abort(403)
-
     try:
         users = User.query.order_by(User.full_name).all()
         si = StringIO()
         cw = csv.writer(si)
         cw.writerow(['ID', 'Full Name', 'Email', 'Role', 'Verified'])
-
         for user in users:
             cw.writerow([
                 user.id,
@@ -420,14 +404,13 @@ def export_users_csv():
         )
     except Exception as e:
         return jsonify({'error': 'Failed to export users', 'details': str(e)}), 500
+    
 # Manage Elections
-# -------------------------
 @admin_web_bp.route('/manage-elections', methods=['GET', 'POST'])
 @login_required
 def manage_elections():
     if not (current_user.is_superadmin or current_user.role == UserRole.admin.value):
         abort(403)
-
     try:
         form = ElectionForm()
         now = datetime.now()
@@ -452,8 +435,6 @@ def manage_elections():
                 election.start_date = form.start_date.data
                 election.end_date = form.end_date.data
                 election.status = form.status.data
-
-            # Process candidates
             for cand_form in form.candidates.entries:
                 full_name = cand_form.form.full_name.data.strip()
                 existing = Candidate.query.filter_by(
@@ -497,8 +478,6 @@ def manage_elections():
                     original_candidate=candidate
                 )
                 form.candidates.append_entry(cand_form)
-
-        # Update election statuses
         elections = Election.query.all()
         for election in elections:
             if election.status not in [ElectionStatusEnum.ENDED, ElectionStatusEnum.PAUSED]:
@@ -707,16 +686,22 @@ def edit_election(election_id):
                     "position": candidate.position
                 })
         if form.validate_on_submit():
-            form.populate_obj(election)
+            election.title = form.title.data
+            election.start_date = form.start_date.data
+            election.end_date = form.end_date.data
+            election.status = form.status.data
             existing_candidates = {
-                (c.full_name.strip().lower(), c.position.strip().lower()): c
+                ((c.full_name or "").strip().lower(), (c.position or "").strip().lower()): c
                 for c in election.candidates
             }
             form_keys = set()
             for entry in form.candidates.entries:
                 data = entry.data
-                name = data['full_name'].strip()
-                position_name = data['position'].strip()
+                name = (data.get('full_name') or "").strip()
+                position_name = (data.get('position') or "").strip()
+                if not name or not position_name:
+                    flash("Candidate name and position are required.", "warning")
+                    continue
                 key = (name.lower(), position_name.lower())
                 form_keys.add(key)
                 position = Position.query.filter_by(name=position_name).first()
@@ -752,6 +737,8 @@ def edit_election(election_id):
         db.session.rollback()
         flash(f"Error editing election: {e}", "danger")
         return redirect(url_for('admin_web.manage_elections'))
+
+
 
 
 

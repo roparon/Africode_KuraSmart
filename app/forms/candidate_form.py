@@ -47,5 +47,5 @@ class CandidateForm(FlaskForm):
                 "A candidate with this name already exists in this election."
             )
     def validate_manifesto(self, field):
-        if not self.original_candidate and not field.data.strip():
-            raise ValidationError("Manifesto is required for new candidates.")
+        if not self.original_candidate and not (field.data or "").strip():
+            raise ValidationError("Manifesto is required.")
