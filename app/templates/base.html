@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="{% block meta_description %}Modern Voting App{% endblock %}">
     <meta name="author" content="Africode KuraSmart Team">
-    <title>{% block title %}KuraSmart{% endblock %}</title>
+    <title>{% block title %}KuraSmart{% endblock %} - KuraSmart</title>
 
     <!-- Favicon -->
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
@@ -27,7 +27,6 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 
-    <!-- Optional: Smooth icon transition -->
     <style>
         #theme-toggle i {
             transition: transform 0.3s ease, opacity 0.3s ease;
@@ -36,20 +35,20 @@
 
     {% block head_extra %}{% endblock %}
 </head>
-<body class="text-dark d-flex flex-column min-vh-100"
-      style="font-family: 'Inter', sans-serif; line-height: 1.6; background-color: #F3DBCA;">
+<body class="text-dark d-flex flex-column min-vh-100" style="font-family: 'Inter', sans-serif; line-height: 1.6; background-color: #F3DBCA;">
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
         <div class="container">
             <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{{ url_for('main.index') }}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-ballot" viewBox="0 0 16 16">
-                  <path d="M0 3a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3zm2-1a1 1 0 0 0-1 1v2h14V3a1 1 0 0 0-1-1H2zm13 4H1v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6z"/>
-                  <path d="M4 7.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1H5v1h1.5a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5v-2z"/>
-                  <path d="M8.854 10.354a.5.5 0 0 0 .707-.708l-1.147-1.146-.708.708 1.148 1.146z"/>
+                    <path d="M0 3a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3zm2-1a1 1 0 0 0-1 1v2h14V3a1 1 0 0 0-1-1H2zm13 4H1v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6z"/>
+                    <path d="M4 7.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1H5v1h1.5a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5v-2z"/>
+                    <path d="M8.854 10.354a.5.5 0 0 0 .707-.708l-1.147-1.146-.708.708 1.148 1.146z"/>
                 </svg>
                 KuraSmart
-              </a>
-                          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navCollapse" aria-label="Toggle navigation">
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navCollapse" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -61,13 +60,23 @@
 
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'dashboard.dashboard' %}active{% endif %}" href="{{ url_for('dashboard.dashboard') }}">Dashboard</a>
+                            <a class="nav-link
+                                {% if request.endpoint in ['admin_web.dashboard', 'voter_web.dashboard'] %}active{% endif %}"
+                                href="{% if current_user.is_super_admin or current_user.role == 'admin' %}
+                                          {{ url_for('admin_web.dashboard') }}
+                                       {% elif current_user.role == 'voter' %}
+                                          {{ url_for('admin_web.dashboard') }}  {# Or change to voter_web.dashboard if separate blueprint #}
+                                       {% endif %}">
+                                Dashboard
+                            </a>
                         </li>
 
-                        {% if current_user.role in ['admin', 'super_admin'] %}
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}" href="{{ url_for('admin.dashboard') }}">Admin Panel</a>
-                        </li>
+                        {% if current_user.is_super_admin or current_user.role == 'admin' %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint == 'admin_web.dashboard' %}active{% endif %}" href="{{ url_for('admin_web.dashboard') }}">
+                                    Admin Panel
+                                </a>
+                            </li>
                         {% endif %}
 
                         <li class="nav-item dropdown">
@@ -91,7 +100,7 @@
                 <!-- Theme Toggle Button -->
                 <span id="theme-toggle" class="text-light ms-2" title="Toggle theme" style="cursor: pointer;">
                     <i class="fas fa-moon"></i>
-                  </span>
+                </span>
             </div>
         </div>
     </nav>

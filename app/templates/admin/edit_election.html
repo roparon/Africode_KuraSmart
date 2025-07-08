@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block title %}Edit Election{% endblock %}
 
 {% block content %}
@@ -42,25 +41,21 @@
         <div class="mb-3">
           {{ form.title.label(class="form-label") }}
           {{ form.title(class="form-control", placeholder="Enter election title") }}
-          {% for e in form.title.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
         </div>
 
         <div class="mb-3">
           {{ form.description.label(class="form-label") }}
-          {{ form.description(class="form-control", rows=3, placeholder="Optional description") }}
-          {% for e in form.description.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          {{ form.description(class="form-control", rows=3) }}
         </div>
 
         <div class="row">
           <div class="col-md-6 mb-3">
             {{ form.start_date.label(class="form-label") }}
             {{ form.start_date(class="form-control") }}
-            {% for e in form.start_date.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
           </div>
           <div class="col-md-6 mb-3">
             {{ form.end_date.label(class="form-label") }}
             {{ form.end_date(class="form-control") }}
-            {% for e in form.end_date.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
           </div>
         </div>
 
@@ -68,19 +63,17 @@
         <div class="mb-3">
           {{ form.status.label(class="form-label") }}
           {{ form.status(class="form-select") }}
-          {% for e in form.status.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
         </div>
         {% endif %}
 
         <h5 class="mt-4">Candidates</h5>
         <div id="candidates-list">
           {% for cand_form in form.candidates %}
-          <div class="card my-3 p-3 candidate-entry">
+          <div class="card my-3 p-3 candidate-entry bg-light">
             <div class="row g-2">
               <div class="col-md-6">
                 {{ cand_form.full_name.label(class="form-label") }}
                 {{ cand_form.full_name(class="form-control") }}
-                {% for e in cand_form.full_name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
               </div>
               <div class="col-md-6">
                 {{ cand_form.party_name.label(class="form-label") }}
@@ -95,11 +88,23 @@
                 {{ cand_form.manifesto(class="form-control", rows=2) }}
               </div>
             </div>
-            <button type="button" class="btn btn-danger btn-sm remove-candidate mt-3">Remove</button>
+            {{ cand_form.candidate_id(type="hidden") }}
+            {{ cand_form.election_id(type="hidden") }}
+
+            {% if form.candidates|length > 1 %}
+              <a href="{{ url_for('admin_web.edit_election', election_id=election.id, remove_candidate=loop.index0) }}"
+                 class="btn btn-danger btn-sm mt-3">
+                Remove
+              </a>
+            {% endif %}
           </div>
           {% endfor %}
         </div>
-        <button type="button" class="btn btn-success btn-sm" id="add-candidate-btn">Add Candidate</button>
+
+        <a href="{{ url_for('admin_web.edit_election', election_id=election.id, add_candidate=1) }}"
+           class="btn btn-success btn-sm mt-3">
+          Add Candidate
+        </a>
 
         <div class="d-flex justify-content-between mt-4">
           <a href="{{ url_for('admin_web.manage_elections') }}" class="btn btn-secondary">
@@ -124,35 +129,6 @@
 
 {% block scripts %}
 <script>
-AOS.init({ duration: 600, once: true, easing: 'ease-out-cubic' });
-
-document.addEventListener('DOMContentLoaded', () => {
-  const list = document.getElementById('candidates-list');
-  const addBtn = document.getElementById('add-candidate-btn');
-  let total = {{ form.candidates|length }};
-  const blank = list.querySelector('.candidate-entry').cloneNode(true);
-
-  blank.querySelectorAll('input,textarea,select').forEach(el => {
-    if (el.type !== 'hidden') el.value = '';
-  });
-
-  addBtn.addEventListener('click', () => {
-    const clone = blank.cloneNode(true);
-    clone.querySelectorAll('[name]').forEach(el => {
-      el.name = el.name.replace(/candidates-\d+-/, `candidates-${total}-`);
-      el.id = el.id.replace(/candidates-\d+-/, `candidates-${total}-`);
-      if (el.type !== 'hidden') el.value = '';
-    });
-    list.appendChild(clone);
-    total++;
-  });
-
-  list.addEventListener('click', e => {
-    if (e.target.classList.contains('remove-candidate')) {
-      const card = e.target.closest('.candidate-entry');
-      if (list.children.length > 1) card.remove();
-    }
-  });
-});
+  AOS.init({ duration: 600, once: true, easing: 'ease-out-cubic' });
 </script>
 {% endblock %}

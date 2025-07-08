@@ -9,9 +9,10 @@ from app.enums import UserRole, ElectionStatusEnum
 from datetime import datetime, timedelta
 from app.utils.email import send_email, send_reset_email
 from app.utils.audit_utils import log_action
-from app.utils.decorators import superadmin_required
+from app.utils.decorators import super_admin_required
 from werkzeug.utils import secure_filename
 from collections import defaultdict
+from flask_wtf.csrf import validate_csrf, CSRFError
 from io import StringIO
 import csv
 import os
@@ -174,31 +175,38 @@ def logout():
 def dashboard():
     form = ProfileImageForm()
 
-    if not (current_user.is_superadmin or current_user.role == UserRole.admin.value):
-        abort(403)
-    try:
-        total_voters = User.query.filter_by(role='voter').count()
-        voted_count = db.session.query(Vote.voter_id).distinct().count()
-        turnout_percent = round((voted_count / total_voters) * 100, 2) if total_voters else 0
+    if current_user.is_super_admin or current_user.role == UserRole.admin.value:
+        try:
+            total_voters = User.query.filter_by(role='voter').count()
+            voted_count = db.session.query(Vote.voter_id).distinct().count()
+            turnout_percent = round((voted_count / total_voters) * 100, 2) if total_voters else 0
 
-        ongoing_elections = Election.query.filter(Election.status == 'active').all()
-        ending_soon = [
-            e for e in ongoing_elections
-            if e.end_date and e.end_date <= datetime.utcnow() + timedelta(hours=4)
-        ]
-        return render_template(
-            'admin/dashboard.html',
-            form=form,
-            total_voters=total_voters,
-            voted_count=voted_count,
-            turnout_percent=turnout_percent,
-            ongoing_elections=ongoing_elections,
-            ending_soon=ending_soon
-        )
-    except Exception as e:
-        current_app.logger.error(f"Admin dashboard error: {e}")
-        flash("Error loading dashboard data.", "danger")
-        return redirect(url_for('web_auth.login'))
+            ongoing_elections = Election.query.filter(Election.status == 'active').all()
+            ending_soon = [
+                e for e in ongoing_elections
+                if e.end_date and e.end_date <= datetime.utcnow() + timedelta(hours=4)
+            ]
+
+            return render_template(
+                'admin/dashboard.html',
+                form=form,
+                total_voters=total_voters,
+                voted_count=voted_count,
+                turnout_percent=turnout_percent,
+                ongoing_elections=ongoing_elections,
+                ending_soon=ending_soon
+            )
+
+        except Exception as e:
+            current_app.logger.error(f"Admin dashboard error: {e}")
+            flash("Error loading dashboard data.", "danger")
+            return redirect(url_for('web_auth.login'))
+
+    elif current_user.role == UserRole.voter.value:
+        return render_template('voter/dashboard.html')
+
+    else:
+        abort(403)
 
 # Manage Users
 # -------------------------
@@ -673,12 +681,13 @@ def edit_election(election_id):
         election = Election.query.get_or_404(election_id)
         now = datetime.now()
 
-        # Auto-end if needed
         if election.status != ElectionStatusEnum.ENDED and now >= election.end_date:
             election.status = ElectionStatusEnum.ENDED
             db.session.commit()
 
         form = ElectionForm(obj=election)
+
+        # On GET: load candidates
         if request.method == "GET":
             form.candidates.entries = []
             for candidate in election.candidates:
@@ -688,84 +697,100 @@ def edit_election(election_id):
                 entry.form.party_name.data = candidate.party_name
                 entry.form.manifesto.data = candidate.manifesto
                 entry.form.position.data = candidate.position
+                entry.form.election_id.data = str(election.id)
+                entry.form.candidate_id.data = str(candidate.id)
+
+        # On POST: assign candidate IDs to match validation and editing
+        if request.method == "POST":
+            for entry in form.candidates.entries:
+                candidate_id = entry.form.candidate_id.data
+                if candidate_id:
+                    existing = Candidate.query.get(candidate_id)
+                    if existing:
+                        entry.form.original_candidate = existing
+                        entry.form.election_id.data = str(election.id)
+                else:
+                    entry.form.original_candidate = None
+                    entry.form.election_id.data = str(election.id)
+                print("✅ Submitted Candidates:")
+                for entry in form.candidates.entries:
+                    print("➡️", entry.data)
+
+
         if form.validate_on_submit():
+            print("✅ Submitted Candidates:")
+            for entry in form.candidates.entries:
+                print("➡️", entry.data)
+
             election.title = form.title.data
+            election.description = form.description.data
             election.start_date = form.start_date.data
             election.end_date = form.end_date.data
             election.status = form.status.data
+
+            # Track existing candidates
             existing_candidates = {
-                ((c.full_name or "").strip().lower(), (c.position or "").strip().lower()): c
+                (c.full_name.strip().lower(), c.position.strip().lower()): c
                 for c in election.candidates
             }
-
-            form_keys = set()
+            seen_keys = set()
 
             for entry in form.candidates.entries:
                 data = entry.data
-                name = (data.get('full_name') or "").strip()
-                position_name = (data.get('position') or "").strip()
+                full_name = (data.get("full_name") or "").strip()
+                position_name = (data.get("position") or "").strip()
 
-                if not name or not position_name:
+                if not full_name or not position_name:
                     flash("Candidate name and position are required.", "warning")
                     continue
 
-                key = (name.lower(), position_name.lower())
-                form_keys.add(key)
+                key = (full_name.lower(), position_name.lower())
+                seen_keys.add(key)
 
-                # Get or create position
-                position = Position.query.filter_by(name=position_name).first()
+                position = Position.query.filter_by(name=position_name, election_id=election.id).first()
                 if not position:
-                    position = Position(name=position_name)
+                    position = Position(name=position_name, election_id=election.id)
                     db.session.add(position)
                     db.session.flush()
 
                 if key in existing_candidates:
-                    # Update existing candidate
+                    # update existing
                     candidate = existing_candidates[key]
-                    candidate.party_name = data.get('party_name')
-                    candidate.manifesto = data.get('manifesto')
+                    candidate.party_name = data.get("party_name")
+                    candidate.manifesto = data.get("manifesto")
                     candidate.position_id = position.id
                     candidate.position = position_name
+                    print(f"🔄 Updated candidate: {full_name}")
                 else:
-                    # Check for existing match by constraint
-                    existing = Candidate.query.filter_by(
+                    # create new
+                    new_candidate = Candidate(
                         user_id=current_user.id,
                         election_id=election.id,
-                        position_id=position.id
-                    ).first()
+                        position_id=position.id,
+                        full_name=full_name,
+                        party_name=data.get("party_name"),
+                        manifesto=data.get("manifesto"),
+                        position=position_name,
+                    )
+                    db.session.add(new_candidate)
+                    print(f"🆕 Added candidate: {full_name}")
 
-                    if not existing:
-                        new_candidate = Candidate(
-                            user_id=current_user.id,
-                            election_id=election.id,
-                            position_id=position.id,
-                            full_name=name,
-                            party_name=data.get('party_name'),
-                            manifesto=data.get('manifesto'),
-                            position=position_name
-                        )
-                        db.session.add(new_candidate)
-                    else:
-                        existing.full_name = name
-                        existing.party_name = data.get('party_name')
-                        existing.manifesto = data.get('manifesto')
-                        existing.position = position_name
-
-            # Remove removed candidates
+            # Delete removed candidates
             for key, candidate in existing_candidates.items():
-                if key not in form_keys:
+                if key not in seen_keys:
+                    print(f"❌ Deleting removed candidate: {candidate.full_name}")
                     db.session.delete(candidate)
 
             db.session.commit()
             flash("Election updated successfully!", "success")
-            return redirect(url_for('admin_web.manage_elections'))
+            return redirect(url_for("admin_web.manage_elections"))
 
         return render_template("admin/edit_election.html", form=form, election=election)
 
     except Exception as e:
         db.session.rollback()
-        flash(f"Error editing election: {e}", "danger")
-        return redirect(url_for('admin_web.manage_elections'))
+        flash(f"❌ Error editing election: {e}", "danger")
+        return redirect(url_for("admin_web.manage_elections"))
 
 
 
@@ -1016,7 +1041,7 @@ def edit_candidate(id):
 
 @admin_web_bp.route('/audit-logs')
 @login_required
-@superadmin_required
+@super_admin_required
 def audit_logs():
     try:
         logs = AuditLog.query.order_by(AuditLog.timestamp.desc()).limit(100).all()
@@ -1041,7 +1066,36 @@ def delete_candidate(candidate_id):
     return redirect(url_for('admin_web.manage_candidates'))
 
 
-@admin_web_bp.route('/admin/approve-all-users', methods=['POST'])
+@admin_web_bp.route('/<action>-user/<int:user_id>', methods=['POST'])
+@login_required
+def user_action(action, user_id):
+    # CSRF protection
+    try:
+        csrf_token = request.headers.get('X-CSRFToken')
+        validate_csrf(csrf_token)
+    except CSRFError:
+        return jsonify({'success': False, 'error': 'Invalid CSRF token'}), 400
+
+    user = User.query.get_or_404(user_id)
+
+    if action == 'approve':
+        user.is_approved = True
+        user.is_blocked = False
+        db.session.commit()
+        return jsonify({'success': True})
+    elif action == 'reject':
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'success': True})
+    elif action == 'block':
+        user.is_blocked = True
+        db.session.commit()
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'error': 'Invalid action'}), 400
+
+
+@admin_web_bp.route('/approve-all-users', methods=['POST'])
 @login_required
 def approve_all_users():
     try:
@@ -1049,11 +1103,11 @@ def approve_all_users():
         for user in pending_users:
             user.is_approved = True
         db.session.commit()
-
         flash(f'All {len(pending_users)} pending users have been approved.', 'success')
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Failed to approve all users: {e}")
         flash("Approval failed. Please try again.", "danger")
 
-    return redirect(url_for('pending_users'))
+    return redirect(url_for('admin_web.pending_users'))
+

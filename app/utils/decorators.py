@@ -14,10 +14,10 @@ def role_required(*roles):
 
 
 
-def superadmin_required(f):
+def super_admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.is_superadmin:
+        if not current_user.is_authenticated or not current_user.is_super_admin:
             flash("Access restricted to Super Admins.", "danger")
             return redirect(url_for('web_auth.login'))
         return f(*args, **kwargs)

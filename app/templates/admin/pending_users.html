@@ -1,67 +1,228 @@
 {% extends "base.html" %}
-
-{% block head %}
-  <link rel="stylesheet" href="https://unpkg.com/glass-ui/dist/glass-ui.min.css" />
-  <style>
-    .glass-table thead {
-      background: rgba(255, 255, 255, 0.15);
-      -webkit-backdrop-filter: blur(10px);
-      backdrop-filter: blur(10px);
-    }
-    .glass-table tbody tr {
-      background: rgba(255, 255, 255, 0.1);
-    }
-    .glass-button {
-      --gi-button-bg: rgba(255, 255, 255, 0.2);
-      --gi-button-hover-bg: rgba(255, 255, 255, 0.3);
-      --gi-button-color: #fff;
-      --gi-button-border-radius: 8px;
-      --gi-button-padding: 0.5rem 1rem;
-    }
-  </style>
-{% endblock %}
+{% block title %}Approve Users{% endblock %}
 
 {% block content %}
-<section class="gi-container gi-py-4">
-  <h2 class="gi-text-2xl gi-font-semibold gi-text-white gi-mb-4">Pending User Approvals</h2>
+<div class="manage-elections-background py-5">
+  <div class="container" data-aos="fade-up">
+    <h2 class="mb-4 fw-bold">
+      <i class="bi bi-person-check-fill me-2 text-primary"></i>
+      Approve Users
+    </h2>
 
-  {% if users %}
-  <form method="POST" action="{{ url_for('admin_web.approve_all_users') }}" class="gi-mb-4">
-    <button type="submit" class="glass-button gi-shadow-lg">
-      <i class="bi bi-check-circle"></i> Approve All Users
-    </button>
-  </form>
-  {% endif %}
-
-  <div class="gi-overflow-x-auto">
-    <table class="glass-table gi-w-full gi-text-white">
-      <thead>
-        <tr>
-          <th class="gi-p-3 gi-text-left">Full Name</th>
-          <th class="gi-p-3 gi-text-left">Email</th>
-          <th class="gi-p-3 gi-text-left">Role</th>
-          <th class="gi-p-3 gi-text-left">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for user in users %}
-        <tr class="gi-border-b gi-border-gray-700">
-          <td class="gi-p-3">{{ user.full_name }}</td>
-          <td class="gi-p-3">{{ user.email }}</td>
-          <td class="gi-p-3 gi-capitalize">{{ user.role.name.replace('_', ' ') }}</td>
-          <td class="gi-p-3">
-            <span class="gi-text-sm gi-text-gray-300">Pending</span>
-          </td>
-        </tr>
-        {% else %}
-        <tr>
-          <td colspan="4" class="gi-p-3 gi-text-center gi-text-gray-300">
-            No pending users at the moment.
-          </td>
-        </tr>
+    {# Flash messages #}
+    {% with messages = get_flashed_messages(with_categories=True) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+            <i class="bi bi-{{ 'check-circle-fill' if category == 'success' else 'exclamation-triangle-fill' }} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
         {% endfor %}
-      </tbody>
-    </table>
+      {% endif %}
+    {% endwith %}
+
+    {% for role_group, group_label in [('admin', 'Admin Users'), ('voter', 'Voter Users')] %}
+    <div class="card shadow-sm mb-5 rounded-4" data-aos="fade-right">
+      <div class="card-header bg-gradient-primary text-white fw-semibold rounded-top-4">
+        {{ group_label }}
+      </div>
+      <div class="card-body">
+        {% set group_users = users | selectattr('role.name', 'equalto', role_group) | list %}
+        {% if group_users %}
+          <form method="POST" action="{{ url_for('admin_web.approve_all_users') }}" class="mb-3">
+            <input type="hidden" name="role" value="{{ role_group }}">
+            <button type="submit" class="btn btn-success btn-sm shadow-sm">
+              <i class="bi bi-person-check me-1"></i> Approve All
+            </button>
+          </form>
+
+          <div class="input-group shadow-sm mb-3">
+            <input type="text" class="form-control" placeholder="Search {{ group_label }}..." onkeyup="filterTable(this, '{{ role_group }}-table')">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+          </div>
+
+          <div class="table-responsive">
+            <table id="{{ role_group }}-table" class="table table-hover align-middle text-center" data-rows="5">
+              <thead class="table-dark">
+                <tr>
+                  <th>Full Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for user in group_users %}
+                <tr>
+                  <td>{{ user.full_name }}</td>
+                  <td>{{ user.email }}</td>
+                  <td class="text-capitalize">{{ user.role.name.replace('_', ' ') }}</td>
+                  <td>
+                    {% if user.is_approved %}
+                      <span class="badge bg-success">Approved</span>
+                    {% else %}
+                      <span class="badge bg-warning text-dark">Pending</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if not user.is_approved %}
+                      <div class="btn-group btn-group-sm">
+                        <button class="btn btn-success" onclick="openModal({{ user.id }}, 'approve')">Approve</button>
+                        <button class="btn btn-warning" onclick="openModal({{ user.id }}, 'reject')">Reject</button>
+                        <button class="btn btn-danger" onclick="openModal({{ user.id }}, 'block')">Block</button>
+                      </div>
+                    {% else %}
+                      <span class="text-muted">-</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <div id="{{ role_group }}-pagination" class="mt-3 text-center"></div>
+          </div>
+        {% else %}
+          <p class="text-muted">No pending {{ group_label | lower }} at this time.</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
   </div>
-</section>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="actionModal" tabindex="-1" aria-labelledby="actionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="actionModalLabel">Confirm Action</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p id="actionModalBody">Are you sure?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button id="confirmActionBtn" type="button" class="btn btn-danger">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block head_extra %}
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<style>
+  .manage-elections-background { background:#f8f9fb; min-height:100vh; }
+  .bg-gradient-primary { background:linear-gradient(135deg,#0d6efd,#0a58ca); }
+  .card, .input-group, .btn, .alert { border-radius:.75rem; }
+  .btn:hover { transform:translateY(-2px); box-shadow:0 .5rem 1rem rgba(0,0,0,.15); }
+  .alert { font-size:.95rem; }
+  .table-hover tbody tr:hover { background:#eef3f7; }
+  .badge { font-size:.85rem; padding:.45em .75em; }
+  .pagination-btn {
+    margin: 0 0.25rem;
+    padding: 0.4rem 0.75rem;
+    border: none;
+    border-radius: 0.5rem;
+    background: #6c757d;
+    color: white;
+  }
+  .pagination-btn.active {
+    background-color: #198754;
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  AOS.init({ duration: 600, once: true, easing: 'ease-out-cubic' });
+
+  function filterTable(input, tableId) {
+    const filter = input.value.toLowerCase();
+    const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+    rows.forEach(row => {
+      const match = row.textContent.toLowerCase().includes(filter);
+      row.style.display = match ? '' : 'none';
+    });
+  }
+
+  function initPagination() {
+    document.querySelectorAll('table').forEach(table => {
+      const rowsPerPage = parseInt(table.dataset.rows || '5');
+      const rows = Array.from(table.querySelectorAll('tbody tr'));
+      const pagination = document.getElementById(`${table.id}-pagination`);
+      if (!pagination) return;
+
+      let currentPage = 1;
+      const totalPages = Math.ceil(rows.length / rowsPerPage);
+
+      const render = () => {
+        rows.forEach((row, i) => {
+          row.style.display = (i >= (currentPage - 1) * rowsPerPage && i < currentPage * rowsPerPage) ? '' : 'none';
+        });
+
+        pagination.innerHTML = '';
+        for (let i = 1; i <= totalPages; i++) {
+          const btn = document.createElement('button');
+          btn.textContent = i;
+          btn.className = 'pagination-btn' + (i === currentPage ? ' active' : '');
+          btn.addEventListener('click', () => {
+            currentPage = i;
+            render();
+          });
+          pagination.appendChild(btn);
+        }
+      };
+
+      render();
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initPagination);
+
+  let selectedUserId = null;
+  let selectedAction = null;
+
+  function openModal(userId, action) {
+    selectedUserId = userId;
+    selectedAction = action;
+
+    const actionText = action.charAt(0).toUpperCase() + action.slice(1);
+    document.getElementById('actionModalLabel').textContent = `${actionText} User`;
+    document.getElementById('actionModalBody').textContent = `Are you sure you want to ${actionText.toUpperCase()} this user?`;
+
+    const confirmBtn = document.getElementById('confirmActionBtn');
+    confirmBtn.className = 'btn btn-' + (action === 'approve' ? 'success' : (action === 'reject' ? 'warning' : 'danger'));
+    new bootstrap.Modal(document.getElementById('actionModal')).show();
+  }
+
+  document.getElementById('confirmActionBtn').addEventListener('click', function () {
+    const metaTag = document.querySelector('meta[name="csrf-token"]');
+    const csrfToken = metaTag ? metaTag.getAttribute('content') : '';
+
+    fetch(`/admin/${selectedAction}-user/${selectedUserId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        const btn = document.querySelector(`button[onclick*="${selectedUserId}"]`);
+        const row = btn ? btn.closest('tr') : null;
+        if (row) row.remove();
+      } else {
+        alert('Action failed.');
+      }
+    })
+    .catch(() => alert('Server error.'));
+
+    bootstrap.Modal.getInstance(document.getElementById('actionModal')).hide();
+  });
+</script>
 {% endblock %}
