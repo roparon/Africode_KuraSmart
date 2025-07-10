@@ -13,6 +13,7 @@ from app.utils.decorators import super_admin_required
 from werkzeug.utils import secure_filename
 from collections import defaultdict
 from flask_wtf.csrf import validate_csrf, CSRFError
+from app.utils.decorators import admin_required
 from io import StringIO
 import csv
 import os
@@ -128,9 +129,6 @@ def login():
     return render_template('login.html', form=form)
 
 
-
-
-
 @web_auth_bp.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
     form = ForgotPasswordForm()
@@ -172,6 +170,7 @@ def logout():
 # -------------------------
 @admin_web_bp.route('/dashboard')
 @login_required
+@admin_required
 def dashboard():
     form = ProfileImageForm()
 
@@ -204,7 +203,6 @@ def dashboard():
 
     elif current_user.role == UserRole.voter.value:
         return render_template('voter/dashboard.html')
-
     else:
         abort(403)
 
