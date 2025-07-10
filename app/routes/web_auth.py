@@ -690,11 +690,14 @@ def edit_election(election_id):
             election.status = ElectionStatusEnum.ENDED
             db.session.commit()
 
-        form = ElectionForm(obj=election)
+        form = ElectionForm()
 
-        # On GET: load candidates
+        # --- On GET: Build form with current candidates ---
         if request.method == "GET":
+            form = ElectionForm(obj=election)
             form.candidates.entries = []
+
+            # Load existing candidates into the form
             for candidate in election.candidates:
                 entry = form.candidates.append_entry()
                 entry.form.original_candidate = candidate
@@ -705,8 +708,22 @@ def edit_election(election_id):
                 entry.form.election_id.data = str(election.id)
                 entry.form.candidate_id.data = str(candidate.id)
 
-        # On POST: assign candidate IDs to match validation and editing
+            # Append a new blank candidate entry if requested
+            if request.args.get("add_candidate"):
+                form.candidates.append_entry()
+
+            # Remove a candidate entry by index if requested
+            if request.args.get("remove_candidate"):
+                index = int(request.args.get("remove_candidate"))
+                if 0 <= index < len(form.candidates.entries):
+                    form.candidates.entries.pop(index)
+
+            return render_template("admin/edit_election.html", form=form, election=election)
+
+        # --- On POST: Process form submission ---
         if request.method == "POST":
+            form = ElectionForm(request.form)
+
             for entry in form.candidates.entries:
                 candidate_id = entry.form.candidate_id.data
                 if candidate_id:
@@ -717,78 +734,67 @@ def edit_election(election_id):
                 else:
                     entry.form.original_candidate = None
                     entry.form.election_id.data = str(election.id)
-                print("✅ Submitted Candidates:")
+
+            if form.validate_on_submit():
+                election.title = form.title.data
+                election.description = form.description.data
+                election.start_date = form.start_date.data
+                election.end_date = form.end_date.data
+                election.status = form.status.data
+
+                # Track original candidates by unique (name, position)
+                existing_candidates = {
+                    (c.full_name.strip().lower(), c.position.strip().lower()): c
+                    for c in election.candidates
+                }
+                seen_keys = set()
+
                 for entry in form.candidates.entries:
-                    print("➡️", entry.data)
+                    data = entry.data
+                    full_name = (data.get("full_name") or "").strip()
+                    position_name = (data.get("position") or "").strip()
 
+                    if not full_name or not position_name:
+                        flash("Candidate name and position are required.", "warning")
+                        continue
 
-        if form.validate_on_submit():
-            print("✅ Submitted Candidates:")
-            for entry in form.candidates.entries:
-                print("➡️", entry.data)
+                    key = (full_name.lower(), position_name.lower())
+                    seen_keys.add(key)
 
-            election.title = form.title.data
-            election.description = form.description.data
-            election.start_date = form.start_date.data
-            election.end_date = form.end_date.data
-            election.status = form.status.data
+                    # Get or create position
+                    position = Position.query.filter_by(name=position_name, election_id=election.id).first()
+                    if not position:
+                        position = Position(name=position_name, election_id=election.id)
+                        db.session.add(position)
+                        db.session.flush()
 
-            # Track existing candidates
-            existing_candidates = {
-                (c.full_name.strip().lower(), c.position.strip().lower()): c
-                for c in election.candidates
-            }
-            seen_keys = set()
+                    # Update existing or add new
+                    if key in existing_candidates:
+                        candidate = existing_candidates[key]
+                        candidate.party_name = data.get("party_name")
+                        candidate.manifesto = data.get("manifesto")
+                        candidate.position_id = position.id
+                        candidate.position = position_name
+                    else:
+                        new_candidate = Candidate(
+                            user_id=current_user.id,
+                            election_id=election.id,
+                            position_id=position.id,
+                            full_name=full_name,
+                            party_name=data.get("party_name"),
+                            manifesto=data.get("manifesto"),
+                            position=position_name,
+                        )
+                        db.session.add(new_candidate)
 
-            for entry in form.candidates.entries:
-                data = entry.data
-                full_name = (data.get("full_name") or "").strip()
-                position_name = (data.get("position") or "").strip()
+                # Delete candidates that were removed in the form
+                for key, candidate in existing_candidates.items():
+                    if key not in seen_keys:
+                        db.session.delete(candidate)
 
-                if not full_name or not position_name:
-                    flash("Candidate name and position are required.", "warning")
-                    continue
-
-                key = (full_name.lower(), position_name.lower())
-                seen_keys.add(key)
-
-                position = Position.query.filter_by(name=position_name, election_id=election.id).first()
-                if not position:
-                    position = Position(name=position_name, election_id=election.id)
-                    db.session.add(position)
-                    db.session.flush()
-
-                if key in existing_candidates:
-                    # update existing
-                    candidate = existing_candidates[key]
-                    candidate.party_name = data.get("party_name")
-                    candidate.manifesto = data.get("manifesto")
-                    candidate.position_id = position.id
-                    candidate.position = position_name
-                    print(f"🔄 Updated candidate: {full_name}")
-                else:
-                    # create new
-                    new_candidate = Candidate(
-                        user_id=current_user.id,
-                        election_id=election.id,
-                        position_id=position.id,
-                        full_name=full_name,
-                        party_name=data.get("party_name"),
-                        manifesto=data.get("manifesto"),
-                        position=position_name,
-                    )
-                    db.session.add(new_candidate)
-                    print(f"🆕 Added candidate: {full_name}")
-
-            # Delete removed candidates
-            for key, candidate in existing_candidates.items():
-                if key not in seen_keys:
-                    print(f"❌ Deleting removed candidate: {candidate.full_name}")
-                    db.session.delete(candidate)
-
-            db.session.commit()
-            flash("Election updated successfully!", "success")
-            return redirect(url_for("admin_web.manage_elections"))
+                db.session.commit()
+                flash("Election updated successfully!", "success")
+                return redirect(url_for("admin_web.manage_elections"))
 
         return render_template("admin/edit_election.html", form=form, election=election)
 
@@ -796,7 +802,6 @@ def edit_election(election_id):
         db.session.rollback()
         flash(f"❌ Error editing election: {e}", "danger")
         return redirect(url_for("admin_web.manage_elections"))
-
 
 
 
