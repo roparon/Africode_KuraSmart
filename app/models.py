@@ -122,6 +122,19 @@ class Election(db.Model):
 
     def __str__(self):
         return self.title
+    
+    @property
+    def current_status(self):
+        """Dynamically calculates election status based on dates and activity."""
+        now = datetime.utcnow()
+        if not self.is_active:
+            return 'inactive'
+        if now < self.start_date:
+            return 'pending'
+        elif self.start_date <= now <= self.end_date:
+            return 'active'
+        else:
+            return 'ended'
 
 class Candidate(db.Model):
     __tablename__ = 'candidate'
