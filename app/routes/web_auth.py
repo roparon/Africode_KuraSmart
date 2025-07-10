@@ -441,6 +441,7 @@ def manage_elections():
                 election.start_date = form.start_date.data
                 election.end_date = form.end_date.data
                 election.status = form.status.data
+
             for cand_form in form.candidates.entries:
                 full_name = cand_form.form.full_name.data.strip()
                 existing = Candidate.query.filter_by(
@@ -449,19 +450,26 @@ def manage_elections():
                 ).first()
 
                 if cand_form.form.original_candidate:
-                    # Update
                     candidate = cand_form.form.original_candidate
                     candidate.full_name = full_name
                     candidate.party_name = cand_form.form.party_name.data
                     candidate.manifesto = cand_form.form.manifesto.data
                     candidate.position = cand_form.form.position.data
                 elif not existing:
-                    # New
+                    # New candidate
+                    position_name = cand_form.form.position.data
+                    position = Position.query.filter_by(name=position_name).first()
+
+                    if not position:
+                        flash(f"Position '{position_name}' does not exist. Please create it first.", "danger")
+                        continue  # Skip this candidate if position is invalid
+
                     candidate = Candidate(
                         full_name=full_name,
                         party_name=cand_form.form.party_name.data,
                         manifesto=cand_form.form.manifesto.data,
-                        position=cand_form.form.position.data,
+                        position=position.name,
+                        position_id=position.id,  # ✅ FIXED: Set required foreign key
                         election_id=election.id,
                         user_id=current_user.id
                     )
@@ -476,7 +484,7 @@ def manage_elections():
             election_id = request.args.get("edit")
             election = Election.query.get_or_404(election_id)
             form = ElectionForm(obj=election)
-            form.status.data = election.status.value  # Ensure correct status enum
+            form.status.data = election.status.value
             form.candidates.entries.clear()
             for candidate in election.candidates:
                 cand_form = CandidateForm(
@@ -484,6 +492,7 @@ def manage_elections():
                     original_candidate=candidate
                 )
                 form.candidates.append_entry(cand_form)
+
         elections = Election.query.all()
         for election in elections:
             if election.status not in [ElectionStatusEnum.ENDED, ElectionStatusEnum.PAUSED]:
@@ -724,6 +733,7 @@ def edit_election(election_id):
         if request.method == "POST":
             form = ElectionForm(request.form)
 
+            # Re-link original_candidate based on form input
             for entry in form.candidates.entries:
                 candidate_id = entry.form.candidate_id.data
                 if candidate_id:
@@ -761,33 +771,34 @@ def edit_election(election_id):
                     key = (full_name.lower(), position_name.lower())
                     seen_keys.add(key)
 
-                    # Get or create position
+                    # ✅ Get or create position
                     position = Position.query.filter_by(name=position_name, election_id=election.id).first()
                     if not position:
                         position = Position(name=position_name, election_id=election.id)
                         db.session.add(position)
-                        db.session.flush()
+                        db.session.flush()  # Needed to get position.id
 
-                    # Update existing or add new
+                    # ✅ Update existing candidate
                     if key in existing_candidates:
                         candidate = existing_candidates[key]
                         candidate.party_name = data.get("party_name")
                         candidate.manifesto = data.get("manifesto")
-                        candidate.position_id = position.id
                         candidate.position = position_name
+                        candidate.position_id = position.id
                     else:
+                        # ✅ Add new candidate
                         new_candidate = Candidate(
                             user_id=current_user.id,
                             election_id=election.id,
-                            position_id=position.id,
                             full_name=full_name,
                             party_name=data.get("party_name"),
                             manifesto=data.get("manifesto"),
                             position=position_name,
+                            position_id=position.id
                         )
                         db.session.add(new_candidate)
 
-                # Delete candidates that were removed in the form
+                # ✅ Remove deleted candidates
                 for key, candidate in existing_candidates.items():
                     if key not in seen_keys:
                         db.session.delete(candidate)
@@ -802,6 +813,7 @@ def edit_election(election_id):
         db.session.rollback()
         flash(f"❌ Error editing election: {e}", "danger")
         return redirect(url_for("admin_web.manage_elections"))
+
 
 
 

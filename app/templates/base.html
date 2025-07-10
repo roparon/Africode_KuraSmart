@@ -52,7 +52,7 @@
 
     .profile-initial {
       background-color: #ffffff33;
-      color: #fff;
+      color: #ffffff;
       font-weight: bold;
       width: 32px;
       height: 32px;
@@ -71,10 +71,10 @@
       left: 50%;
       transform: translateX(-50%);
       background-color: rgba(0, 0, 0, 0.85);
-      color: #fff;
+      color: #ffffff;
       padding: 2px 8px;
       border-radius: 4px;
-      font-size: 0.75rem;
+      font-size: 0.85rem;
       white-space: nowrap;
       opacity: 0;
       transition: opacity 0.3s ease;
@@ -90,8 +90,8 @@
       position: fixed;
       bottom: 0;
       width: 100%;
-      background-color: #0f204d;
-      color: white;
+      background-color: #fcbf49;
+      color: rgb(5, 17, 190);
       padding: 8px 16px;
       font-size: 0.875rem;
       box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.15);
@@ -107,9 +107,9 @@
 
     .social-icons a {
       margin: 0 8px;
-      color: #26eb41;
-      font-size: 18px;
-      transition: color 0.3s ease;
+      color: #200c79;
+      font-size: 23px;
+      transition: color 0.1s ease;
     }
 
     .social-icons a:hover {
@@ -131,7 +131,7 @@
 
 <body class="text-dark d-flex flex-column min-vh-100">
   <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
+  <nav class="navbar navbar-expand-lg sticky-top shadow-sm" style="background-color: #fcbf49;">
     <div class="container">
       <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{{ url_for('main.index') }}">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-ballot" viewBox="0 0 16 16">
@@ -141,7 +141,7 @@
         </svg>
         KuraSmart
       </a>
-
+       <!-- Wavy Header Background -->
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navCollapse">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -179,10 +179,18 @@
                   </div>
                 </div>
               </a>
-              <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="{{ url_for('web_auth.logout') }}">Logout</a></li>
+              <ul class="dropdown-menu dropdown-menu-end py-0 px-0 small"
+                  style="background-color: rgb(248, 82, 82); min-width: 100px; max-height: 35px; overflow: hidden;">
+                <li>
+                  <a class="dropdown-item d-flex align-items-center gap-2 text-white py-1"
+                    href="{{ url_for('web_auth.logout') }}"
+                    style="background-color: transparent !important;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                  </a>
+                </li>
               </ul>
-            </li>
+
+
 
           {% else %}
             <li class="nav-item">
@@ -200,6 +208,12 @@
       </div>
     </div>
   </nav>
+  <div class="position-relative">
+    <svg viewBox="0 0 500 150" preserveAspectRatio="none" class="w-100" style="height: 150px; display: block;">
+      <path d="M0,50 C150,150 350,0 500,100 L500,0 L0,0 Z" style="fill: #0d1b2a;"></path>
+      <path d="M0,70 C150,100 350,20 500,90 L500,0 L0,0 Z" style="fill: #fcbf49;"></path>
+    </svg>
+  </div>
 
   <!-- Flash Messages -->
   <div class="container mt-3">
