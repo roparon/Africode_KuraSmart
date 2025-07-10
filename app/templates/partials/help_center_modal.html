@@ -1,0 +1,122 @@
+<!-- Help Center Modal -->
+<div class="modal fade" id="helpCenterModal" tabindex="-1" aria-labelledby="helpCenterModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg">
+    <div class="modal-content" style="border: 2px solid #f4c430; border-radius: 12px; box-shadow: 0 8px 30px rgba(244, 196, 48, 0.3);">
+      
+      <!-- Header -->
+      <div class="modal-header" style="background-color: #fff8e1; border-bottom: 1px solid #f4c430;">
+        <h5 class="modal-title" id="helpCenterModalLabel" style="color: #b8860b; font-weight: bold;">KuraSmart Help Center</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body" style="color: #333; line-height: 1.6;">
+        <h6 style="color: #c68e17; font-weight: 600;">📘 Welcome to the Help Center</h6>
+        <p>
+          At KuraSmart, our goal is to ensure your voting experience is smooth, transparent, and secure.
+          This Help Center is here to guide you through every step—from registration to final results.
+        </p>
+
+        <h6 style="color: #c68e17; font-weight: 600;">🔐 Account Issues</h6>
+        <p>
+          Having trouble accessing your account or verifying your identity? Ensure you're using your registered email or ID.
+          For password resets, follow the reset link on the login page.
+        </p>
+
+        <h6 style="color: #c68e17; font-weight: 600;">🗳️ Voting Process</h6>
+        <p>
+          After logging in, you’ll see active elections under your dashboard. Click “Vote” and make your selections. 
+          Once submitted, your vote is securely recorded and cannot be changed.
+        </p>
+
+        <h6 style="color: #c68e17; font-weight: 600;">📊 Results Transparency</h6>
+        <p>
+          KuraSmart ensures results are tamper-proof. Every vote is encrypted and tallied in real-time with audit trails.
+          Only verified election admins can view and publish results.
+        </p>
+
+        <h6 style="color: #c68e17; font-weight: 600;">🔎 Reporting Irregularities</h6>
+        <p>
+          If you suspect fraud, double voting, or suspicious activity, report it immediately to your institution or via our support email.
+          We take every concern seriously and investigate thoroughly.
+        </p>
+
+        <hr style="border-color: #f4c430;">
+        
+        <h6 style="color: #c68e17; font-weight: 600;">📨 Still Need Help?</h6>
+        <p>
+          Email us at 
+          <a href="mailto:support@kurasmart.com" class="text-decoration-none" style="color: #c68e17;">
+            <strong>support@kurasmart.com</strong>
+          </a> 
+          or message us directly using the buttons below.
+        </p>
+
+        <div class="d-flex flex-wrap gap-2 mt-3">
+          <button type="button" class="btn btn-warning text-dark" data-bs-toggle="modal" data-bs-target="#exampleModal" data-bs-whatever="Technical Support">
+            Contact Technical Support
+          </button>
+          <button type="button" class="btn btn-warning text-dark" data-bs-toggle="modal" data-bs-target="#exampleModal" data-bs-whatever="Account Help">
+            Contact Account Help
+          </button>
+          <button type="button" class="btn btn-warning text-dark" data-bs-toggle="modal" data-bs-target="#exampleModal" data-bs-whatever="General Inquiry">
+            Contact General Inquiry
+          </button>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button class="btn" style="background-color: #f4c430; color: #212529;" data-bs-dismiss="modal">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Message Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border: 2px solid #f4c430; border-radius: 10px;">
+      
+      <!-- Header -->
+      <div class="modal-header" style="background-color: #fff8e1;">
+        <h5 class="modal-title" id="exampleModalLabel" style="color: #b8860b;">New Message</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label for="recipient-name" class="col-form-label">Recipient:</label>
+            <input type="text" class="form-control" id="recipient-name">
+          </div>
+          <div class="mb-3">
+            <label for="message-text" class="col-form-label">Message:</label>
+            <textarea class="form-control" id="message-text"></textarea>
+          </div>
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-warning text-dark">Send Message</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script>
+  const exampleModal = document.getElementById('exampleModal');
+  exampleModal.addEventListener('show.bs.modal', event => {
+    const button = event.relatedTarget;
+    const recipient = button.getAttribute('data-bs-whatever');
+    const modalTitle = exampleModal.querySelector('.modal-title');
+    const recipientInput = exampleModal.querySelector('#recipient-name');
+
+    modalTitle.textContent = `New Message to ${recipient}`;
+    recipientInput.value = recipient;
+  });
+</script>

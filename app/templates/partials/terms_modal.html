@@ -1,0 +1,110 @@
+{% block content %}
+
+<style>
+  .btn-kura {
+    background-color: #f4c430;
+    color: #212529;
+    border: none;
+    transition: all 0.3s ease;
+  }
+
+  .btn-kura:hover {
+    background-color: #e6b800;
+    color: #000;
+  }
+
+  .modal-header {
+    background-color: #fff8e1;
+    border-bottom: 1px solid #f4c430;
+  }
+
+  .modal-title {
+    color: #b8860b;
+    font-weight: bold;
+  }
+
+  .modal-content {
+    border: 2px solid #f4c430;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(244, 196, 48, 0.3);
+  }
+
+  .modal-body h6 {
+    color: #c68e17;
+    margin-top: 1.5rem;
+    font-weight: 600;
+  }
+
+  .modal-body p {
+    margin-bottom: 1rem;
+    color: #333;
+    line-height: 1.6;
+  }
+</style>
+
+<!-- Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="termsModalLabel">KuraSmart Terms & Conditions</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+
+        <h6>1. Acceptance of Terms</h6>
+        <p>By accessing or using KuraSmart, you agree to comply with and be bound by these terms. If you do not agree, please do not use the platform.</p>
+
+        <h6>2. Purpose of Use</h6>
+        <p>KuraSmart is developed to support transparent, efficient, and secure digital voting processes. It is intended for elections held by academic institutions, organizations, or communities, and should not be used for unauthorized or illegal voting activities.</p>
+
+        <h6>3. Educational Use Only</h6>
+        <p>Initially tailored for students, teachers, and academic administrators, KuraSmart may also be adapted for broader organizational use. However, any unauthorized commercial, political, or fraudulent activity is strictly forbidden.</p>
+
+        <h6>4. Secure Voting System</h6>
+        <p>KuraSmart implements multi-layered security including encrypted voting, OTP verification, and user authentication to ensure integrity, fairness, and voter anonymity. Every vote counts once — and only once.</p>
+
+        <h6>5. Transparency & Audit Logs</h6>
+        <p>Our system maintains encrypted, anonymized audit logs of voting activity to ensure transparency. Admins and supervisors may access these logs upon request for verification or dispute resolution.</p>
+
+        <h6>6. Account Security</h6>
+        <p>Users are responsible for protecting their account credentials. KuraSmart is not liable for votes or activity conducted under compromised accounts. If you suspect unauthorized access, notify us immediately.</p>
+
+        <h6>7. Intellectual Property</h6>
+        <p>All design, branding, software, and content on KuraSmart are the intellectual property of Africode Technologies unless otherwise stated. You may not copy, reuse, or modify any part without explicit permission.</p>
+
+        <h6>8. Data Collection & Privacy</h6>
+        <p>We collect only essential user data such as name, student ID, email, and phone number for verification purposes. No sensitive information is shared with third parties. See our <a href="{{ url_for('static_pages.privacy_policy') }}">Privacy Policy</a> for details.</p>
+
+        <h6>9. One-Person-One-Vote Guarantee</h6>
+        <p>Each eligible voter can cast only one vote per election. KuraSmart uses identity validation and session controls to prevent duplicate voting or impersonation.</p>
+
+        <h6>10. User Conduct</h6>
+        <p>All users must behave responsibly and ethically. Misuse, cheating, impersonation, vote buying, harassment, or spreading false information will lead to immediate disciplinary action and possible legal consequences.</p>
+
+        <h6>11. Platform Downtime or Errors</h6>
+        <p>Although we strive for full reliability, technical issues may occasionally occur. KuraSmart is not liable for delays, failed submissions, or outages during elections. Election administrators may extend deadlines in such events.</p>
+
+        <h6>12. Limitation of Liability</h6>
+        <p>KuraSmart is provided "as is." We are not responsible for indirect damages, vote disputes caused by human error, or results manipulation attempted outside of the platform.</p>
+
+        <h6>13. Modifications & Updates</h6>
+        <p>We reserve the right to modify these Terms & Conditions at any time. All changes will be posted within the platform. Continued use after updates implies acceptance of the new terms.</p>
+
+        <h6>14. Termination</h6>
+        <p>Accounts that violate terms, engage in suspicious activities, or threaten the integrity of an election may be suspended or permanently disabled without notice.</p>
+
+        <h6>15. Contact & Support</h6>
+        <p>For inquiries or technical assistance, please contact <a href="mailto:support@kurasmart.com">support@kurasmart.com</a>. Your feedback helps us improve.</p>
+
+        <p class="text-muted small mt-4">Last updated: July 10, 2025</p>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-kura" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
