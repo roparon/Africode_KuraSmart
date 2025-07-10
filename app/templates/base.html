@@ -71,6 +71,8 @@
                                        {% endif %}">
                                 Dashboard
                             </a>
+                            {% include 'includes/ticker.html' %}
+
                         </li>
 
                         {% if current_user.is_super_admin or current_user.role == 'admin' %}
@@ -125,9 +127,6 @@
         {% block content %}{% endblock %}
     </main>
 
-    {% include 'includes/ticker.html' %}
-
-
     <!-- Footer -->
 <!-- HTML -->
 <footer class="sticky-footer">
@@ -161,7 +160,7 @@
           z-index: 999;
         }
         .footer-container {
-          display: flex;
+          display:flex;
           flex-direction: column;
           align-items: center;
           gap: 10px;
