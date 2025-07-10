@@ -64,6 +64,7 @@ def create_app():
     from app.routes.notifications import notifications_bp
     from app.context_processors import inject_unread_notifs
     from app.routes.voter import voter_bp
+    from .routes.static import static_pages
 
     app.register_blueprint(auth_bp, url_prefix='/api/v1')
     app.register_blueprint(protected_bp, url_prefix='/api/v1')
@@ -81,6 +82,8 @@ def create_app():
     app.register_blueprint(main_bp)
     app.register_blueprint(notifications_bp)
     app.context_processor(inject_unread_notifs)
+    app.register_blueprint(static_pages)
+
 
     @app.context_processor
     def inject_unread_notifs():
