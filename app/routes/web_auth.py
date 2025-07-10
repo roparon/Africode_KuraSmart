@@ -647,25 +647,8 @@ def voter_dashboard():
     if current_user.role != UserRole.voter.value:
         abort(403)
     try:
-        now = datetime.utcnow()
+        all_elections = Election.query.order_by(Election.start_date.desc()).all()
 
-        # Fetch elections based on timing
-        active_elections = Election.query.filter(Election.start_date <= now, Election.end_date >= now).all()
-        upcoming_elections = Election.query.filter(Election.start_date > now).all()
-        ended_elections = Election.query.filter(Election.end_date < now).all()
-
-        # Add .status to each
-        for e in active_elections:
-            e.status = 'active'
-        for e in upcoming_elections:
-            e.status = 'pending'
-        for e in ended_elections:
-            e.status = 'ended'
-
-        # Combine all
-        all_elections = active_elections + upcoming_elections + ended_elections
-
-        # Fetch voting history
         votes = Vote.query.filter_by(voter_id=current_user.id).all()
         vote_records = []
         for vote in votes:
@@ -681,16 +664,15 @@ def voter_dashboard():
 
         return render_template(
             'voter/dashboard.html',
-            user=current_user,
             all_elections=all_elections,
-            active_elections=active_elections,
-            upcoming_elections=upcoming_elections,
-            ended_elections=ended_elections,
+            user=current_user,
             votes=vote_records
         )
+
     except Exception as e:
         flash(f"Error loading dashboard: {e}", "danger")
         return redirect(url_for('main.index'))
+
 
 
 

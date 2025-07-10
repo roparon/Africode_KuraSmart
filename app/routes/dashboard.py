@@ -8,7 +8,7 @@ voter_bp = Blueprint('voter', __name__)
 @dashboard_bp.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html', user=current_user)
+    return render_template('voter/dashboard.html', user=current_user)
 
 @voter_bp.route('/dashboard')
 @login_required
