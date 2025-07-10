@@ -13,7 +13,6 @@ def voter_dashboard():
         abort(403)
     try:
         now = datetime.utcnow()
-        # Active elections: currently running
         active_elections = Election.query.filter(
             and_(
                 Election.start_date <= now,
@@ -21,14 +20,12 @@ def voter_dashboard():
                 Election.active == True
             )
         ).order_by(Election.created_at.desc()).all()
-        # Upcoming (pending) elections: not started yet
         upcoming_elections = Election.query.filter(
             and_(
                 Election.start_date > now,
                 Election.active == True
             )
         ).order_by(Election.start_date.asc()).all()
-        # Ended elections
         ended_elections = Election.query.filter(
             Election.end_date < now
         ).order_by(Election.end_date.desc()).all()
