@@ -655,10 +655,26 @@ def view_analytics():
 def voter_dashboard():
     if current_user.role != UserRole.voter.value:
         abort(403)
+
     try:
+        now = datetime.utcnow()
+
+        # Get all elections sorted by date
         all_elections = Election.query.order_by(Election.start_date.desc()).all()
 
+        # Get all votes cast by the voter
         votes = Vote.query.filter_by(voter_id=current_user.id).all()
+        voted_election_ids = {vote.election_id for vote in votes}
+
+        # Prepare elections with voting status
+        elections = []
+        for election in all_elections:
+            elections.append({
+                "election": election,
+                "has_voted": election.id in voted_election_ids
+            })
+
+        # Vote history
         vote_records = []
         for vote in votes:
             candidate = Candidate.query.get(vote.candidate_id)
@@ -673,14 +689,43 @@ def voter_dashboard():
 
         return render_template(
             'voter/dashboard.html',
-            all_elections=all_elections,
+            elections=elections,
             user=current_user,
-            votes=vote_records
+            votes=vote_records,
+            now=now
         )
 
     except Exception as e:
-        flash(f"Error loading dashboard: {e}", "danger")
+        current_app.logger.error(f"Voter dashboard error: {str(e)}")
+        flash("Error loading dashboard. Please try again.", "danger")
         return redirect(url_for('main.index'))
+    
+
+@voter_bp.route('/election/<int:election_id>')
+@login_required
+def view_election(election_id):
+    if current_user.role != UserRole.voter.value:
+        abort(403)
+
+    election = Election.query.get_or_404(election_id)
+
+    if election.status not in ['active', 'pending', 'ended']:
+        flash("This election is not accessible at the moment.", "warning")
+        return redirect(url_for('voter_dashboard'))
+
+    positions = Position.query.filter_by(election_id=election.id).all()
+    candidates = Candidate.query.filter_by(election_id=election.id).all()
+    votes = Vote.query.filter_by(voter_id=current_user.id, election_id=election.id).all()
+    has_voted = len(votes) > 0
+
+    return render_template(
+        'election_details.html',
+        election=election,
+        positions=positions,
+        candidates=candidates,
+        has_voted=has_voted,
+        user=current_user
+    )
 
 
 
