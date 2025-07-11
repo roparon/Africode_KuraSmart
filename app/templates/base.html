@@ -285,7 +285,33 @@
   <main class="container py-2 flex-grow-1">
     {% block content %}{% endblock %}
   </main>
-  <footer class="bg-dark text-white pt-4 pb-3 border-top shadow-sm">
+  <!-- Footer -->
+<footer class="bg-dark text-white pt-4 pb-3 border-top shadow-sm">
+  <style>
+    footer a {
+      color: #ffffff;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    footer a:hover {
+      color: #f4c430 !important;
+      text-decoration: underline;
+      text-decoration-color: #f4c430;
+      font-weight: 600;
+    }
+
+    footer .social-icons a {
+      font-size: 1.25rem;
+      transition: transform 0.3s ease, color 0.3s ease;
+    }
+
+    footer .social-icons a:hover {
+      color: #f4c430 !important;
+      transform: scale(1.2);
+    }
+  </style>
+
   <div class="container">
     <div class="row g-4">
 
@@ -301,26 +327,26 @@
       <div class="col-md-4">
         <h5 class="text-warning">Quick Links</h5>
         <ul class="list-unstyled small">
-          <li><a href="#" class="text-white text-decoration-none" data-bs-toggle="modal" data-bs-target="#howItWorksModal">How It Works</a></li>
-          <li><a href="#" class="text-white text-decoration-none" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy Policy</a></li>
-          <li><a href="#" class="text-white text-decoration-none" data-bs-toggle="modal" data-bs-target="#termsModal">Terms & Conditions</a></li>
-          <li><a href="#" class="text-white text-decoration-none" data-bs-toggle="modal" data-bs-target="#helpCenterModal">Help Center</a></li>
+          <li><a href="#" data-bs-toggle="modal" data-bs-target="#howItWorksModal">How It Works</a></li>
+          <li><a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy Policy</a></li>
+          <li><a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms & Conditions</a></li>
+          <li><a href="#" data-bs-toggle="modal" data-bs-target="#helpCenterModal">Help Center</a></li>
         </ul>
       </div>
 
       <!-- Contact & Social -->
       <div class="col-md-4">
-        <h5 class="text-warning">Connect With Us</h5>
+        <h5 class="text-warning">Find Us on Social Media</h5>
         <p class="small mb-2">
-          Email: <a href="mailto:support@kurasmart.com" class="text-light text-decoration-underline">support@kurasmart.com</a>
+          Email: <a href="mailto:support@kurasmart.com">kurasmartteam@gmail.com</a>
         </p>
-        <div class="social-icons d-flex gap-3" style="position: relative; left: 120px;">
-          <a href="https://www.facebook.com/home.php" title="Facebook"><i class="fab fa-facebook-f"></i></a>
-          <a href="https://x.com/?lang=en" title="Twitter"><i class="fab fa-twitter"></i></a>
-          <a href="https://www.instagram.com/#reactivated" title="Instagram"><i class="fab fa-instagram"></i></a>
-          <a href="https://www.linkedin.com" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-          <a href="hRevamped footer layout and Help Center modal, reorganized sections for About, Quick Links, and Contact, centered and styled social media icons in a responsive two-column grid, enhanced modal UI with custom message buttons and labels, applied Bootstrap 5 utilities for spacing and alignment, and improved overall responsiveness and accessibility.ttps://www.youtube.com" title="YouTube"><i class="fab fa-youtube"></i></a>
-          <a href="https://www.tiktok.com" title="TikTok"><i class="fab fa-tiktok"></i></a>
+        <div class="social-icons d-flex gap-3" style="position: relative; left: 0px;">
+          <a href="https://www.facebook.com/home.php" title="Facebook"><i class="fab fa-facebook-f fs-6"></i>Facebook</a>
+          <a href="https://x.com/?lang=en" title="Twitter"><i class="fab fa-twitter fs-6"></i>Twitter</a>
+          <a href="https://www.instagram.com/#reactivated" title="Instagram"><i class="fab fa-instagram fs-6"></i>Instagram</a>
+          <a href="https://www.linkedin.com" title="LinkedIn"><i class="fab fa-linkedin-in fs-6"></i>Linkedin</a>
+          <a href="https://www.youtube.com" title="YouTube"><i class="fab fa-youtube fs-6"></i>Youtube</a>
+          <a href="https://www.tiktok.com" title="TikTok"><i class="fab fa-tiktok fs-6"></i>Tiktok</a>
         </div>
       </div>
 
@@ -333,6 +359,7 @@
     </div>
   </div>
 </footer>
+
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
