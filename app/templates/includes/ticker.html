@@ -1,59 +1,70 @@
 <style>
   .sticky-footer-container {
     position: fixed;
-    bottom: 0.1rem;
+    bottom: 0;
     left: 0;
     width: 100%;
     z-index: 9999;
+    background: #000;
   }
 
   .footer-ticker-wrapper {
     color: #ffffff;
     font-family: 'Segoe UI', sans-serif;
     overflow: hidden;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    height: 40px;
   }
 
   .ticker-track {
-    display: flex;
-    width: max-content;
-    animation: scroll-ltr 390s linear infinite;
+    display: inline-block;
+    padding-left: 100%;
+    animation: scroll-rtl 60s linear infinite;
+    white-space: nowrap;
+  }
+
+  @keyframes scroll-rtl {
+    0% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
   }
 
   .footer-ticker-wrapper:hover .ticker-track {
     animation-play-state: paused;
   }
 
-  @keyframes scroll-ltr {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-  }
-
   .ticker-item {
+    display: inline-block;
     white-space: nowrap;
     padding: 3px 16px;
-    margin-right: 2px;
+    margin-right: 4px;
     border-radius: 4px;
     font-size: 1rem;
     font-weight: 500;
     color: #fff;
   }
 
-.bg1  { background: #0ea5e9; }
-.bg2  { background: #10b981; }
-.bg3  { background: #f59e0b; }
-.bg4  { background: #ef4444; }
-.bg5  { background: #8b5cf6; }
-.bg6  { background: #ec4899; }
-.bg7  { background: #14b8a6; }
-.bg8  { background: #1d4ed8; }
-.bg9  { background: #f97316; }
-.bg10 { background: #059669; }
-.bg11 { background: #3b82f6; }
-.bg12 { background: #a855f7; }
-.bg13 { background: #dc2626; }
-.bg14 { background: #4ade80; }
-.bg15 { background: #facc15; }
-.bg16 { background: #7c3aed; }
+  .bg1  { background: #0ea5e9; }
+  .bg2  { background: #10b981; }
+  .bg3  { background: #f59e0b; }
+  .bg4  { background: #ef4444; }
+  .bg5  { background: #8b5cf6; }
+  .bg6  { background: #ec4899; }
+  .bg7  { background: #14b8a6; }
+  .bg8  { background: #1d4ed8; }
+  .bg9  { background: #f97316; }
+  .bg10 { background: #059669; }
+  .bg11 { background: #3b82f6; }
+  .bg12 { background: #a855f7; }
+  .bg13 { background: #dc2626; }
+  .bg14 { background: #4ade80; }
+  .bg15 { background: #facc15; }
+  .bg16 { background: #7c3aed; }
 
   .live-icon {
     color: #e6110a;
@@ -62,6 +73,7 @@
     font-weight: bold;
     display: inline-block;
     transition: opacity 0.3s ease;
+    top: -2px;
   }
 
   @keyframes pulse {
@@ -78,7 +90,7 @@
 
 <div class="sticky-footer-container">
   <div class="footer-ticker-wrapper">
-    <span id="live-message" class="live-icon">🔴 Real-Time Election Feed!</span>
+    <span class="live-icon">🔴 Real-Time Election Feed!</span>
     <div class="ticker-track" id="tickerTrack"></div>
   </div>
 </div>
@@ -108,13 +120,15 @@
     { text: "👋 Welcome to KuraSmart — your secure and transparent digital voting platform, proudly built to empower every citizen with a safe, fair, and accessible way to make their voice heard. Cast your vote with confidence, knowing your participation matters!", bg: "bg1" }
   ];
 
-  const fullTickerMessages = [...tickerMessages, ...tickerMessages];
   const tickerTrack = document.getElementById('tickerTrack');
 
-  fullTickerMessages.forEach(msg => {
-    const span = document.createElement('span');
-    span.className = `ticker-item ${msg.bg}`;
-    span.textContent = msg.text;
-    tickerTrack.appendChild(span);
-  });
+  // Duplicate content to ensure long enough scroll
+  for (let i = 0; i < 3; i++) {
+    tickerMessages.forEach(msg => {
+      const span = document.createElement('span');
+      span.className = `ticker-item ${msg.bg}`;
+      span.textContent = msg.text;
+      tickerTrack.appendChild(span);
+    });
+  }
 </script>
