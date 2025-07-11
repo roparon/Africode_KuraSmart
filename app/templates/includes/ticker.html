@@ -21,7 +21,7 @@
   .ticker-track {
     display: inline-block;
     padding-left: 100%;
-    animation: scroll-rtl 60s linear infinite;
+    animation: scroll-rtl 400s linear infinite;
     white-space: nowrap;
   }
 
@@ -67,17 +67,16 @@
   .bg16 { background: #7c3aed; }
 
 
-
   .live-icon {
-    color: #e6110a;
-    margin: 0 12px;
-    animation: pulse 1.5s infinite;
-    font-weight: bold;
-    display: inline-block;
-    transition: opacity 0.3s ease;
-    position: relative;
-    top: -4px;
-  }
+  color: #e6110a;
+  margin: 0 12px;
+  animation: pulse 1.5s infinite;
+  font-weight: bold;
+  display: inline-block;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform: translateY(-4px); /* 👈 Moves it upward slightly */
+}
+
 
 
   @keyframes pulse {
@@ -101,6 +100,7 @@
 
 <script>
   const tickerMessages = [
+    { text: "👋 Welcome to KuraSmart — your secure and transparent digital voting platform, proudly built to empower every citizen with a safe, fair, and accessible way to make their voice heard. Cast your vote with confidence, knowing your participation matters!", bg: "bg4" },
     { text: "💡 Tip: Review your vote confirmation receipt carefully.", bg: "bg16" },
     { text: "🔍 Transparency is our core principle.", bg: "bg15" },
     { text: "📖 Learn more about candidates before voting.", bg: "bg14" },
@@ -125,8 +125,6 @@
   ];
 
   const tickerTrack = document.getElementById('tickerTrack');
-
-  // Duplicate content to ensure long enough scroll
   for (let i = 0; i < 3; i++) {
     tickerMessages.forEach(msg => {
       const span = document.createElement('span');
