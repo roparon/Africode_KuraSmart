@@ -47,7 +47,7 @@
         <p>
           Email us at 
           <a href="mailto:support@kurasmart.com" class="text-decoration-none" style="color: #c68e17;">
-            <strong>support@kurasmart.com</strong>
+            <strong>kurasmartteam@gmail.com</strong>
           </a> 
           or message us directly using the buttons below.
         </p>
@@ -108,7 +108,10 @@
     </div>
   </div>
 </div>
+
+<!-- Fix Script for Nested Modal Behavior -->
 <script>
+  // Dynamic title update based on button clicked
   const exampleModal = document.getElementById('exampleModal');
   exampleModal.addEventListener('show.bs.modal', event => {
     const button = event.relatedTarget;
@@ -118,5 +121,17 @@
 
     modalTitle.textContent = `New Message to ${recipient}`;
     recipientInput.value = recipient;
+  });
+
+  // Fix lingering backdrop and scroll after closing nested modal
+  const modals = document.querySelectorAll('.modal');
+  modals.forEach(modal => {
+    modal.addEventListener('hidden.bs.modal', () => {
+      // Clean up leftover backdrops
+      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+      // Restore scroll if it's locked
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    });
   });
 </script>
