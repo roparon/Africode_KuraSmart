@@ -5,24 +5,46 @@
     left: 0;
     width: 100%;
     z-index: 9999;
-    background: #000;
+    font-family: 'Segoe UI', sans-serif;
+    color: #ffffff;
+  }
+
+  .live-icon-wrapper {
+    text-align: left;
+    padding: 4px 0 2px;
+  }
+
+  .live-icon {
+    color: #e6110a;
+    font-weight: bold;
+    font-size: 0.95rem;
+    animation: pulse 1.5s infinite;
+    transform: translateY(-12px);
+    display: inline-block;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
   }
 
   .footer-ticker-wrapper {
-    color: #ffffff;
-    font-family: 'Segoe UI', sans-serif;
-    overflow: hidden;
-    white-space: nowrap;
     display: flex;
     align-items: center;
-    height: 40px;
+    height: 38;
+    overflow: hidden;
+    white-space: nowrap;
   }
 
   .ticker-track {
     display: inline-block;
     padding-left: 100%;
-    animation: scroll-rtl 400s linear infinite;
+    animation: scroll-rtl 40s linear infinite;
     white-space: nowrap;
+  }
+
+  .footer-ticker-wrapper:hover .ticker-track {
+    animation-play-state: paused;
   }
 
   @keyframes scroll-rtl {
@@ -32,10 +54,6 @@
     100% {
       transform: translateX(-100%);
     }
-  }
-
-  .footer-ticker-wrapper:hover .ticker-track {
-    animation-play-state: paused;
   }
 
   .ticker-item {
@@ -49,6 +67,16 @@
     color: #fff;
   }
 
+  .welcome-highlight {
+    font-style: italic;
+    background: linear-gradient(90deg, #f43f5e, #f97316, #facc15, hsl(56, 87%, 85%));
+    color: #000;
+    font-size: 1.05rem;
+    padding: 4px 18px;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
+  }
+
+  /* Background classes */
   .bg1  { background: #0ea5e9; }
   .bg2  { background: #10b981; }
   .bg3  { background: #f59e0b; }
@@ -66,24 +94,6 @@
   .bg15 { background: #facc15; }
   .bg16 { background: #7c3aed; }
 
-
-  .live-icon {
-  color: #e6110a;
-  margin: 0 12px;
-  animation: pulse 1.5s infinite;
-  font-weight: bold;
-  display: inline-block;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  transform: translateY(-4px); /* 👈 Moves it upward slightly */
-}
-
-
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-
   @media (max-width: 768px) {
     .ticker-item {
       font-size: 0.85rem;
@@ -92,15 +102,21 @@
 </style>
 
 <div class="sticky-footer-container">
-  <div class="footer-ticker-wrapper">
+  <div class="live-icon-wrapper">
     <span class="live-icon">🔴 Real-Time Election Feed!</span>
+  </div>
+  <div class="footer-ticker-wrapper">
     <div class="ticker-track" id="tickerTrack"></div>
   </div>
 </div>
 
 <script>
   const tickerMessages = [
-    { text: "👋 Welcome to KuraSmart — your secure and transparent digital voting platform, proudly built to empower every citizen with a safe, fair, and accessible way to make their voice heard. Cast your vote with confidence, knowing your participation matters!", bg: "bg4" },
+    {
+      text: "👋 Welcome to KuraSmart — your secure and transparent digital voting platform, proudly built to empower every citizen with a safe, fair, and accessible way to make their voice heard. Cast your vote with confidence, knowing your participation matters!",
+      bg: "bg4",
+      customClass: "welcome-highlight"
+    },
     { text: "💡 Tip: Review your vote confirmation receipt carefully.", bg: "bg16" },
     { text: "🔍 Transparency is our core principle.", bg: "bg15" },
     { text: "📖 Learn more about candidates before voting.", bg: "bg14" },
@@ -120,15 +136,14 @@
     { text: "🧠 Make informed choices! Read candidate profiles and manifestos before casting your vote.", bg: "bg3" },
     { text: "🔒 Your privacy is our priority — all voting activity is encrypted and never shared.", bg: "bg4" },
     { text: "⏳ Don’t wait until the last minute — vote early and avoid peak-time traffic!", bg: "bg5" },
-    { text: "📬 Didn’t receive a confirmation email? Check your dashboard or contact support immediately.", bg: "bg6" },
-    { text: "👋 Welcome to KuraSmart — your secure and transparent digital voting platform, proudly built to empower every citizen with a safe, fair, and accessible way to make their voice heard. Cast your vote with confidence, knowing your participation matters!", bg: "bg1" }
+    { text: "📬 Didn’t receive a confirmation email? Check your dashboard or contact support immediately.", bg: "bg6" }
   ];
 
   const tickerTrack = document.getElementById('tickerTrack');
   for (let i = 0; i < 3; i++) {
     tickerMessages.forEach(msg => {
       const span = document.createElement('span');
-      span.className = `ticker-item ${msg.bg}`;
+      span.className = `ticker-item ${msg.bg} ${msg.customClass || ''}`;
       span.textContent = msg.text;
       tickerTrack.appendChild(span);
     });
