@@ -157,34 +157,27 @@
 
     <!-- Search Filter -->
     <input type="text" id="electionSearch" placeholder="Search elections..." class="form-control mt-5 mb-3">
-
-    <!-- All Elections -->
     <h3 class="text-center">🗳️ All Elections</h3>
     <div class="election-grid" id="electionGrid">
         {% for election in all_elections %}
-            {% set status_class = 'pending' %}
-            {% if election.status == 'active' %}
-                {% set status_class = 'active' %}
-            {% elif election.status == 'ended' %}
-                {% set status_class = 'ended' %}
-            {% endif %}
+            {% set status_class = election.current_status %}
             <div class="election-card {{ status_class }}">
                 <div>
                     <h4>{{ election.title }}</h4>
-                    {% if election.status == 'active' %}
+                    {% if election.current_status == 'active' %}
                         <small>Ends: {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</small>
-                    {% elif election.status == 'pending' %}
+                    {% elif election.current_status == 'pending' %}
                         <small>Starts: {{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</small>
                     {% else %}
                         <small>Ended: {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</small>
                     {% endif %}
                 </div>
 
-                {% if election.status == 'active' and user.is_verified %}
+                {% if election.current_status == 'active' and user.is_verified %}
                     <form method="POST" action="{{ url_for('voter.cast_vote', election_id=election.id) }}">
                         <button type="submit" class="vote-btn">Vote</button>
                     </form>
-                {% elif election.status == 'ended' %}
+                {% elif election.current_status == 'ended' %}
                     <a href="{{ url_for('admin_web.election_results', election_id=election.id) }}" class="vote-btn">View Results</a>
                 {% else %}
                     <button class="vote-btn" disabled>Pending</button>
@@ -192,6 +185,7 @@
             </div>
         {% endfor %}
     </div>
+
 </div>
 
 <script>
