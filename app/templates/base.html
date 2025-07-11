@@ -6,177 +6,162 @@
   <meta name="description" content="{% block meta_description %}Modern Voting App{% endblock %}">
   <meta name="author" content="Africode KuraSmart Team">
   <title>{% block title %}KuraSmart{% endblock %}</title>
-
   <!-- Favicon -->
   <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
   <meta name="theme-color" content="#0d6efd">
-
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-
   <!-- Icons & AOS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-
   <!-- Custom CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <style>
-  body {
-    font-family: 'Inter', sans-serif;
-    background-color: #F3DBCA;
-    margin: 0;
-    padding-bottom: 60px;
-    line-height: 1.6;
-  }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #F3DBCA;
+      margin: 0;
+      padding-bottom: 60px;
+      line-height: 1.6;
+    }
 
-  .navbar {
-    padding-top: 0.25rem;
-    padding-bottom: 0.25rem;
-    font-size: 0.95rem;
-  }
+    .navbar {
+      padding-top: 0.25rem;
+      padding-bottom: 0.25rem;
+      font-size: 0.95rem;
+    }
 
-  .navbar-brand svg {
-    margin-top: -2px;
-  }
+    .navbar-brand svg {
+      margin-top: -2px;
+    }
 
-  .nav-profile-wrapper {
-    position: relative;
-    display: inline-block;
-  }
+    .nav-profile-wrapper {
+      position: relative;
+      display: inline-block;
+    }
 
-  .profile-initial {
-    background-color: #ffffff33;
-    color: #ffffff;
-    font-weight: bold;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    font-size: 0.95rem;
-    text-transform: uppercase;
-    cursor: pointer;
-  }
+    .profile-initial {
+      background-color: #ffffff33;
+      color: #ffffff;
+      font-weight: bold;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
 
-  .user-name-hover {
-    position: absolute;
-    bottom: -1.8rem;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.85);
-    color: #ffffff;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    white-space: nowrap;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-    z-index: 10;
-  }
+    .user-name-hover {
+      position: absolute;
+      bottom: 1.3rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.85);
+      color: #ffffff;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 10;
+    }
 
-  .nav-profile-wrapper:hover .user-name-hover {
-    opacity: 1;
-  }
+    .nav-profile-wrapper:hover .user-name-hover {
+      opacity: 1;
+    }
 
-  /* --- Footer Styling --- */
-  footer {
-    font-size: 0.875rem;
-  }
+    footer {
+      font-size: 0.875rem;
+    }
 
-  footer h5 {
-    font-weight: 600;
-  }
+    footer h5 {
+      font-weight: 600;
+    }
 
-  .footer-link {
-    display: inline-block;
-    padding: 2px 0;
-    color: #ffffffcc;
-    text-decoration: none;
-    transition: color 0.2s ease;
-  }
+    .footer-link {
+      display: inline-block;
+      padding: 2px 0;
+      color: #ffffffcc;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
 
-  .footer-link:hover {
-    color: #ffc107;
-    text-decoration: underline;
-  }
+    .footer-link:hover {
+      color: #ffc107;
+      text-decoration: underline;
+    }
 
-  .social-icons a {
-    color: #ffffffcc;
-    font-size: 1.2rem;
-    transition: color 0.3s ease, transform 0.3s ease;
-  }
+    .social-icons a {
+      color: #ffffffcc;
+      font-size: 1.2rem;
+      transition: color 0.3s ease, transform 0.3s ease;
+    }
 
-  .social-icons a:hover {
-    color: #ffc107;
-    transform: scale(1.15);
-  }
-  html, body {
-  height: 100%;
-}
+    .social-icons a:hover {
+      color: #ffc107;
+      transform: scale(1.15);
+    }
 
+    html, body {
+      height: 100%;
+    }
 
-  .sticky-footer {
-    width: 100%;
-    background-color: #fcbf49;
-    color: rgb(5, 17, 190);
-    padding: 12px 16px;
-    font-size: 0.875rem;
-    box-shadow: 0 -2px 8px rgba(83, 209, 24, 0.15);
-    z-index: 999;
-  }
+    .sticky-footer {
+      width: 100%;
+      background-color: #fcbf49;
+      color: rgb(5, 17, 190);
+      padding: 12px 16px;
+      font-size: 0.875rem;
+      box-shadow: 0 -2px 8px rgba(83, 209, 24, 0.15);
+      z-index: 999;
+    }
 
-  .footer-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    text-align: center;
-    bottom: 20;
-  }
-
-  .footer-info {
-    line-height: 1.4;
-  }
-
-  .footer-info p {
-    margin: 0;
-    color: rgb(5, 17, 190);
-  }
-
-  .footer-info .tiny {
-    font-size: 0.75rem;
-    color: rgba(5, 17, 190, 0.85);
-  }
-
-  .social-icons {
-    margin-top: 5px;
-  }
-
-  @media (min-width: 600px) {
     .footer-container {
-      flex-direction: row;
-      justify-content: space-between;
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      text-align: center;
     }
 
-    .footer-info {
-      text-align: left;
+    .footer-info p {
+      margin: 0;
+      color: rgb(5, 17, 190);
     }
 
-    .social-icons {
-      margin-top: 0;
+    .footer-info .tiny {
+      font-size: 0.75rem;
+      color: rgba(5, 17, 190, 0.85);
     }
-  }
-</style>
+
+    @media (min-width: 600px) {
+      .footer-container {
+        flex-direction: row;
+        justify-content: space-between;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 16px;
+      }
+
+      .footer-info {
+        text-align: left;
+      }
+
+      .social-icons {
+        margin-top: 0;
+      }
+    }
+  </style>
 
   {% block head_extra %}{% endblock %}
 </head>
@@ -206,8 +191,7 @@
 
           {% if current_user.is_authenticated %}
             <li class="nav-item">
-              <a class="nav-link {% if request.endpoint in ['admin_web.dashboard', 'voter_web.dashboard'] %}active{% endif %}"
-                href="{{ url_for('admin_web.dashboard') }}">
+              <a class="nav-link {% if request.endpoint in ['admin_web.dashboard', 'voter_web.dashboard'] %}active{% endif %}" href="{{ url_for('admin_web.dashboard') }}">
                 Dashboard
               </a>
             </li>
@@ -231,18 +215,14 @@
                   </div>
                 </div>
               </a>
-              <ul class="dropdown-menu dropdown-menu-end py-0 px-0 small"
-                  style="background-color: rgb(248, 82, 82); min-width: 100px; max-height: 35px; overflow: hidden;">
+              <ul class="dropdown-menu dropdown-menu-end py-0 px-0 small" style="background-color: rgb(248, 82, 82); min-width: 100px; max-height: 35px; overflow: hidden;">
                 <li>
-                  <a class="dropdown-item d-flex align-items-center gap-2 text-white py-1"
-                    href="{{ url_for('web_auth.logout') }}"
-                    style="background-color: transparent !important;">
+                  <a class="dropdown-item d-flex align-items-center gap-2 text-white py-1" href="{{ url_for('web_auth.logout') }}" style="background-color: transparent !important;">
                     <i class="fas fa-sign-out-alt"></i> Logout
                   </a>
                 </li>
               </ul>
             </li>
-
           {% else %}
             <li class="nav-item">
               <a class="nav-link {% if request.endpoint == 'web_auth.login' %}active{% endif %}" href="{{ url_for('web_auth.login') }}">Login</a>
@@ -267,7 +247,6 @@
     </svg>
   </div>
 
-  <!-- Flash Messages -->
   <div class="container mt-3">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
@@ -281,12 +260,10 @@
     {% endwith %}
   </div>
 
-  <!-- Main Content -->
   <main class="container py-2 flex-grow-1">
     {% block content %}{% endblock %}
   </main>
-  <!-- Footer -->
-<footer class="bg-dark text-white pt-4 pb-3 border-top shadow-sm">
+  <footer class="bg-dark text-white pt-4 pb-3 border-top shadow-sm">
   <style>
     footer a {
       color: #ffffff;
@@ -360,72 +337,52 @@
   </div>
 </footer>
 
-
+  <!-- Footer -->
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+  <script>AOS.init({ duration: 800, easing: 'ease-in-out' });</script>
+
+  <script>
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const themeIcon = themeToggleBtn?.querySelector('i');
+
+    themeToggleBtn?.addEventListener('click', () => {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-bs-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-bs-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+
+      if (themeIcon) {
+        themeIcon.style.opacity = 0;
+        setTimeout(() => {
+          themeIcon.classList.toggle('fa-moon', newTheme === 'dark');
+          themeIcon.classList.toggle('fa-sun', newTheme === 'light');
+          themeIcon.style.opacity = 1;
+        }, 150);
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const finalTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-bs-theme', finalTheme);
+
+      if (themeIcon) {
+        themeIcon.classList.add(finalTheme === 'dark' ? 'fa-moon' : 'fa-sun');
+        themeIcon.classList.remove(finalTheme === 'dark' ? 'fa-sun' : 'fa-moon');
+      }
+    });
+  </script>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
   {% include "partials/terms_modal.html" %}
   {% include "partials/privacy_modal.html" %}
   {% include "partials/how_it_works_modal.html" %}
   {% include "partials/help_center_modal.html" %}
-</body>
-</html>
-
-  
-  <!-- Font Awesome CDN -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-  />
-  
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
-
-    <!-- AOS JS -->
-    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
-    <script>
-        AOS.init({ duration: 800, easing: 'ease-in-out' });
-    </script>
-
-    <!-- Theme Toggle Script -->
-    <script>
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        const themeIcon = themeToggleBtn?.querySelector('i');
-
-        themeToggleBtn?.addEventListener('click', () => {
-            const html = document.documentElement;
-            const currentTheme = html.getAttribute('data-bs-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-bs-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-
-            // Animate icon switch
-            if (themeIcon) {
-                themeIcon.style.opacity = 0;
-                setTimeout(() => {
-                    themeIcon.classList.toggle('fa-moon', newTheme === 'dark');
-                    themeIcon.classList.toggle('fa-sun', newTheme === 'light');
-                    themeIcon.style.opacity = 1;
-                }, 150);
-            }
-        });
-
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('theme');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const finalTheme = savedTheme || (prefersDark ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-bs-theme', finalTheme);
-
-            if (themeIcon) {
-                themeIcon.classList.add(finalTheme === 'dark' ? 'fa-moon' : 'fa-sun');
-                themeIcon.classList.remove(finalTheme === 'dark' ? 'fa-sun' : 'fa-moon');
-            }
-        });
-    </script>
-
-    <!-- Custom JS -->
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-
-    {% block scripts %}{% endblock %}
+  {% block scripts %}{% endblock %}
 </body>
 </html>
