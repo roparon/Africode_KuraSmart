@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}{{ election.title }} – Vote Now{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+  <h2 class="mb-4">{{ election.title }}</h2>
+  <p>{{ election.description }}</p>
+
+  <div class="mb-3">
+    <span class="badge bg-{{ election.current_status=='active' and 'success' 
+                        or (election.current_status=='pending' and 'warning') or 'secondary' }}">
+      {{ election.current_status|capitalize }}
+    </span>
+    <small class="text-muted ms-2">
+      {% if election.current_status == 'active' %}
+        Ends: {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}
+      {% elif election.current_status == 'pending' %}
+        Starts: {{ election.start_date.strftime('%Y-%m-%d %H:%M') }}
+      {% else %}
+        Ended: {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}
+      {% endif %}
+    </small>
+  </div>
+
+  {% if not election.positions %}
+    <div class="alert alert-info">This election currently has no positions defined.</div>
+  {% endif %}
+
+  {% if has_voted %}
+    <div class="alert alert-success">You have already voted in this election.</div>
+    <a href="{{ url_for('admin_web.election_results', election_id=election.id) }}" class="btn btn-primary">
+      View Results
+    </a>
+  {% elif election.current_status == 'active' and user.is_verified %}
+    <form method="POST" action="{{ url_for('voter.cast_vote', election_id=election.id) }}">
+      {% for position in positions %}
+        <div class="mb-4">
+          <h5>{{ position.name }}</h5>
+          {% set position_candidates = candidates | selectattr('position_id','equalto',position.id) | list %}
+          {% if position_candidates %}
+            {% for candidate in position_candidates %}
+              <div class="form-check">
+                <input class="form-check-input" type="radio"
+                       name="position_{{ position.id }}"
+                       id="cand_{{ candidate.id }}"
+                       value="{{ candidate.id }}"
+                       required>
+                <label class="form-check-label" for="cand_{{ candidate.id }}">
+                  {{ candidate.full_name }}{% if candidate.party %} – {{ candidate.party }}{% endif %}
+                </label>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="text-muted">No candidates registered for this position yet.</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-primary mt-3">Submit Vote</button>
+    </form>
+
+  {% else %}
+    <div class="alert alert-info">
+      Voting is {{ election.current_status == 'pending' and 'not yet open' or 'closed' }} or you may not be verified.
+    </div>
+  {% endif %}
+
+  <hr class="mt-5">
+
+  <p><strong>Election ID:</strong> {{ election.id }}</p>
+  <p><strong>Start Date:</strong> {{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</p>
+  <p><strong>End Date:</strong> {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</p>
+</div>
+{% endblock %}
