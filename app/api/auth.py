@@ -11,7 +11,6 @@ auth_bp = Blueprint('auth_bp', __name__, url_prefix='/api/v1/auth')
 @auth_bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-
     email = data.get('email')
     password = data.get('password')
     full_name = data.get('full_name')
@@ -81,8 +80,6 @@ def login():
             'is_verified': user.is_verified
         }
     }), 200
-
-
 # ---- Logout ----
 @auth_bp.route('/logout', methods=['POST'])
 @login_required
@@ -110,8 +107,6 @@ def get_profile():
         'created_at': user.created_at.isoformat()
     }), 200
 
-
-# ---- Profile (PUT) ----
 @auth_bp.route('/me', methods=['PUT'])
 @login_required
 def update_profile():
@@ -147,8 +142,6 @@ def update_profile():
         'sub_location': user.sub_location
     }), 200
 
-
-# ---- Dev: List All Users ----
 @auth_bp.route('/dev/users', methods=['GET'])
 def list_users():
     users = User.query.all()
