@@ -2,40 +2,48 @@
 {% block title %}Home | KuraSmart{% endblock %}
 
 {% block content %}
-<section class="container py-5 text-center" data-aos="fade-up">
+<!-- Hero Section -->
+<section class="container-sm py-5 text-center" data-aos="fade-up">
   <div class="row justify-content-center">
-    <div class="col-md-10 col-lg-8">
-      <h1 class="display-4 mb-3 fw-bold">
+    <div class="col-12 col-md-10 col-lg-8 px-3">
+      <h1 class="fw-bold mb-3 text-dark fs-2 fs-md-1">
         Welcome to <span class="text-primary">KuraSmart</span>
       </h1>
-      <p class="lead mb-4 text-muted">
+      <p class="lead text-muted mb-4 fs-6 fs-md-5">
         Secure. Transparent. Smart Voting System for the modern era. Empowering communities with fair elections.
       </p>
-      <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
-        <a href="{{ url_for('web_auth.login') }}" class="btn btn-primary btn-lg px-4">Login</a>
-        <a href="{{ url_for('web_auth.register') }}" class="btn btn-outline-secondary btn-lg px-4">Register</a>
+      <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+        <a href="{{ url_for('web_auth.login') }}" class="btn btn-primary btn-lg px-4 w-100 w-sm-auto">Login</a>
+        <a href="{{ url_for('web_auth.register') }}" class="btn btn-outline-secondary btn-lg px-4 w-100 w-sm-auto">Register</a>
       </div>
     </div>
   </div>
 </section>
 
+<!-- Feature Section -->
 <section class="bg-light py-5 mt-4" data-aos="fade-up">
   <div class="container">
-    <div class="row text-center">
-      <div class="col-md-4 mb-4" data-aos="zoom-in" data-aos-delay="100">
-        <i class="fas fa-lock fa-3x text-primary mb-3"></i>
-        <h5 class="fw-semibold">Secure</h5>
-        <p class="text-muted">End-to-end encrypted voting processes to ensure your data stays safe.</p>
+    <div class="row row-cols-1 row-cols-md-3 text-center g-4">
+      <div class="col" data-aos="zoom-in" data-aos-delay="100">
+        <div class="px-3 px-md-2">
+          <i class="fas fa-lock fa-3x text-primary mb-3"></i>
+          <h5 class="fw-semibold">Secure</h5>
+          <p class="text-muted">End-to-end encrypted voting processes to ensure your data stays safe.</p>
+        </div>
       </div>
-      <div class="col-md-4 mb-4" data-aos="zoom-in" data-aos-delay="200">
-        <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
-        <h5 class="fw-semibold">Real-time Analytics</h5>
-        <p class="text-muted">Monitor elections live with powerful and transparent vote tracking tools.</p>
+      <div class="col" data-aos="zoom-in" data-aos-delay="200">
+        <div class="px-3 px-md-2">
+          <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+          <h5 class="fw-semibold">Real-time Analytics</h5>
+          <p class="text-muted">Monitor elections live with powerful and transparent vote tracking tools.</p>
+        </div>
       </div>
-      <div class="col-md-4 mb-4" data-aos="zoom-in" data-aos-delay="300">
-        <i class="fas fa-users fa-3x text-primary mb-3"></i>
-        <h5 class="fw-semibold">Community Focused</h5>
-        <p class="text-muted">Built for local governments, schools, and communities of all sizes.</p>
+      <div class="col" data-aos="zoom-in" data-aos-delay="300">
+        <div class="px-3 px-md-2">
+          <i class="fas fa-users fa-3x text-primary mb-3"></i>
+          <h5 class="fw-semibold">Community Focused</h5>
+          <p class="text-muted">Built for local governments, schools, and communities of all sizes.</p>
+        </div>
       </div>
     </div>
   </div>

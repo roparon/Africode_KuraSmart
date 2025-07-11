@@ -193,7 +193,7 @@
         </svg>
         KuraSmart
       </a>
-       <!-- Wavy Header Background -->
+
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navCollapse">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -207,7 +207,7 @@
           {% if current_user.is_authenticated %}
             <li class="nav-item">
               <a class="nav-link {% if request.endpoint in ['admin_web.dashboard', 'voter_web.dashboard'] %}active{% endif %}"
-                 href="{{ url_for('admin_web.dashboard') }}">
+                href="{{ url_for('admin_web.dashboard') }}">
                 Dashboard
               </a>
             </li>
@@ -221,7 +221,7 @@
             {% endif %}
 
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="userMenu" data-bs-toggle="dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <div class="nav-profile-wrapper">
                   <div class="profile-initial bg10">
                     {{ current_user.full_name[0]|upper }}
@@ -241,8 +241,7 @@
                   </a>
                 </li>
               </ul>
-
-
+            </li>
 
           {% else %}
             <li class="nav-item">
@@ -260,6 +259,7 @@
       </div>
     </div>
   </nav>
+
   <div class="position-relative">
     <svg viewBox="0 0 500 150" preserveAspectRatio="none" class="w-100" style="height: 150px; display: block;">
       <path d="M0,50 C150,150 350,0 500,100 L500,0 L0,0 Z" style="fill: #0d1b2a;"></path>
