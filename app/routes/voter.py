@@ -1,6 +1,6 @@
-from flask import Blueprint, render_template, flash, url_for, redirect, abort, request
+from flask import Blueprint, render_template, flash, url_for, redirect, request
 from flask_login import login_required, current_user
-from app.models import Notification, UserRole, Election, Vote, Candidate, Position
+from app.models import Notification, Election, Vote
 from datetime import datetime
 from sqlalchemy import and_
 from app.extensions import db
@@ -14,18 +14,19 @@ def voter_dashboard():
     try:
         now = datetime.utcnow()
 
+        # Filter elections
         active_elections = Election.query.filter(
             and_(
                 Election.start_date <= now,
                 Election.end_date >= now,
-                Election.is_active == True
+                Election.is_active.is_(True)
             )
         ).order_by(Election.created_at.desc()).all()
 
         upcoming_elections = Election.query.filter(
             and_(
                 Election.start_date > now,
-                Election.is_active == True
+                Election.is_active.is_(True)
             )
         ).order_by(Election.start_date.asc()).all()
 
@@ -33,31 +34,21 @@ def voter_dashboard():
             Election.end_date < now
         ).order_by(Election.end_date.desc()).all()
 
-        all_elections = [
-            {
+        # Merge results
+        def format_elections(elections, status):
+            return [{
                 'id': e.id,
                 'title': e.title,
                 'start_date': e.start_date,
                 'end_date': e.end_date,
-                'current_status': 'active'
-            } for e in active_elections
-        ] + [
-            {
-                'id': e.id,
-                'title': e.title,
-                'start_date': e.start_date,
-                'end_date': e.end_date,
-                'current_status': 'pending'
-            } for e in upcoming_elections
-        ] + [
-            {
-                'id': e.id,
-                'title': e.title,
-                'start_date': e.start_date,
-                'end_date': e.end_date,
-                'current_status': 'ended'
-            } for e in ended_elections
-        ]
+                'current_status': status
+            } for e in elections]
+
+        all_elections = (
+            format_elections(active_elections, 'active') +
+            format_elections(upcoming_elections, 'pending') +
+            format_elections(ended_elections, 'ended')
+        )
 
         return render_template(
             'voter/dashboard.html',
@@ -92,7 +83,7 @@ def mark_read(notif_id):
             flash('Notification marked as read.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f"Error marking notification as read: {str(e)}", "danger")
+        flash(f"Error marking notification as read: {str(e)}", 'danger')
     return redirect(url_for('voter.user_notifications'))
 
 
@@ -106,7 +97,7 @@ def delete_notification(notif_id):
         flash('Notification deleted.', 'warning')
     except Exception as e:
         db.session.rollback()
-        flash(f"Error deleting notification: {str(e)}", "danger")
+        flash(f"Error deleting notification: {str(e)}", 'danger')
     return redirect(url_for('voter.user_notifications'))
 
 
@@ -116,15 +107,30 @@ def cast_vote(election_id):
     try:
         election = Election.query.get_or_404(election_id)
 
-        if election.current_status != 'active' or not current_user.is_verified:
-            flash('You are not allowed to vote in this election.', 'warning')
+        # Check election status and user verification
+        if election.current_status != 'active':
+            flash('Voting is not currently open for this election.', 'warning')
             return redirect(url_for('voter.voter_dashboard'))
 
-        # TODO: Implement vote recording logic
-        # Example:
-        # vote = Vote(user_id=current_user.id, election_id=election_id, candidate_id=request.form.get('candidate_id'))
-        # db.session.add(vote)
-        # db.session.commit()
+        if not current_user.is_verified:
+            flash('Your account is not verified for voting.', 'warning')
+            return redirect(url_for('voter.voter_dashboard'))
+
+        candidate_id = request.form.get('candidate_id')
+        if not candidate_id:
+            flash('No candidate selected.', 'warning')
+            return redirect(url_for('voter.voter_dashboard'))
+
+        # Optional: prevent duplicate votes
+        existing_vote = Vote.query.filter_by(user_id=current_user.id, election_id=election_id).first()
+        if existing_vote:
+            flash('You have already voted in this election.', 'info')
+            return redirect(url_for('voter.voter_dashboard'))
+
+        # Record vote
+        vote = Vote(user_id=current_user.id, election_id=election_id, candidate_id=candidate_id)
+        db.session.add(vote)
+        db.session.commit()
 
         flash('Vote submitted successfully!', 'success')
     except Exception as e:
