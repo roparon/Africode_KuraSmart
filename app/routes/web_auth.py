@@ -656,6 +656,7 @@ def view_analytics():
 @login_required
 def voter_dashboard():
     if current_user.role != UserRole.voter.value:
+        print(f"User role: {current_user.role}, expected: {UserRole.voter.value}")
         abort(403)
     try:
         now = datetime.utcnow()
