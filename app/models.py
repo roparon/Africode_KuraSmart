@@ -25,37 +25,25 @@ class ElectionStatus(Enum):
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
-
-    # Identity
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     full_name = db.Column(db.String(120), nullable=False)
-    username = db.Column(db.String(80), unique=True, nullable=True)  # Informal only
+    username = db.Column(db.String(80), unique=True, nullable=True)
     password_hash = db.Column(db.String(128), nullable=False)
-
-    # Voting type
-    voting_type = db.Column(db.String(10), nullable=False, default="informal")  # 'formal' or 'informal'
-
-    # Formal voting fields (Kenyan ID)
+    voting_type = db.Column(db.String(10), nullable=False, default="informal")
     national_id = db.Column(db.String(20), unique=True, nullable=True)
     dob = db.Column(db.Date, nullable=True)
     gender = db.Column(db.String(10), nullable=True)
-
-    # Location as per Kenyan ID
     county = db.Column(db.String(100), nullable=True)
     sub_county = db.Column(db.String(100), nullable=True)
     division = db.Column(db.String(100), nullable=True)
     location = db.Column(db.String(100), nullable=True)
     sub_location = db.Column(db.String(100), nullable=True)
-
-    # System & status
     profile_image_url = db.Column(db.String(255), nullable=True)
     is_verified = db.Column(db.Boolean, default=False, index=True)
     is_superadmin = db.Column(db.Boolean, default=False)
     role = db.Column(db.Enum(UserRole), default=UserRole.voter, nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    # Relationships
     candidates = db.relationship('Candidate', back_populates='user', lazy='dynamic')
     verification_requests = db.relationship('VerificationRequest', back_populates='user', lazy='dynamic')
     votes = db.relationship('Vote', back_populates='voter', lazy='dynamic')
