@@ -145,6 +145,7 @@
         {% endfor %}
     </div>
 
+    <!-- Search Input -->
     <input type="text" id="electionSearch" placeholder="Search elections..." class="form-control mb-4">
 
     <h3 class="text-center mb-3">🗳️ All Elections</h3>
@@ -184,6 +185,7 @@
     </div>
 </div>
 
+<!-- JavaScript for Live Search -->
 <script>
 document.getElementById('electionSearch').addEventListener('input', function () {
     const query = this.value.toLowerCase();
