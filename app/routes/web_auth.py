@@ -650,31 +650,18 @@ def view_analytics():
         flash(f"Error loading analytics: {e}", "danger")
         return redirect(url_for('admin_web.dashboard'))
 
+
+
 @voter_bp.route('/dashboard')
 @login_required
 def voter_dashboard():
     if current_user.role != UserRole.voter.value:
         abort(403)
-
     try:
         now = datetime.utcnow()
-
-        # Get all elections sorted by date
         all_elections = Election.query.order_by(Election.start_date.desc()).all()
-
-        # Get all votes cast by the voter
         votes = Vote.query.filter_by(voter_id=current_user.id).all()
         voted_election_ids = {vote.election_id for vote in votes}
-
-        # Prepare elections with voting status
-        elections = []
-        for election in all_elections:
-            elections.append({
-                "election": election,
-                "has_voted": election.id in voted_election_ids
-            })
-
-        # Vote history
         vote_records = []
         for vote in votes:
             candidate = Candidate.query.get(vote.candidate_id)
@@ -686,20 +673,63 @@ def voter_dashboard():
                 "election_title": election.title if election else "Unknown",
                 "voted_at": vote.created_at.strftime("%Y-%m-%d %H:%M")
             })
-
         return render_template(
             'voter/dashboard.html',
-            elections=elections,
+            all_elections=all_elections,
             user=current_user,
             votes=vote_records,
+            voted_election_ids=voted_election_ids,
             now=now
         )
-
     except Exception as e:
         current_app.logger.error(f"Voter dashboard error: {str(e)}")
         flash("Error loading dashboard. Please try again.", "danger")
         return redirect(url_for('main.index'))
     
+@voter_bp.route('/cast_vote/<int:election_id>', methods=['POST'])
+@login_required
+def cast_vote(election_id):
+    if current_user.role != UserRole.voter.value:
+        abort(403)
+    election = Election.query.get_or_404(election_id)
+    now = datetime.utcnow()
+    if not (election.start_date <= now <= election.end_date):
+        flash("This election is not currently active.", "warning")
+        return redirect(url_for('voter.voter_dashboard'))
+    if not current_user.is_verified:
+        flash("You must be a verified voter to cast a vote.", "danger")
+        return redirect(url_for('voter.voter_dashboard'))
+    already_voted = Vote.query.filter_by(
+        voter_id=current_user.id,
+        election_id=election_id
+    ).first()
+    if already_voted:
+        flash("You have already voted in this election.", "info")
+        return redirect(url_for('voter.voter_dashboard'))
+    try:
+        candidate_id = request.form.get("candidate_id")
+        position_id = request.form.get("position_id")
+        candidate = Candidate.query.get(candidate_id)
+        position = Position.query.get(position_id)
+        if not candidate or not position:
+            flash("Invalid candidate or position.", "danger")
+            return redirect(url_for('voter.voter_dashboard'))
+        vote = Vote(
+            voter_id=current_user.id,
+            election_id=election_id,
+            candidate_id=candidate.id,
+            position_id=position.id,
+            created_at=datetime.utcnow()
+        )
+        db.session.add(vote)
+        db.session.commit()
+        flash("Your vote has been successfully recorded.", "success")
+    except Exception as e:
+        current_app.logger.error(f"Error casting vote: {str(e)}")
+        flash("Failed to record vote. Please try again.", "danger")
+    return redirect(url_for('voter.voter_dashboard'))
+
+
 
 @voter_bp.route('/election/<int:election_id>')
 @login_required

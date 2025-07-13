@@ -4,8 +4,6 @@
 
 {% block content %}
 {% include 'includes/ticker.html' %}
-
-<!-- Flash Messages -->
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
     {% for category, message in messages %}
@@ -16,12 +14,9 @@
     {% endfor %}
   {% endif %}
 {% endwith %}
-
-<!-- Google Font -->
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
 
 <style>
-/* Styling */
 .card { transition: transform 0.2s ease-in-out; }
 .card:hover { transform: scale(1.02); }
 .card-title { font-weight: 600; }
@@ -116,8 +111,6 @@
     <h2 class="mb-5 text-center" style="background-color: #F5F5DC;">
         Welcome, {{ user.full_name or user.username }}!
     </h2>
-
-    <!-- Profile Summary -->
     <div class="card mb-4 shadow-sm" style="background-color: #EDC9AF;">
         <div class="card-body">
             <h5 class="card-title">🧾 Profile Summary</h5>
@@ -133,8 +126,6 @@
             <a href="{{ url_for('auth_bp.update_profile') }}" class="btn btn-sm btn-outline-secondary">Update Profile</a>
         </div>
     </div>
-
-    <!-- Dashboard Actions -->
     {% set actions = [
         ('🕘 Voting History', 'See your past voting participation.', 'admin_web.election_results', 'View History', 'dark', ''),
         ('🔔 Notifications', 'Check updates and announcements.', 'voter.user_notifications', 'View Notifications', 'primary', ''),
@@ -154,14 +145,12 @@
         </div>
         {% endfor %}
     </div>
-
-    <!-- Search Filter -->
     <input type="text" id="electionSearch" placeholder="Search elections..." class="form-control mt-5 mb-3">
     <h3 class="text-center">🗳️ All Elections</h3>
     <div class="election-grid" id="electionGrid">
         {% for election in all_elections %}
-            {% set status_class = election.current_status %}
-            <div class="election-card {{ status_class }}">
+            {% set has_voted = election.id in voted_election_ids %}
+            <div class="election-card {{ election.current_status }}">
                 <div>
                     <h4>{{ election.title }}</h4>
                     {% if election.current_status == 'active' %}
@@ -173,10 +162,12 @@
                     {% endif %}
                 </div>
 
-                {% if election.current_status == 'active' and user.is_verified %}
+                {% if election.current_status == 'active' and user.is_verified and not has_voted %}
                     <form method="POST" action="{{ url_for('voter.cast_vote', election_id=election.id) }}">
                         <button type="submit" class="vote-btn">Vote</button>
                     </form>
+                {% elif has_voted %}
+                    <span class="badge bg-success">✅ Voted</span>
                 {% elif election.current_status == 'ended' %}
                     <a href="{{ url_for('admin_web.election_results', election_id=election.id) }}" class="vote-btn">View Results</a>
                 {% else %}
@@ -184,6 +175,7 @@
                 {% endif %}
             </div>
         {% endfor %}
+
     </div>
 
 </div>
