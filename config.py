@@ -9,7 +9,7 @@ class Config:
     # Security & Database
     # ------------------------
     SECRET_KEY = os.getenv("SECRET_KEY", "you-should-set-this-in-env")
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///kura.db")
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///instance/kura.db")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # ------------------------

@@ -9,8 +9,6 @@ voter_bp = Blueprint('voter', __name__)
 @voter_bp.route('/dashboard')
 @login_required
 def voter_dashboard():
-    if current_user.role != UserRole.voter.value:
-        abort(403)
     try:
         now = datetime.utcnow()
         active_elections = Election.query.filter(
