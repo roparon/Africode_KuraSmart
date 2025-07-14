@@ -5,6 +5,7 @@ from app.forms.forms import LoginForm, RegistrationForm, ElectionForm, PositionF
 from app.models import User, Election, Candidate, Vote, Position, Notification, AuditLog
 from app.extensions import db
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from app.enums import UserRole, ElectionStatusEnum
 from datetime import datetime, timedelta
 from app.utils.email import send_email, send_reset_email
@@ -107,7 +108,7 @@ def login():
                     return redirect(url_for('web_auth.login'))
                 login_user(user, remember=form.remember.data)
                 log_action("Logged in", target_type="User", target_id=user.id)
-                flash(f"Welcome back, {user.full_name}!", 'success')
+                flash(f"Welcome, {user.full_name}!", 'success')
                 if user.is_super_admin():
                     return redirect(url_for('admin_web.dashboard'))
                 elif user.is_admin():
@@ -169,8 +170,6 @@ def logout():
 # Admin Dashboard
 # -------------------------
 @admin_web_bp.route('/dashboard')
-@login_required
-@admin_required
 def dashboard():
     form = ProfileImageForm()
 
@@ -412,18 +411,20 @@ def export_users_csv():
         return jsonify({'error': 'Failed to export users', 'details': str(e)}), 500
     
 # Manage Elections
+
 @admin_web_bp.route('/manage-elections', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def manage_elections():
     if not (current_user.is_superadmin or current_user.role == UserRole.admin.value):
         abort(403)
-    try:
-        form = ElectionForm()
-        now = datetime.now()
-        current_datetime = now.strftime('%Y-%m-%dT%H:%M')
 
+    form = ElectionForm()
+    now = datetime.now()
+    current_datetime = now.strftime('%Y-%m-%dT%H:%M')
+
+    try:
         if request.method == "POST" and form.validate_on_submit():
-            # Check election exists by title (you could use ID instead)
             election = Election.query.filter_by(title=form.title.data).first()
 
             if not election:
@@ -455,32 +456,39 @@ def manage_elections():
                     candidate.party_name = cand_form.form.party_name.data
                     candidate.manifesto = cand_form.form.manifesto.data
                     candidate.position = cand_form.form.position.data
+
                 elif not existing:
-                    # New candidate
                     position_name = cand_form.form.position.data
                     position = Position.query.filter_by(name=position_name).first()
 
                     if not position:
                         flash(f"Position '{position_name}' does not exist. Please create it first.", "danger")
-                        continue  # Skip this candidate if position is invalid
+                        continue
 
                     candidate = Candidate(
                         full_name=full_name,
                         party_name=cand_form.form.party_name.data,
                         manifesto=cand_form.form.manifesto.data,
                         position=position.name,
-                        position_id=position.id,  # ✅ FIXED: Set required foreign key
+                        position_id=position.id,
                         election_id=election.id,
                         user_id=current_user.id
                     )
                     db.session.add(candidate)
 
-            db.session.commit()
-            flash("Election and candidates saved successfully.", "success")
+            try:
+                db.session.commit()
+                flash("Election and candidates saved successfully.", "success")
+            except IntegrityError:
+                db.session.rollback()
+                flash("⚠️ Candidate already exists for this position in this election.", "warning")
+            except Exception as db_error:
+                db.session.rollback()
+                flash(f"❌ Unexpected database error: {db_error}", "danger")
+
             return redirect(url_for("admin_web.manage_elections"))
 
         elif request.method == "GET" and request.args.get("edit"):
-            # Load form for editing
             election_id = request.args.get("edit")
             election = Election.query.get_or_404(election_id)
             form = ElectionForm(obj=election)
@@ -519,9 +527,8 @@ def manage_elections():
 
     except Exception as e:
         db.session.rollback()
-        flash(f"Error managing elections: {e}", "danger")
+        flash(f"❌ Error managing elections: {e}", "danger")
         return redirect(url_for("admin_web.dashboard"))
-
 
 
 

@@ -1,7 +1,6 @@
 import os
 from dotenv import load_dotenv
 
-# ✅ Load environment variables before anything else
 load_dotenv()
 
 from flask import Flask
@@ -19,13 +18,13 @@ def create_app():
     app = Flask(__name__, template_folder='templates')
     app.config.from_object(Config)
 
-    # Initialize core extensions
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
     csrf = CSRFProtect()
     csrf.init_app(app)
     mail.init_app(app)
+    
 
     # APScheduler setup
     scheduler = APScheduler()
@@ -33,7 +32,6 @@ def create_app():
     scheduler.init_app(app)
     scheduler.start()
 
-    # Schedule the daily 9 AM reminder job
     scheduler.add_job(
         id='daily_election_reminder',
         func=send_reminders,
