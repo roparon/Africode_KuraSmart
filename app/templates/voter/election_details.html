@@ -1,73 +1,87 @@
 {% extends "base.html" %}
-{% block title %}{{ election.title }} – Vote Now{% endblock %}
+{% block title %}Election Details | {{ election.title }}{% endblock %}
 
 {% block content %}
-<div class="container mt-5 mb-5">
-  <h2 class="mb-4">{{ election.title }}</h2>
-  <p>{{ election.description }}</p>
-
-  <div class="mb-3">
-    <span class="badge bg-{{ election.current_status=='active' and 'success' 
-                        or (election.current_status=='pending' and 'warning') or 'secondary' }}">
-      {{ election.current_status|capitalize }}
-    </span>
-    <small class="text-muted ms-2">
-      {% if election.current_status == 'active' %}
-        Ends: {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}
-      {% elif election.current_status == 'pending' %}
-        Starts: {{ election.start_date.strftime('%Y-%m-%d %H:%M') }}
-      {% else %}
-        Ended: {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}
-      {% endif %}
-    </small>
-  </div>
-
-  {% if not election.positions %}
-    <div class="alert alert-info">This election currently has no positions defined.</div>
-  {% endif %}
-
-  {% if has_voted %}
-    <div class="alert alert-success">You have already voted in this election.</div>
-    <a href="{{ url_for('admin_web.election_results', election_id=election.id) }}" class="btn btn-primary">
-      View Results
-    </a>
-  {% elif election.current_status == 'active' and user.is_verified %}
-    <form method="POST" action="{{ url_for('voter.cast_vote', election_id=election.id) }}">
-      {% for position in positions %}
-        <div class="mb-4">
-          <h5>{{ position.name }}</h5>
-          {% set position_candidates = candidates | selectattr('position_id','equalto',position.id) | list %}
-          {% if position_candidates %}
-            {% for candidate in position_candidates %}
-              <div class="form-check">
-                <input class="form-check-input" type="radio"
-                       name="position_{{ position.id }}"
-                       id="cand_{{ candidate.id }}"
-                       value="{{ candidate.id }}"
-                       required>
-                <label class="form-check-label" for="cand_{{ candidate.id }}">
-                  {{ candidate.full_name }}{% if candidate.party %} – {{ candidate.party }}{% endif %}
-                </label>
-              </div>
-            {% endfor %}
-          {% else %}
-            <p class="text-muted">No candidates registered for this position yet.</p>
-          {% endif %}
+<div class="container mt-5">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
       {% endfor %}
-      <button type="submit" class="btn btn-primary mt-3">Submit Vote</button>
-    </form>
+    {% endif %}
+  {% endwith %}
 
-  {% else %}
-    <div class="alert alert-info">
-      Voting is {{ election.current_status == 'pending' and 'not yet open' or 'closed' }} or you may not be verified.
+  <h2 class="mb-4 text-center">{{ election.title }}</h2>
+  <div class="mb-3 p-3 bg-light rounded shadow-sm">
+    <p><strong>Description:</strong> {{ election.description }}</p>
+    <p><strong>Status:</strong> {{ election.status.capitalize() }}</p>
+    <p><strong>Start:</strong> {{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</p>
+    <p><strong>End:</strong> {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</p>
+    <p><strong>Countdown:</strong> <span id="countdown"></span></p>
+  </div>
+
+  {% if has_voted %}
+    <div class="alert alert-success text-center">
+      ✅ You have already voted in this election.
     </div>
   {% endif %}
 
-  <hr class="mt-5">
-
-  <p><strong>Election ID:</strong> {{ election.id }}</p>
-  <p><strong>Start Date:</strong> {{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</p>
-  <p><strong>End Date:</strong> {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</p>
+  {% for position in positions %}
+    <div class="card my-4 shadow-sm">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">{{ position.name }}</h5>
+      </div>
+      <div class="card-body">
+        {% set filtered = candidates | selectattr("position_id", "equalto", position.id) | list %}
+        {% if filtered %}
+          <div class="row">
+            {% for candidate in filtered %}
+              <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100 border-0 shadow-sm">
+                  <div class="card-body">
+                    <h5 class="card-title">{{ candidate.full_name }}</h5>
+                    <p><strong>Party:</strong> {{ candidate.party_name or "Independent" }}</p>
+                    <p><strong>Manifesto:</strong> {{ candidate.manifesto }}</p>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p>No candidates for this position.</p>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
 </div>
+
+<script>
+  // Countdown Timer
+  const endDate = new Date("{{ election.end_date.isoformat() }}").getTime();
+
+  function updateCountdown() {
+    const now = new Date().getTime();
+    const diff = endDate - now;
+
+    if (diff <= 0) {
+      document.getElementById("countdown").innerText = "⏳ Election Ended";
+      clearInterval(timer);
+      return;
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+    const seconds = Math.floor((diff / 1000) % 60);
+
+    document.getElementById("countdown").innerText =
+      `${days}d ${hours}h ${minutes}m ${seconds}s`;
+  }
+
+  const timer = setInterval(updateCountdown, 1000);
+  updateCountdown();
+</script>
 {% endblock %}

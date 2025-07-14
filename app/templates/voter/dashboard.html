@@ -102,6 +102,7 @@
     .vote-btn { font-size: 0.9rem; padding: 0.5rem 1rem; }
 }
 </style>
+
 <div class="container mt-5 p-4 rounded-4 shadow-sm"
      style="background: linear-gradient(to bottom right, 
         #007bff, #f8f9fa, #ffffff, #fff9c4,
@@ -110,6 +111,7 @@
     <h2 class="mb-5 text-center py-2 rounded-3" style="background-color: #F5F5DC;">
         Welcome, {{ user.full_name or user.username }}!
     </h2>
+
     <div class="card mb-4 shadow-sm" style="background-color: #EDC9AF;">
         <div class="card-body">
             <h5 class="card-title">🧾 Profile Summary</h5>
@@ -125,6 +127,7 @@
             <a href="{{ url_for('auth_bp.update_profile') }}" class="btn btn-sm btn-outline-secondary">Update Profile</a>
         </div>
     </div>
+
     {% set actions = [
         ('🕘 Voting History', 'See your past voting participation.', 'admin_web.election_results', 'View History', 'dark', ''),
         ('🔔 Notifications', 'Check updates and announcements.', 'voter.user_notifications', 'View Notifications', 'primary', ''),
@@ -153,33 +156,33 @@
         {% for election in all_elections %}
         {% set has_voted = election.id in voted_election_ids %}
         <div class="col-md-6 col-lg-4 election-card {{ election.current_status }}">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h4 class="card-title">{{ election.title }}</h4>
-                    <p class="card-subtitle text-muted">
-                        {% if election.current_status == 'active' %}
-                            Ends: {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}
-                        {% elif election.current_status == 'pending' %}
-                            Starts: {{ election.start_date.strftime('%Y-%m-%d %H:%M') }}
-                        {% else %}
-                            Ended: {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}
-                        {% endif %}
-                    </p>
-
-                    {% if election.current_status == 'active' and user.is_verified and not has_voted %}
-                        <form method="POST" action="{{ url_for('voter.cast_vote', election_id=election.id) }}" class="mt-3">
-                            <button type="submit" class="btn btn-success w-100">Vote Now</button>
-                        </form>
-                    {% elif has_voted %}
-                        <div class="mt-3 text-success fw-bold text-center">✅ You Voted</div>
-                    {% elif election.current_status == 'ended' %}
-                        <a href="{{ url_for('admin_web.election_results', election_id=election.id) }}"
-                           class="btn btn-outline-info w-100 mt-3">View Results</a>
-                    {% else %}
-                        <button class="btn btn-secondary w-100 mt-3" disabled>Pending</button>
-                    {% endif %}
+            <a href="{{ url_for('voter_bp.view_election', election_id=election.id) }}" class="text-decoration-none text-dark">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h4 class="card-title">{{ election.title }}</h4>
+                        <p class="card-subtitle text-muted">
+                            {% if election.current_status == 'active' %}
+                                Ends: {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}
+                            {% elif election.current_status == 'pending' %}
+                                Starts: {{ election.start_date.strftime('%Y-%m-%d %H:%M') }}
+                            {% else %}
+                                Ended: {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}
+                            {% endif %}
+                        </p>
+                        <div class="mt-3 text-center">
+                            {% if election.current_status == 'active' and user.is_verified and not has_voted %}
+                                <span class="badge bg-success">Ongoing — Vote Now</span>
+                            {% elif has_voted %}
+                                <span class="badge bg-primary">✅ You Voted</span>
+                            {% elif election.current_status == 'ended' %}
+                                <span class="badge bg-danger">Ended</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Pending</span>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         {% endfor %}
     </div>
