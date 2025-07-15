@@ -124,6 +124,7 @@ class Election(db.Model):
             return 'active'
         else:
             return 'ended'
+        
 
 class Candidate(db.Model):
     __tablename__ = 'candidate'
