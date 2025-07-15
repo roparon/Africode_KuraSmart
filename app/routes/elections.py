@@ -1,11 +1,13 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, abort, redirect, render_template, url_for, flash
 from flask_login import login_required, current_user
 from app.extensions import db
-from app.models import Election, User, Candidate, Vote
+from app.enums import UserRole
+from app.models import Election, User, Candidate, Vote, Position
 from datetime import datetime
 
 elections_bp = Blueprint('elections_bp', __name__)
 vote_bp = Blueprint('vote_bp', __name__, url_prefix='/api/v1/votes')
+voter_bp = Blueprint('voter', __name__, url_prefix='/voter')
 
 
 @elections_bp.route('/elections', methods=['POST'])
@@ -213,3 +215,30 @@ def get_election_results(election_id):
         "ward_turnout": ward_turnout,
         "results": results_data
     }), 200
+
+
+@voter_bp.route('/election/<int:election_id>')
+@login_required
+def view_election(election_id):
+    if current_user.role != UserRole.voter.value:
+        abort(403)
+
+    election = Election.query.get_or_404(election_id)
+
+    if election.status not in ['active', 'pending', 'ended']:
+        flash("This election is not accessible at the moment.", "warning")
+        return redirect(url_for('voter_dashboard'))
+
+    positions = Position.query.filter_by(election_id=election.id).all()
+    candidates = Candidate.query.filter_by(election_id=election.id).all()
+    votes = Vote.query.filter_by(voter_id=current_user.id, election_id=election.id).all()
+    has_voted = len(votes) > 0
+
+    return render_template(
+        'election_details.html',
+        election=election,
+        positions=positions,
+        candidates=candidates,
+        has_voted=has_voted,
+        user=current_user
+    )

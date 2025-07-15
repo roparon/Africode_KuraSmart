@@ -156,7 +156,7 @@
         {% for election in all_elections %}
         {% set has_voted = election.id in voted_election_ids %}
         <div class="col-md-6 col-lg-4 election-card {{ election.current_status }}">
-            <a href="{{ url_for('voter_bp.view_election', election_id=election.id) }}" class="text-decoration-none text-dark">
+            <a href="{{ url_for('voter.view_election', election_id=election.id) }}" class="text-decoration-none text-dark">
                 <div class="card h-100 shadow-sm">
                     <div class="card-body">
                         <h4 class="card-title">{{ election.title }}</h4>

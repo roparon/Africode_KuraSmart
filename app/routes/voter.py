@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, flash, url_for, redirect, request
 from flask_login import login_required, current_user
-from app.models import Notification, Election, Vote
+from app.models import Notification, Election, Vote, Candidate, Position
 from datetime import datetime
 from sqlalchemy import and_
 from app.extensions import db
@@ -138,3 +138,19 @@ def cast_vote(election_id):
         flash(f'Error submitting vote: {str(e)}', 'danger')
 
     return redirect(url_for('voter.voter_dashboard'))
+
+
+@voter_bp.route('/election/<int:election_id>')
+@login_required
+def view_election(election_id):
+    election = Election.query.get_or_404(election_id)
+    candidates = Candidate.query.filter_by(election_id=election_id).all()
+    positions = Position.query.filter_by(election_id=election_id).all()
+
+    return render_template(
+        'voter/view_election.html',
+        election=election,
+        candidates=candidates,
+        positions=positions
+    )
+
