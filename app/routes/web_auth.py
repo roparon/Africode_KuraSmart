@@ -411,7 +411,6 @@ def export_users_csv():
         return jsonify({'error': 'Failed to export users', 'details': str(e)}), 500
     
 # Manage Elections
-
 @admin_web_bp.route('/manage-elections', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -445,9 +444,18 @@ def manage_elections():
 
             for cand_form in form.candidates.entries:
                 full_name = cand_form.form.full_name.data.strip()
+                position_name = cand_form.form.position.data
+                position = Position.query.filter_by(name=position_name).first()
+
+                if not position:
+                    flash(f"Position '{position_name}' does not exist. Please create it first.", "danger")
+                    continue
+
+                # Check for existing candidate using user_id, election_id, position_id
                 existing = Candidate.query.filter_by(
-                    full_name=full_name,
-                    election_id=election.id
+                    user_id=current_user.id,
+                    election_id=election.id,
+                    position_id=position.id
                 ).first()
 
                 if cand_form.form.original_candidate:
@@ -455,16 +463,9 @@ def manage_elections():
                     candidate.full_name = full_name
                     candidate.party_name = cand_form.form.party_name.data
                     candidate.manifesto = cand_form.form.manifesto.data
-                    candidate.position = cand_form.form.position.data
-
+                    candidate.position = position.name
+                    candidate.position_id = position.id
                 elif not existing:
-                    position_name = cand_form.form.position.data
-                    position = Position.query.filter_by(name=position_name).first()
-
-                    if not position:
-                        flash(f"Position '{position_name}' does not exist. Please create it first.", "danger")
-                        continue
-
                     candidate = Candidate(
                         full_name=full_name,
                         party_name=cand_form.form.party_name.data,
@@ -475,13 +476,15 @@ def manage_elections():
                         user_id=current_user.id
                     )
                     db.session.add(candidate)
+                else:
+                    flash(f"⚠️ You are already registered as a candidate for '{position.name}' in this election.", "warning")
 
             try:
                 db.session.commit()
-                flash("Election and candidates saved successfully.", "success")
+                flash("✅ Election and candidates saved successfully.", "success")
             except IntegrityError:
                 db.session.rollback()
-                flash("⚠️ Candidate already exists for this position in this election.", "warning")
+                flash("⚠️ Integrity error: You may already be registered as a candidate for this position.", "warning")
             except Exception as db_error:
                 db.session.rollback()
                 flash(f"❌ Unexpected database error: {db_error}", "danger")
@@ -501,6 +504,7 @@ def manage_elections():
                 )
                 form.candidates.append_entry(cand_form)
 
+        # Auto-update election status
         elections = Election.query.all()
         for election in elections:
             if election.status not in [ElectionStatusEnum.ENDED, ElectionStatusEnum.PAUSED]:
@@ -510,6 +514,7 @@ def manage_elections():
                     election.status = ElectionStatusEnum.ENDED
         db.session.commit()
 
+        # Search functionality
         search_title = request.args.get("search_title", "").strip()
         elections_query = Election.query
         if search_title:
@@ -529,7 +534,6 @@ def manage_elections():
         db.session.rollback()
         flash(f"❌ Error managing elections: {e}", "danger")
         return redirect(url_for("admin_web.dashboard"))
-
 
 
 
@@ -1110,13 +1114,17 @@ def manage_candidates():
                 return redirect(url_for('admin_web.manage_candidates'))
         elif request.method == 'POST':
             flash("Form validation failed. Please check your input.", "danger")
+
         candidates = Candidate.query.all()
         return render_template('admin/candidates.html', candidates=candidates, form=form)
+
     except Exception as e:
         db.session.rollback()
+        import traceback
+        print("Exception in /candidates route:", traceback.format_exc())
         flash(f"Error managing candidates: {e}", "danger")
-        return redirect(url_for('admin_web.manage_candidates'))
-    
+        return render_template('admin/candidates.html', candidates=[], form=form)
+
 
 def get_position_id(position_name, election_id):
     position = Position.query.filter_by(name=position_name, election_id=election_id).first()
@@ -1227,4 +1235,43 @@ def approve_all_users():
         flash("Approval failed. Please try again.", "danger")
 
     return redirect(url_for('admin_web.pending_users'))
+
+@admin_web_bp.route('/approve_candidate/<int:candidate_id>', methods=['POST'])
+@login_required
+def approve_candidate(candidate_id):
+    from app.models import Candidate
+    candidate = Candidate.query.get_or_404(candidate_id)
+    candidate.approved = True
+    db.session.commit()
+    flash(f"Candidate {candidate.full_name} approved!", "success")
+    return redirect(request.referrer or url_for('some_view'))
+
+@admin_web_bp.route('/approve_all_candidates', methods=['POST'])
+@login_required
+def approve_all_candidates():
+    from app.models import Candidate
+    Candidate.query.filter_by(approved=False).update({'approved': True})
+    db.session.commit()
+    flash("All unapproved candidates are now approved!", "success")
+    return redirect(request.referrer or url_for('some_view'))
+
+@admin_web_bp.route('/candidate/<int:candidate_id>/unapprove', methods=['POST'])
+def reject_candidate(candidate_id):
+    candidate = Candidate.query.get_or_404(candidate_id)
+    candidate.approved = False
+    db.session.commit()
+    flash(f'{candidate.full_name} has been unapproved.', 'warning')
+    return redirect(url_for('admin_web.manage_candidates'))
+
+@admin_web_bp.route('/candidates/reject_all', methods=['POST'])
+@login_required
+def reject_all_candidates():
+    if not current_user.is_superadmin:
+        abort(403)
+    Candidate.query.update({Candidate.approved: False})
+    db.session.commit()
+    flash("All candidates have been unapproved.", "warning")
+    return redirect(url_for('admin_web.manage_candidates'))
+
+
 

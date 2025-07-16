@@ -29,6 +29,19 @@
     </div>
   {% endif %}
 
+  <!-- 🔍 Debug Info Start -->
+  <div class="alert alert-secondary">
+    <h5>🧪 Debug Info</h5>
+    <p><strong>Total Positions:</strong> {{ positions|length }}</p>
+    <p><strong>Total Candidates:</strong> {{ candidates|length }}</p>
+    <ul>
+      {% for c in candidates %}
+        <li>{{ c.full_name }} (Position ID: {{ c.position_id }})</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <!-- 🔍 Debug Info End -->
+
   {% for position in positions %}
     <div class="card my-4 shadow-sm">
       <div class="card-header bg-primary text-white">

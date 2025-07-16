@@ -4,11 +4,14 @@
 {% block content %}
 <div class="manage-elections-background py-5">
   <div class="container" data-aos="fade-up">
+
+    <!-- Page Heading -->
     <h2 class="mb-4 fw-bold">
       <i class="bi bi-clipboard-data me-2 text-primary"></i>
       {{ election.title }}
     </h2>
 
+    <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=True) %}
       {% if messages %}
         {% for category, message in messages %}
@@ -21,6 +24,7 @@
       {% endif %}
     {% endwith %}
 
+    <!-- Election Info Card -->
     <div class="card shadow-sm rounded-4 mb-4" data-aos="fade-right">
       <div class="card-header bg-gradient-secondary text-white fw-semibold rounded-top-4">
         Election Details
@@ -45,28 +49,33 @@
         {% endif %}
       </div>
     </div>
-
     <div class="card shadow-sm rounded-4" data-aos="fade-left">
       <div class="card-header bg-gradient-primary text-white fw-semibold rounded-top-4">
         Candidates by Position
       </div>
       <div class="card-body">
+
         {% if positions %}
           {% for position in positions %}
             <div class="mb-4">
               <h5 class="fw-bold">{{ position.name }}</h5>
+
               {% set position_candidates = candidates | selectattr("position_id", "equalto", position.id) | list %}
               {% if position_candidates %}
                 <ul class="list-group">
                   {% for candidate in position_candidates %}
                     <li class="list-group-item">
                       <div class="fw-semibold">{{ candidate.full_name }}</div>
-                      <div class="text-muted small">{{ candidate.party_name }}</div>
+                      {% if candidate.party_name %}
+                        <div class="text-muted small">{{ candidate.party_name }}</div>
+                      {% endif %}
                       {% if candidate.manifesto %}
                         <div class="mt-2 small">
                           <strong>Manifesto:</strong> {{ candidate.manifesto }}
                         </div>
                       {% endif %}
+                      <!-- Optional debug info -->
+                      <div class="small text-muted mt-1">Approved: {{ 'Yes' if candidate.approved else 'No' }}</div>
                     </li>
                   {% endfor %}
                 </ul>
@@ -76,10 +85,12 @@
             </div>
           {% endfor %}
         {% else %}
-          <p class="text-muted">No positions defined.</p>
+          <p class="text-muted">No positions defined for this election.</p>
         {% endif %}
+
       </div>
     </div>
+
   </div>
 </div>
 {% endblock %}

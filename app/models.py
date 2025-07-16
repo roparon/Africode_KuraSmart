@@ -102,9 +102,9 @@ class Election(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=func.now())
     deactivated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    candidates = db.relationship('Candidate', back_populates='election', lazy='dynamic')
-    positions = db.relationship('Position', back_populates='election', lazy='dynamic', cascade="all, delete-orphan")
-    votes = db.relationship('Vote', back_populates='election', lazy='dynamic')
+    candidates = db.relationship('Candidate', back_populates='election', lazy='select')
+    positions = db.relationship('Position', back_populates='election', lazy='select', cascade="all, delete-orphan")
+    votes = db.relationship('Vote', back_populates='election', lazy='select')
 
     def __repr__(self):
         return f"<Election id={self.id}, title='{self.title}', active={self.is_active}>"
@@ -145,10 +145,6 @@ class Candidate(db.Model):
     election = db.relationship('Election', back_populates='candidates')
     position_rel = db.relationship('Position', back_populates='candidates')
     votes = db.relationship('Vote', back_populates='candidate', lazy='dynamic')
-
-    __table_args__ = (
-        db.UniqueConstraint('user_id', 'election_id', 'position_id', name='unique_candidate_combination'),
-    )
 
     def to_dict(self):
         return {

@@ -153,4 +153,3 @@ def view_election(election_id):
         candidates=candidates,
         positions=positions
     )
-

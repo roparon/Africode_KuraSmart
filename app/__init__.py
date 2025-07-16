@@ -10,6 +10,7 @@ from flask_mail import Mail
 from app.extensions import db, migrate, login_manager, CSRFProtect, mail
 from app.models import User, Notification
 from app.tasks.reminders import send_reminders
+from app.tasks.elections import update_election_statuses  # ✅ NEW IMPORT
 from config import Config
 
 mail = Mail()
@@ -24,7 +25,6 @@ def create_app():
     csrf = CSRFProtect()
     csrf.init_app(app)
     mail.init_app(app)
-    
 
     # APScheduler setup
     scheduler = APScheduler()
@@ -32,6 +32,7 @@ def create_app():
     scheduler.init_app(app)
     scheduler.start()
 
+    # Daily reminder job
     scheduler.add_job(
         id='daily_election_reminder',
         func=send_reminders,
@@ -39,6 +40,14 @@ def create_app():
         hour=9,
         minute=0,
         timezone=app.config.get('TIMEZONE', 'UTC')
+    )
+
+    scheduler.add_job(
+        id='update_election_statuses',
+        func=update_election_statuses,
+        trigger='interval',
+        seconds=60,
+        replace_existing=True
     )
 
     @login_manager.user_loader
@@ -81,7 +90,6 @@ def create_app():
     app.register_blueprint(notifications_bp)
     app.context_processor(inject_unread_notifs)
     app.register_blueprint(static_pages)
-
 
     @app.context_processor
     def inject_unread_notifs():
