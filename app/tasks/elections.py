@@ -23,4 +23,3 @@ def update_election_statuses():
                 election.current_status = new_status
 
         db.session.commit()
-
