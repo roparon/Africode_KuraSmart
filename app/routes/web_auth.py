@@ -691,6 +691,21 @@ def voter_dashboard():
         flash("Error loading dashboard. Please try again.", "danger")
         return redirect(url_for('main.index'))
     
+
+from app.utils.voting import check_if_user_has_voted
+@voter_bp.route('/election/<int:election_id>')
+def election_detail(election_id):
+    election = Election.query.get_or_404(election_id)
+    positions = Position.query.filter_by(election_id=election.id).all()
+    candidates = Candidate.query.filter(Candidate.position_id.in_([p.id for p in positions])).all()
+
+    return render_template("election_detail.html", 
+                           election=election, 
+                           positions=positions, 
+                           candidates=candidates,
+                           has_voted=check_if_user_has_voted(current_user, election.id))
+
+    
 @voter_bp.route('/cast_vote/<int:election_id>', methods=['POST'])
 @login_required
 def cast_vote(election_id):
