@@ -37,4 +37,3 @@ def update_election_statuses():
 
 
 
-
