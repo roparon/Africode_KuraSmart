@@ -120,8 +120,6 @@ def cast_vote(election_id):
         if not candidate_id:
             flash('No candidate selected.', 'warning')
             return redirect(url_for('voter.voter_dashboard'))
-
-        # Optional: prevent duplicate votes
         existing_vote = Vote.query.filter_by(user_id=current_user.id, election_id=election_id).first()
         if existing_vote:
             flash('You have already voted in this election.', 'info')
