@@ -35,7 +35,7 @@
         <h5 class="mb-0">{{ position.name }}</h5>
       </div>
       <div class="card-body">
-        {% set filtered = candidates | selectattr("position_id", "equalto", position.id) | list %}
+        {% set filtered = candidates_with_votes[position.id] %}
         {% if filtered %}
           <div class="row">
             {% for candidate in filtered %}
@@ -48,6 +48,7 @@
                          style="width: 120px; height: 120px; object-fit: cover;">
                     <h5 class="card-title">{{ candidate.full_name }}</h5>
                     <p class="mb-1"><strong>Party:</strong> {{ candidate.party_name or 'Independent' }}</p>
+                    <p class="mb-1"><strong>Votes:</strong> {{ candidate.vote_count }}</p>
                     <p class="text-muted small mb-2">Running for {{ position.name }}</p>
 
                     <div class="d-grid gap-2 w-100">
@@ -66,7 +67,7 @@
                 </div>
               </div>
 
-              <!-- 📜 Modal for Manifesto -->
+              <!-- Manifesto Modal -->
               <div class="modal fade" id="manifestoModal{{ candidate.id }}" tabindex="-1" aria-labelledby="manifestoModalLabel{{ candidate.id }}" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-scrollable">
                   <div class="modal-content">
@@ -94,8 +95,6 @@
     </div>
   {% endfor %}
 </div>
-
-<!-- Countdown Script -->
 <script>
   const endDate = new Date("{{ election.end_date.isoformat() }}").getTime();
 

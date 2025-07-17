@@ -35,7 +35,7 @@
   <div class="card shadow-sm" data-aos="fade-up">
     <div class="card-header fw-bold">Update Election Details</div>
     <div class="card-body">
-      <form method="POST" id="election-form" novalidate>
+      <form method="POST" id="election-form" enctype="multipart/form-data" novalidate>
         {{ form.hidden_tag() }}
 
         <div class="mb-3">
@@ -70,7 +70,7 @@
         <div id="candidates-list">
           {% for cand_form in form.candidates %}
           <div class="card my-3 p-3 candidate-entry bg-light">
-            <div class="row g-2">
+            <div class="row g-3">
               <div class="col-md-6">
                 {{ cand_form.full_name.label(class="form-label") }}
                 {{ cand_form.full_name(class="form-control") }}
@@ -80,14 +80,31 @@
                 {{ cand_form.party_name(class="form-control") }}
               </div>
               <div class="col-md-6">
-                {{ cand_form.position.label(class="form-label mt-2") }}
+                {{ cand_form.position.label(class="form-label") }}
                 {{ cand_form.position(class="form-select") }}
               </div>
               <div class="col-md-6">
-                {{ cand_form.manifesto.label(class="form-label mt-2") }}
+                {{ cand_form.manifesto.label(class="form-label") }}
                 {{ cand_form.manifesto(class="form-control", rows=2) }}
               </div>
+              <div class="col-md-6">
+                {{ cand_form.profile_photo.label(class="form-label") }}
+                {{ cand_form.profile_photo(class="form-control", type="file") }}
+                {% if cand_form.profile_photo.errors %}
+                  <div class="text-danger small">{{ cand_form.profile_photo.errors[0] }}</div>
+                {% endif %}
+              </div>
+
+              {# Optional: Display existing photo if present #}
+              {% if cand_form.existing_photo %}
+              <div class="col-md-6">
+                <label class="form-label">Current Photo</label><br>
+                <img src="{{ url_for('static', filename='uploads/candidates/' ~ cand_form.existing_photo) }}"
+                     class="img-thumbnail" width="100">
+              </div>
+              {% endif %}
             </div>
+
             {{ cand_form.candidate_id(type="hidden") }}
             {{ cand_form.election_id(type="hidden") }}
 

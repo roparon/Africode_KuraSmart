@@ -7,28 +7,12 @@
 
     <!-- Page Heading -->
     <h2 class="mb-4 fw-bold">
-      <i class="bi bi-clipboard-data me-2 text-primary"></i>
-      {{ election.title }}
+      <i class="bi bi-clipboard-data me-2 text-primary"></i> {{ election.title }}
     </h2>
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=True) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
-            <i class="bi bi-{{ 'check-circle-fill' if category == 'success' else 'exclamation-triangle-fill' }} me-2"></i>
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-
-    <!-- Election Info Card -->
-    <div class="card shadow-sm rounded-4 mb-4" data-aos="fade-right">
-      <div class="card-header bg-gradient-secondary text-white fw-semibold rounded-top-4">
-        Election Details
-      </div>
+    <!-- Election Info -->
+    <div class="card shadow-sm rounded-4 mb-4">
+      <div class="card-header bg-gradient-secondary text-white fw-semibold">Election Details</div>
       <div class="card-body">
         <p><strong>Description:</strong> {{ election.description or '—' }}</p>
         <p><strong>Start:</strong> {{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</p>
@@ -39,22 +23,13 @@
           {% set status_clr = {'inactive':'secondary','active':'success','paused':'warning','ended':'danger'}.get(status,'dark') %}
           <span class="badge bg-{{ status_clr }}">{{ status.title() }}</span>
         </p>
-
-        {% if status == 'active' %}
-          <div class="mt-4 text-center">
-            <a href="{{ url_for('vote_bp.cast_vote', election_id=election.id) }}" class="btn btn-primary btn-lg">
-              <i class="bi bi-box-arrow-in-right me-1"></i> Vote Now
-            </a>
-          </div>
-        {% endif %}
       </div>
     </div>
-    <div class="card shadow-sm rounded-4" data-aos="fade-left">
-      <div class="card-header bg-gradient-primary text-white fw-semibold rounded-top-4">
-        Candidates by Position
-      </div>
-      <div class="card-body">
 
+    <!-- Candidates -->
+    <div class="card shadow-sm rounded-4">
+      <div class="card-header bg-gradient-primary text-white fw-semibold">Candidates by Position</div>
+      <div class="card-body">
         {% if positions %}
           {% for position in positions %}
             <div class="mb-4">
@@ -62,23 +37,30 @@
 
               {% set position_candidates = candidates | selectattr("position_id", "equalto", position.id) | list %}
               {% if position_candidates %}
-                <ul class="list-group">
+                <div class="row g-3">
                   {% for candidate in position_candidates %}
-                    <li class="list-group-item">
-                      <div class="fw-semibold">{{ candidate.full_name }}</div>
-                      {% if candidate.party_name %}
-                        <div class="text-muted small">{{ candidate.party_name }}</div>
-                      {% endif %}
-                      {% if candidate.manifesto %}
-                        <div class="mt-2 small">
-                          <strong>Manifesto:</strong> {{ candidate.manifesto }}
+                    <div class="col-md-6 col-lg-4">
+                      <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                          <img src="{{ url_for('static', filename='uploads/candidates/' ~ (candidate.profile_photo or 'default-avatar.png')) }}"
+                               class="rounded-circle mb-3 border border-2"
+                               style="width: 100px; height: 100px; object-fit: cover;">
+                          <h6>{{ candidate.full_name }}</h6>
+                          <p class="text-muted small">{{ candidate.party_name or 'Independent' }}</p>
+                          <p class="small"><strong>Manifesto:</strong> {{ candidate.manifesto or '—' }}</p>
+                          <p class="small">Votes: {{ candidate.vote_count or 0 }}</p>
+
+                          {% if election.status.value == 'active' %}
+                            <form method="POST" action="{{ url_for('vote_bp.cast_vote', election_id=election.id, candidate_id=candidate.id) }}">
+                              {{ csrf_token() }}
+                              <button type="submit" class="btn btn-outline-primary btn-sm mt-2">Vote</button>
+                            </form>
+                          {% endif %}
                         </div>
-                      {% endif %}
-                      <!-- Optional debug info -->
-                      <div class="small text-muted mt-1">Approved: {{ 'Yes' if candidate.approved else 'No' }}</div>
-                    </li>
+                      </div>
+                    </div>
                   {% endfor %}
-                </ul>
+                </div>
               {% else %}
                 <p class="text-muted">No candidates for this position.</p>
               {% endif %}
@@ -87,10 +69,8 @@
         {% else %}
           <p class="text-muted">No positions defined for this election.</p>
         {% endif %}
-
       </div>
     </div>
-
   </div>
 </div>
 {% endblock %}
@@ -105,10 +85,4 @@
   .list-group-item { border-radius:.5rem; margin-bottom:.5rem; }
   .badge { font-size:.85rem; padding:.45em .75em; }
 </style>
-{% endblock %}
-
-{% block scripts %}
-<script>
-  AOS.init({ duration:600, once:true, easing:'ease-out-cubic' });
-</script>
 {% endblock %}

@@ -140,16 +140,35 @@ def cast_vote(election_id):
     return redirect(url_for('voter.voter_dashboard'))
 
 
+from collections import defaultdict
 @voter_bp.route('/election/<int:election_id>')
 @login_required
 def view_election(election_id):
     election = Election.query.get_or_404(election_id)
-    candidates = Candidate.query.filter_by(election_id=election_id).all()
     positions = Position.query.filter_by(election_id=election_id).all()
+
+    # Get all candidates for this election
+    candidates = Candidate.query.filter_by(election_id=election_id).all()
+
+    # Add vote counts to candidates
+    candidate_votes = {
+        c.id: Vote.query.filter_by(candidate_id=c.id).count()
+        for c in candidates
+    }
+
+    for c in candidates:
+        c.vote_count = candidate_votes.get(c.id, 0)
+
+    # Group and sort candidates per position by vote count
+    candidates_with_votes = defaultdict(list)
+    for pos in positions:
+        filtered = [c for c in candidates if c.position_id == pos.id]
+        sorted_candidates = sorted(filtered, key=lambda c: c.vote_count, reverse=True)
+        candidates_with_votes[pos.id] = sorted_candidates
 
     return render_template(
         'voter/view_election.html',
         election=election,
-        candidates=candidates,
-        positions=positions
+        positions=positions,
+        candidates_with_votes=candidates_with_votes
     )
