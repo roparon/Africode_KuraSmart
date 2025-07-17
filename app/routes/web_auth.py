@@ -411,6 +411,19 @@ def export_users_csv():
         return jsonify({'error': 'Failed to export users', 'details': str(e)}), 500
     
 # Manage Elections
+import uuid
+
+UPLOAD_FOLDER = 'static/uploads/candidates'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # Ensure folder exists
+
+def save_candidate_photo(file):
+    if file and file.filename:
+        ext = file.filename.rsplit('.', 1)[-1].lower()
+        filename = f"{uuid.uuid4().hex}.{ext}"
+        path = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(path)
+        return filename
+    return None
 @admin_web_bp.route('/manage-elections', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -421,11 +434,9 @@ def manage_elections():
     form = ElectionForm()
     now = datetime.now()
     current_datetime = now.strftime('%Y-%m-%dT%H:%M')
-
     try:
         if request.method == "POST" and form.validate_on_submit():
             election = Election.query.filter_by(title=form.title.data).first()
-
             if not election:
                 election = Election(
                     title=form.title.data,
@@ -441,22 +452,23 @@ def manage_elections():
                 election.start_date = form.start_date.data
                 election.end_date = form.end_date.data
                 election.status = form.status.data
-
             for cand_form in form.candidates.entries:
                 full_name = cand_form.form.full_name.data.strip()
                 position_name = cand_form.form.position.data
                 position = Position.query.filter_by(name=position_name).first()
-
                 if not position:
                     flash(f"Position '{position_name}' does not exist. Please create it first.", "danger")
                     continue
-
-                # Check for existing candidate using user_id, election_id, position_id
                 existing = Candidate.query.filter_by(
                     user_id=current_user.id,
                     election_id=election.id,
                     position_id=position.id
                 ).first()
+                photo_file = cand_form.form.profile_photo.data
+                photo_filename = None
+
+                if photo_file and hasattr(photo_file, 'filename') and photo_file.filename:
+                    photo_filename = save_candidate_photo(photo_file)
 
                 if cand_form.form.original_candidate:
                     candidate = cand_form.form.original_candidate
@@ -465,6 +477,8 @@ def manage_elections():
                     candidate.manifesto = cand_form.form.manifesto.data
                     candidate.position = position.name
                     candidate.position_id = position.id
+                    if photo_filename:
+                        candidate.profile_photo = photo_filename  
                 elif not existing:
                     candidate = Candidate(
                         full_name=full_name,
@@ -473,7 +487,8 @@ def manage_elections():
                         position=position.name,
                         position_id=position.id,
                         election_id=election.id,
-                        user_id=current_user.id
+                        user_id=current_user.id,
+                        profile_photo=photo_filename
                     )
                     db.session.add(candidate)
                 else:
@@ -534,8 +549,6 @@ def manage_elections():
         db.session.rollback()
         flash(f"❌ Error managing elections: {e}", "danger")
         return redirect(url_for("admin_web.dashboard"))
-
-
 
 @admin_web_bp.route('/elections/<int:election_id>/activate', methods=['POST'])
 @login_required
@@ -710,48 +723,46 @@ def election_detail(election_id):
                            has_voted=check_if_user_has_voted(current_user, election.id))
 
     
-@voter_bp.route('/cast_vote/<int:election_id>', methods=['POST'])
+@voter_bp.route('/cast_vote/<int:election_id>', methods=['GET', 'POST'])
 @login_required
 def cast_vote(election_id):
-    if current_user.role != UserRole.voter.value:
-        abort(403)
     election = Election.query.get_or_404(election_id)
-    now = datetime.utcnow()
-    if not (election.start_date <= now <= election.end_date):
-        flash("This election is not currently active.", "warning")
-        return redirect(url_for('voter.voter_dashboard'))
-    if not current_user.is_verified:
-        flash("You must be a verified voter to cast a vote.", "danger")
-        return redirect(url_for('voter.voter_dashboard'))
-    already_voted = Vote.query.filter_by(
-        voter_id=current_user.id,
-        election_id=election_id
-    ).first()
-    if already_voted:
-        flash("You have already voted in this election.", "info")
-        return redirect(url_for('voter.voter_dashboard'))
-    try:
-        candidate_id = request.form.get("candidate_id")
-        position_id = request.form.get("position_id")
-        candidate = Candidate.query.get(candidate_id)
-        position = Position.query.get(position_id)
-        if not candidate or not position:
-            flash("Invalid candidate or position.", "danger")
-            return redirect(url_for('voter.voter_dashboard'))
-        vote = Vote(
-            voter_id=current_user.id,
-            election_id=election_id,
-            candidate_id=candidate.id,
-            position_id=position.id,
-            created_at=datetime.utcnow()
-        )
-        db.session.add(vote)
+    positions = Position.query.filter_by(election_id=election_id).all()
+    candidates = Candidate.query.filter_by(election_id=election_id, approved=True).all()
+
+    # Add vote counts to each candidate
+    for candidate in candidates:
+        candidate.vote_count = Vote.query.filter_by(candidate_id=candidate.id).count()
+
+    if request.method == 'POST':
+        for position in positions:
+            candidate_id = request.form.get(f'position_{position.id}')
+            if candidate_id:
+                # Check for existing vote
+                existing_vote = Vote.query.filter_by(
+                    voter_id=current_user.id,
+                    election_id=election_id,
+                    position_id=position.id
+                ).first()
+                if not existing_vote:
+                    vote = Vote(
+                        voter_id=current_user.id,
+                        election_id=election_id,
+                        candidate_id=int(candidate_id),
+                        position_id=position.id,
+                        created_at=datetime.utcnow()
+                    )
+                    db.session.add(vote)
         db.session.commit()
-        flash("Your vote has been successfully recorded.", "success")
-    except Exception as e:
-        current_app.logger.error(f"Error casting vote: {str(e)}")
-        flash("Failed to record vote. Please try again.", "danger")
-    return redirect(url_for('voter.voter_dashboard'))
+        flash("Vote successfully cast!", "success")
+        return redirect(url_for('voter.cast_vote', election_id=election_id))
+
+    return render_template(
+        'voter/election_overview.html',
+        election=election,
+        positions=positions,
+        candidates=candidates
+    )
 
 
 

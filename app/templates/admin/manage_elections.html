@@ -28,7 +28,7 @@
         Create New Election
       </div>
       <div class="card-body">
-        <form method="POST" id="election-form">
+        <form method="POST" id="election-form" enctype="multipart/form-data">
           {{ form.hidden_tag() }}
 
           <div class="mb-3">
@@ -56,7 +56,7 @@
             </div>
           </div>
 
-          {# Candidates List (static - no JS) #}
+          {# Candidates Section #}
           <div class="mb-3">
             <h5>Registered Candidates</h5>
             <div class="text-muted small">Candidates can only be modified from the Edit Election page.</div>
@@ -79,6 +79,13 @@
                   <div class="col-md-6 mb-2">
                     {{ cand_form.manifesto.label(class="form-label") }}
                     {{ cand_form.manifesto(class="form-control", rows=2) }}
+                  </div>
+                  <div class="col-md-6 mb-2">
+                    {{ cand_form.profile_photo.label(class="form-label") }}
+                    {{ cand_form.profile_photo(class="form-control", type="file") }}
+                    {% if cand_form.profile_photo.errors %}
+                      <div class="text-danger small">{{ cand_form.profile_photo.errors[0] }}</div>
+                    {% endif %}
                   </div>
                 </div>
               </div>
@@ -109,7 +116,7 @@
       </div>
     </form>
 
-    {# Existing Elections Table #}
+    {# Elections Table #}
     <div class="card shadow-sm rounded-4" data-aos="fade-left">
       <div class="card-header bg-gradient-secondary text-white fw-semibold rounded-top-4">
         Existing Elections
@@ -139,56 +146,37 @@
                     <td>{{ election.description or '—' }}</td>
                     <td>{{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</td>
                     <td>{{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</td>
-                    <td>
-                      <span class="badge bg-{{ status_clr }} text-light">{{ status.title() }}</span>
-                    </td>
+                    <td><span class="badge bg-{{ status_clr }} text-light">{{ status.title() }}</span></td>
                     <td>
                       <div class="btn-group" role="group">
-                        <a href="{{ url_for('admin_web.view_election', election_id=election.id) }}" class="btn btn-sm btn-info" title="View Details">
-                          <i class="bi bi-eye-fill">view</i>
-                        </a>
-                        <a href="{{ url_for('admin_web.edit_election', election_id=election.id) }}" class="btn btn-sm btn-warning" title="Edit">
-                          <i class="bi bi-pencil-fill">edit</i>
-                        </a>
+                        <a href="{{ url_for('admin_web.view_election', election_id=election.id) }}" class="btn btn-sm btn-info">view</a>
+                        <a href="{{ url_for('admin_web.edit_election', election_id=election.id) }}" class="btn btn-sm btn-warning">edit</a>
                         <form method="POST" action="{{ url_for('admin_web.delete_election', election_id=election.id) }}" onsubmit="return confirm('Are you sure?');" class="d-inline">
                           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                          <button type="submit" class="btn btn-sm btn-danger" title="Delete">
-                            <i class="bi bi-trash-fill">delete</i>
-                          </button>
+                          <button type="submit" class="btn btn-sm btn-danger">delete</button>
                         </form>
-
                         {% if status == 'active' %}
                           <form method="POST" action="{{ url_for('admin_web.pause_election', election_id=election.id) }}" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-secondary" title="Pause">
-                              <i class="bi bi-pause-fill">pause</i>
-                            </button>
+                            <button type="submit" class="btn btn-sm btn-secondary">pause</button>
                           </form>
                           <form method="POST" action="{{ url_for('admin_web.end_election', election_id=election.id) }}" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-dark" title="End">
-                              <i class="bi bi-stop-fill">end</i>
-                            </button>
+                            <button type="submit" class="btn btn-sm btn-dark">end</button>
                           </form>
                         {% elif status == 'paused' %}
                           <form method="POST" action="{{ url_for('admin_web.activate_election', election_id=election.id) }}" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-success" title="Activate">
-                              <i class="bi bi-play-fill">activate</i>
-                            </button>
+                            <button type="submit" class="btn btn-sm btn-success">activate</button>
                           </form>
                           <form method="POST" action="{{ url_for('admin_web.end_election', election_id=election.id) }}" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-dark" title="End">
-                              <i class="bi bi-stop-fill">end</i>
-                            </button>
+                            <button type="submit" class="btn btn-sm btn-dark">end</button>
                           </form>
                         {% elif status == 'inactive' %}
                           <form method="POST" action="{{ url_for('admin_web.activate_election', election_id=election.id) }}" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-success" title="Activate">
-                              <i class="bi bi-play-fill">activate</i>
-                            </button>
+                            <button type="submit" class="btn btn-sm btn-success">activate</button>
                           </form>
                         {% endif %}
                       </div>
@@ -203,6 +191,44 @@
         {% endif %}
       </div>
     </div>
+
+    {# 👇 Candidates List per Election #}
+    {% if candidates %}
+    <hr class="my-5">
+    <h4 class="fw-bold mb-3">Candidates by Election</h4>
+    {% for election in elections %}
+      <div class="card my-3 shadow-sm">
+        <div class="card-header bg-light fw-semibold">{{ election.title }}</div>
+        <div class="card-body">
+          {% set election_candidates = candidates | selectattr("position.election_id", "equalto", election.id) | list %}
+          {% if election_candidates %}
+            <div class="row">
+              {% for cand in election_candidates %}
+                <div class="col-md-4 mb-3">
+                  <div class="card h-100 shadow-sm">
+                    {% if cand.profile_photo %}
+                      <img src="{{ url_for('static', filename='uploads/candidates/' ~ cand.profile_photo) }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                      <img src="{{ url_for('static', filename='images/default-profile.png') }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+                    {% endif %}
+                    <div class="card-body">
+                      <h5 class="card-title">{{ cand.full_name }}</h5>
+                      <p><strong>Party:</strong> {{ cand.party_name or 'Independent' }}</p>
+                      <p><strong>Position:</strong> {{ cand.position.name }}</p>
+                      <p><strong>Manifesto:</strong> {{ cand.manifesto }}</p>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted">No candidates registered yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+    {% endif %}
+
   </div>
 </div>
 {% endblock %}

@@ -1,3 +1,5 @@
 .kurasmart/
 .env
 .config.py
+kura.db
+jobs.sqlite

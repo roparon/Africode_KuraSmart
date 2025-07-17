@@ -10,7 +10,7 @@ vote_bp = Blueprint('vote_bp', __name__, url_prefix='/api/v1/votes')
 
 
 # Cast a vote
-@vote_bp.route('/cast_vote/<int:election_id>', methods=['POST'])
+@vote_bp.route('/cast_vote/<int:election_id>', methods=['POST', 'GET'])
 @login_required
 def cast_vote(election_id):
     try:

@@ -29,19 +29,6 @@
     </div>
   {% endif %}
 
-  <!-- 🔍 Debug Info Start -->
-  <div class="alert alert-secondary">
-    <h5>🧪 Debug Info</h5>
-    <p><strong>Total Positions:</strong> {{ positions|length }}</p>
-    <p><strong>Total Candidates:</strong> {{ candidates|length }}</p>
-    <ul>
-      {% for c in candidates %}
-        <li>{{ c.full_name }} (Position ID: {{ c.position_id }})</li>
-      {% endfor %}
-    </ul>
-  </div>
-  <!-- 🔍 Debug Info End -->
-
   {% for position in positions %}
     <div class="card my-4 shadow-sm">
       <div class="card-header bg-primary text-white">
@@ -52,12 +39,49 @@
         {% if filtered %}
           <div class="row">
             {% for candidate in filtered %}
-              <div class="col-md-6 col-lg-4 mb-3">
-                <div class="card h-100 border-0 shadow-sm">
-                  <div class="card-body">
+              <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card shadow-lg h-100 border-0 rounded-4" data-aos="zoom-in" data-aos-delay="100">
+                  <div class="card-body d-flex flex-column align-items-center text-center">
+                    <img src="{{ url_for('static', filename='uploads/candidates/' ~ (candidate.profile_photo or 'default-avatar.png')) }}"
+                         alt="{{ candidate.full_name }} Profile Photo"
+                         class="rounded-circle border border-3 shadow-sm mb-3"
+                         style="width: 120px; height: 120px; object-fit: cover;">
                     <h5 class="card-title">{{ candidate.full_name }}</h5>
-                    <p><strong>Party:</strong> {{ candidate.party_name or "Independent" }}</p>
-                    <p><strong>Manifesto:</strong> {{ candidate.manifesto }}</p>
+                    <p class="mb-1"><strong>Party:</strong> {{ candidate.party_name or 'Independent' }}</p>
+                    <p class="text-muted small mb-2">Running for {{ position.name }}</p>
+
+                    <div class="d-grid gap-2 w-100">
+                      <!-- View Manifesto Modal Trigger -->
+                      <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#manifestoModal{{ candidate.id }}">
+                        📜 View Manifesto
+                      </button>
+
+                      {% if not has_voted %}
+                        <form method="POST" action="{{ url_for('vote.cast_vote', election_id=election.id, candidate_id=candidate.id) }}">
+                          <button type="submit" class="btn btn-success btn-sm mt-1">🗳️ Vote</button>
+                        </form>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 📜 Modal for Manifesto -->
+              <div class="modal fade" id="manifestoModal{{ candidate.id }}" tabindex="-1" aria-labelledby="manifestoModalLabel{{ candidate.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-scrollable">
+                  <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                      <h5 class="modal-title" id="manifestoModalLabel{{ candidate.id }}">
+                        Manifesto - {{ candidate.full_name }}
+                      </h5>
+                      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <p>{{ candidate.manifesto }}</p>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -71,8 +95,8 @@
   {% endfor %}
 </div>
 
+<!-- Countdown Script -->
 <script>
-  // Countdown Timer
   const endDate = new Date("{{ election.end_date.isoformat() }}").getTime();
 
   function updateCountdown() {

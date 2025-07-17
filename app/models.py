@@ -135,6 +135,7 @@ class Candidate(db.Model):
     position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)
 
     full_name = db.Column(db.String(100), nullable=False)
+    profile_photo = db.Column(db.String(255)) 
     party_name = db.Column(db.String(100))
     position = db.Column(db.String(100), nullable=True)
     description = db.Column(db.Text)
