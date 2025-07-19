@@ -230,15 +230,30 @@ def view_election(election_id):
         return redirect(url_for('voter_dashboard'))
 
     positions = Position.query.filter_by(election_id=election.id).all()
-    candidates = Candidate.query.filter_by(election_id=election.id).all()
     votes = Vote.query.filter_by(voter_id=current_user.id, election_id=election.id).all()
     has_voted = len(votes) > 0
+
+    # Build candidates_with_votes: {position_id: [candidate, ...]}
+    candidates_with_votes = {}
+    for position in positions:
+        candidates = Candidate.query.filter_by(position_id=position.id).all()
+        candidate_list = []
+        for candidate in candidates:
+            vote_count = Vote.query.filter_by(
+                candidate_id=candidate.id,
+                election_id=election.id,
+                position_id=position.id
+            ).count()
+            candidate.vote_count = vote_count
+            print(f"DEBUG: Candidate {candidate.full_name} (ID: {candidate.id}) for position {position.name} (ID: {position.id}) has {vote_count} votes.")
+            candidate_list.append(candidate)
+        candidates_with_votes[position.id] = candidate_list
 
     return render_template(
         'election_details.html',
         election=election,
         positions=positions,
-        candidates=candidates,
+        candidates_with_votes=candidates_with_votes,
         has_voted=has_voted,
         user=current_user
     )

@@ -100,33 +100,43 @@ def delete_notification(notif_id):
         flash(f"Error deleting notification: {str(e)}", 'danger')
     return redirect(url_for('voter.user_notifications'))
 
-
 @voter_bp.route('/vote/<int:election_id>', methods=['POST'])
 @login_required
 def cast_vote(election_id):
     try:
         election = Election.query.get_or_404(election_id)
 
-        # Check election status and user verification
         if election.current_status != 'active':
             flash('Voting is not currently open for this election.', 'warning')
-            return redirect(url_for('voter.voter_dashboard'))
+            return redirect(url_for('voter.view_election', election_id=election_id))
 
         if not current_user.is_verified:
             flash('Your account is not verified for voting.', 'warning')
-            return redirect(url_for('voter.voter_dashboard'))
+            return redirect(url_for('voter.view_election', election_id=election_id))
 
         candidate_id = request.form.get('candidate_id')
-        if not candidate_id:
-            flash('No candidate selected.', 'warning')
-            return redirect(url_for('voter.voter_dashboard'))
-        existing_vote = Vote.query.filter_by(user_id=current_user.id, election_id=election_id).first()
+        position_id = request.form.get('position_id')
+        if not candidate_id or not position_id:
+            flash('No candidate or position selected.', 'warning')
+            return redirect(url_for('voter.view_election', election_id=election_id))
+
+        # Prevent double voting for the same position
+        existing_vote = Vote.query.filter_by(
+            voter_id=current_user.id,
+            election_id=election_id,
+            position_id=position_id
+        ).first()
         if existing_vote:
-            flash('You have already voted in this election.', 'info')
-            return redirect(url_for('voter.voter_dashboard'))
+            flash('You have already voted for this position in this election.', 'info')
+            return redirect(url_for('voter.view_election', election_id=election_id))
 
         # Record vote
-        vote = Vote(user_id=current_user.id, election_id=election_id, candidate_id=candidate_id)
+        vote = Vote(
+            voter_id=current_user.id,
+            election_id=election_id,
+            candidate_id=candidate_id,
+            position_id=position_id
+        )
         db.session.add(vote)
         db.session.commit()
 
@@ -135,8 +145,7 @@ def cast_vote(election_id):
         db.session.rollback()
         flash(f'Error submitting vote: {str(e)}', 'danger')
 
-    return redirect(url_for('voter.voter_dashboard'))
-
+    return redirect(url_for('voter.view_election', election_id=election_id))
 
 from collections import defaultdict
 @voter_bp.route('/election/<int:election_id>')
@@ -156,7 +165,6 @@ def view_election(election_id):
 
     for c in candidates:
         c.vote_count = candidate_votes.get(c.id, 0)
-
     # Group and sort candidates per position by vote count
     candidates_with_votes = defaultdict(list)
     for pos in positions:
@@ -165,7 +173,7 @@ def view_election(election_id):
         candidates_with_votes[pos.id] = sorted_candidates
 
     return render_template(
-        'voter/view_election.html',
+        'voter/election_details.html',
         election=election,
         positions=positions,
         candidates_with_votes=candidates_with_votes

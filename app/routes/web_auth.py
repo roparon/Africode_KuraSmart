@@ -421,9 +421,18 @@ def save_candidate_photo(file):
         ext = file.filename.rsplit('.', 1)[-1].lower()
         filename = f"{uuid.uuid4().hex}.{ext}"
         path = os.path.join(UPLOAD_FOLDER, filename)
-        file.save(path)
+        print(f"DEBUG: Saving candidate photo to {path}")
+        try:
+            file.save(path)
+            print(f"DEBUG: File saved successfully: {filename}")
+        except Exception as e:
+            print(f"ERROR: Failed to save file: {e}")
+            return None
         return filename
+    print("DEBUG: No file to save for candidate photo.")
     return None
+
+
 @admin_web_bp.route('/manage-elections', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -466,9 +475,14 @@ def manage_elections():
                 ).first()
                 photo_file = cand_form.form.profile_photo.data
                 photo_filename = None
+                print(f"DEBUG: photo_file={photo_file}, filename={getattr(photo_file, 'filename', None)}")
 
                 if photo_file and hasattr(photo_file, 'filename') and photo_file.filename:
+                    print(f"DEBUG: Candidate form has photo file: {photo_file.filename}")
                     photo_filename = save_candidate_photo(photo_file)
+                    print(f"DEBUG: Photo filename assigned: {photo_filename}")
+                else:
+                    print("DEBUG: No photo file provided for candidate.")
 
                 if cand_form.form.original_candidate:
                     candidate = cand_form.form.original_candidate
@@ -478,8 +492,10 @@ def manage_elections():
                     candidate.position = position.name
                     candidate.position_id = position.id
                     if photo_filename:
+                        print(f"DEBUG: Updating candidate {candidate.id} profile_photo to {photo_filename}")
                         candidate.profile_photo = photo_filename  
                 elif not existing:
+                    print(f"DEBUG: Creating new candidate with photo {photo_filename}")
                     candidate = Candidate(
                         full_name=full_name,
                         party_name=cand_form.form.party_name.data,
@@ -492,6 +508,7 @@ def manage_elections():
                     )
                     db.session.add(candidate)
                 else:
+                    print(f"DEBUG: Candidate already exists for position {position.name}")
                     flash(f"⚠️ You are already registered as a candidate for '{position.name}' in this election.", "warning")
 
             try:

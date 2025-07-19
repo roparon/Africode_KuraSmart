@@ -4,7 +4,6 @@ from wtforms.validators import DataRequired, ValidationError, Optional
 from flask_wtf.file import FileAllowed
 from app.models import Candidate
 from sqlalchemy import func
-
 class CandidateForm(FlaskForm):
     full_name  = StringField("Full Name", validators=[DataRequired()])
     party_name = StringField("Party (optional)", validators=[Optional()])
