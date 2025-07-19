@@ -66,7 +66,13 @@
     <input type="text" id="electionSearch" placeholder="Search elections..." class="form-control mb-4">
 
     <!-- Elections -->
-    <h3 class="text-center mb-3">🗳️ All Elections</h3>
+     <div class="d-flex justify-content-center my-3">
+        <h3 
+            class="text-center px-4 py-2 rounded-pill" 
+            style="background-color: rgb(240, 188, 47); width: fit-content; color: #000;">
+            🗳️ All Elections
+        </h3>
+    </div>
     <div class="row g-4" id="electionGrid">
         {% for election in all_elections %}
         {% set has_voted = election.id in voted_election_ids %}

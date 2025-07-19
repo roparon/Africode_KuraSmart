@@ -35,7 +35,7 @@
         <h5 class="mb-0">{{ position.name }}</h5>
       </div>
       <div class="card-body">
-        {% set filtered = candidates_with_votes[position.id] %}
+        {% set filtered = candidates_with_votes.get(position.id, []) %}
         {% if filtered %}
           <div class="row">
             {% for candidate in filtered %}
@@ -52,7 +52,6 @@
                     <p class="text-muted small mb-2">Running for {{ position.name }}</p>
 
                     <div class="d-grid gap-2 w-100">
-                      <!-- View Manifesto Modal Trigger -->
                       <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#manifestoModal{{ candidate.id }}">
                         📜 View Manifesto
                       </button>
@@ -89,34 +88,30 @@
             {% endfor %}
           </div>
         {% else %}
-          <p>No candidates for this position.</p>
+          <div class="text-muted text-center">❌ No candidates for this position.</div>
         {% endif %}
       </div>
     </div>
   {% endfor %}
 </div>
+
 <script>
   const endDate = new Date("{{ election.end_date.isoformat() }}").getTime();
-
   function updateCountdown() {
     const now = new Date().getTime();
     const diff = endDate - now;
-
     if (diff <= 0) {
       document.getElementById("countdown").innerText = "⏳ Election Ended";
       clearInterval(timer);
       return;
     }
-
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
     const minutes = Math.floor((diff / (1000 * 60)) % 60);
     const seconds = Math.floor((diff / 1000) % 60);
-
     document.getElementById("countdown").innerText =
       `${days}d ${hours}h ${minutes}m ${seconds}s`;
   }
-
   const timer = setInterval(updateCountdown, 1000);
   updateCountdown();
 </script>

@@ -766,6 +766,9 @@ def cast_vote(election_id):
 
 
 
+from sqlalchemy import func
+from app.models import Candidate, Vote, Position  # adjust if needed
+
 @voter_bp.route('/election/<int:election_id>')
 @login_required
 def view_election(election_id):
@@ -779,7 +782,41 @@ def view_election(election_id):
         return redirect(url_for('voter_dashboard'))
 
     positions = Position.query.filter_by(election_id=election.id).all()
-    candidates = Candidate.query.filter_by(election_id=election.id).all()
+
+    # ✅ Subquery to count votes per candidate
+    vote_counts_subq = (
+        db.session.query(
+            Vote.candidate_id,
+            func.count(Vote.id).label('vote_count')
+        )
+        .filter(Vote.election_id == election.id)
+        .group_by(Vote.candidate_id)
+        .subquery()
+    )
+
+    # ✅ Join candidates with vote counts
+    candidates = (
+        db.session.query(Candidate, vote_counts_subq.c.vote_count)
+        .filter(Candidate.election_id == election.id)
+        .outerjoin(vote_counts_subq, Candidate.id == vote_counts_subq.c.candidate_id)
+        .all()
+    )
+
+    # ✅ Attach vote count to each candidate
+    candidate_list = []
+    for candidate, vote_count in candidates:
+        candidate.vote_count = vote_count or 0
+        candidate_list.append(candidate)
+
+    # ✅ Group candidates by position.id
+    candidates_with_votes = {}
+    for position in positions:
+        candidates_for_position = [
+            c for c in candidate_list if c.position_id == position.id
+        ]
+        candidates_with_votes[position.id] = candidates_for_position
+
+    # Has user already voted
     votes = Vote.query.filter_by(voter_id=current_user.id, election_id=election.id).all()
     has_voted = len(votes) > 0
 
@@ -787,11 +824,65 @@ def view_election(election_id):
         'election_details.html',
         election=election,
         positions=positions,
-        candidates=candidates,
+        candidates_with_votes=candidates_with_votes,
         has_voted=has_voted,
         user=current_user
     )
 
+
+# @voter_bp.route('/election/<int:election_id>')
+# @login_required
+# def view_election(election_id):
+#     if current_user.role != UserRole.voter.value:
+#         abort(403)
+
+#     election = Election.query.get_or_404(election_id)
+
+#     if election.status not in ['active', 'pending', 'ended']:
+#         flash("This election is not accessible at the moment.", "warning")
+#         return redirect(url_for('voter_dashboard'))
+
+#     positions = Position.query.filter_by(election_id=election.id).all()
+
+#     # Subquery to get vote counts
+#     vote_counts = (
+#         db.session.query(Vote.candidate_id, func.count(Vote.id).label("vote_count"))
+#         .filter(Vote.election_id == election.id)
+#         .group_by(Vote.candidate_id)
+#         .subquery()
+#     )
+
+#     # Join candidates with vote counts
+#     candidates_raw = (
+#         db.session.query(Candidate, vote_counts.c.vote_count)
+#         .filter(Candidate.election_id == election.id)
+#         .outerjoin(vote_counts, Candidate.id == vote_counts.c.candidate_id)
+#         .all()
+#     )
+
+#     # Attach vote count to each candidate
+#     candidate_list = []
+#     for candidate, vote_count in candidates_raw:
+#         candidate.vote_count = vote_count or 0
+#         candidate_list.append(candidate)
+
+#     # Group candidates by position
+#     candidates_with_votes = {}
+#     for position in positions:
+#         candidates_for_position = [c for c in candidate_list if c.position_id == position.id]
+#         candidates_with_votes[position.id] = candidates_for_position
+
+#     votes = Vote.query.filter_by(voter_id=current_user.id, election_id=election.id).all()
+#     has_voted = len(votes) > 0
+
+#     return render_template(
+#         "election_details.html",
+#         election=election,
+#         positions=positions,
+#         candidates_with_votes=candidates_with_votes,
+#         has_voted=has_voted,
+#         user=current_user
+#     )
 
 
 
