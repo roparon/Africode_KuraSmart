@@ -76,7 +76,7 @@ class VerificationRequestForm(FlaskForm):
 
 
 from wtforms import SelectField
-from app.models import ElectionStatusEnum  # adjust this import to your actual path
+from app.models import ElectionStatusEnum 
 
 
 class ElectionForm(FlaskForm):
