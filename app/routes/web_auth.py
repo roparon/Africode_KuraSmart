@@ -410,7 +410,6 @@ def export_users_csv():
     except Exception as e:
         return jsonify({'error': 'Failed to export users', 'details': str(e)}), 500
     
-# Manage Elections
 import uuid
 
 UPLOAD_FOLDER = 'static/uploads/candidates'
