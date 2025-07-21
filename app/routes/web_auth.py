@@ -424,7 +424,6 @@ def save_candidate_photo(file):
         try:
             file.save(path)
         except Exception as e:
-            print(f"ERROR: Failed to save file: {e}")
             return None
         return filename
     print("DEBUG: No file to save for candidate photo.")
