@@ -421,10 +421,8 @@ def save_candidate_photo(file):
         ext = file.filename.rsplit('.', 1)[-1].lower()
         filename = f"{uuid.uuid4().hex}.{ext}"
         path = os.path.join(UPLOAD_FOLDER, filename)
-        print(f"DEBUG: Saving candidate photo to {path}")
         try:
             file.save(path)
-            print(f"DEBUG: File saved successfully: {filename}")
         except Exception as e:
             print(f"ERROR: Failed to save file: {e}")
             return None
