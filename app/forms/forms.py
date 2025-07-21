@@ -95,7 +95,7 @@ class ElectionForm(FlaskForm):
         "Status",
         choices=[(e.value, e.name.title()) for e in ElectionStatusEnum],
         validators=[DataRequired()],
-        coerce=str,  # change to int if your Enum values are ints
+        coerce=str,
     )
     candidates = FieldList(FormField(CandidateForm), min_entries=1)
 
