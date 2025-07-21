@@ -414,7 +414,7 @@ def export_users_csv():
 import uuid
 
 UPLOAD_FOLDER = 'static/uploads/candidates'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # Ensure folder exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def save_candidate_photo(file):
     if file and file.filename:
