@@ -101,7 +101,6 @@ class ElectionForm(FlaskForm):
 
     submit = SubmitField("Save Changes")
 
-    # ── Validators ──────────────────────────────────────────────────────────
     def validate_start_date(self, field):
         if field.data < datetime.now():
             raise ValidationError("Start date cannot be in the past.")
