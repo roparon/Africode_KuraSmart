@@ -49,7 +49,6 @@ class RegistrationForm(FlaskForm):
     def validate(self, extra_validators=None):
         if not super().validate(extra_validators=extra_validators):
             return False
-        # Formal voter: full_name must be required
         if self.voting_type.data == 'formal' and not self.full_name.data.strip():
             self.full_name.errors.append("Full name is required for formal voters.")
             return False
