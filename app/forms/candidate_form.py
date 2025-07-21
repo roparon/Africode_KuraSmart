@@ -7,7 +7,7 @@ from sqlalchemy import func
 class CandidateForm(FlaskForm):
     full_name  = StringField("Full Name", validators=[DataRequired()])
     party_name = StringField("Party (optional)", validators=[Optional()])
-    manifesto  = TextAreaField("Manifesto")  # Required only for new candidates
+    manifesto  = TextAreaField("Manifesto")
 
     position   = SelectField(
         "Position",
