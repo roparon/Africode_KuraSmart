@@ -426,7 +426,6 @@ def save_candidate_photo(file):
         except Exception as e:
             return None
         return filename
-    print("DEBUG: No file to save for candidate photo.")
     return None
 
 
