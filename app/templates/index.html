@@ -3,86 +3,184 @@
 
 {% block content %}
 
-<!-- Hero Section with Autotyping -->
+<!-- === Custom Styles === -->
+<style>
+/* Bounce animation for Login */
+.bounce-top {
+  -webkit-animation: bounce-top 0.9s both;
+          animation: bounce-top 0.9s both;
+}
+
+@-webkit-keyframes bounce-top {
+  0% { -webkit-transform: translateY(-45px); transform: translateY(-45px); -webkit-animation-timing-function: ease-in; animation-timing-function: ease-in; opacity: 1; }
+  24% { opacity: 1; }
+  40% { -webkit-transform: translateY(-24px); transform: translateY(-24px); -webkit-animation-timing-function: ease-in; animation-timing-function: ease-in; }
+  65% { -webkit-transform: translateY(-12px); transform: translateY(-12px); -webkit-animation-timing-function: ease-in; animation-timing-function: ease-in; }
+  82% { -webkit-transform: translateY(-6px); transform: translateY(-6px); -webkit-animation-timing-function: ease-in; animation-timing-function: ease-in; }
+  93% { -webkit-transform: translateY(-4px); transform: translateY(-4px); -webkit-animation-timing-function: ease-in; animation-timing-function: ease-in; }
+  25%, 55%, 75%, 87% { -webkit-transform: translateY(0); transform: translateY(0); -webkit-animation-timing-function: ease-out; animation-timing-function: ease-out; }
+  100% { -webkit-transform: translateY(0); transform: translateY(0); -webkit-animation-timing-function: ease-out; animation-timing-function: ease-out; opacity: 1; }
+}
+
+@keyframes bounce-top {
+  0% { transform: translateY(-45px); animation-timing-function: ease-in; opacity: 1; }
+  24% { opacity: 1; }
+  40% { transform: translateY(-24px); animation-timing-function: ease-in; }
+  65% { transform: translateY(-12px); animation-timing-function: ease-in; }
+  82% { transform: translateY(-6px); animation-timing-function: ease-in; }
+  93% { transform: translateY(-4px); animation-timing-function: ease-in; }
+  25%, 55%, 75%, 87% { transform: translateY(0); animation-timing-function: ease-out; }
+  100% { transform: translateY(0); animation-timing-function: ease-out; opacity: 1; }
+}
+
+/* Vibrate animation for Register */
+.vibrate-1 {
+  -webkit-animation: vibrate-1 0.3s linear infinite both;
+  animation: vibrate-1 0.3s linear infinite both;
+}
+
+@-webkit-keyframes vibrate-1 {
+  0% { -webkit-transform: translate(0); transform: translate(0); }
+  20% { -webkit-transform: translate(-2px, 2px); transform: translate(-2px, 2px); }
+  40% { -webkit-transform: translate(-2px, -2px); transform: translate(-2px, -2px); }
+  60% { -webkit-transform: translate(2px, 2px); transform: translate(2px, 2px); }
+  80% { -webkit-transform: translate(2px, -2px); transform: translate(2px, -2px); }
+  100% { -webkit-transform: translate(0); transform: translate(0); }
+}
+
+@keyframes vibrate-1 {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+</style>
+
+<!-- === Hero Section with Autotyping === -->
 <section class="container py-5 text-center" data-aos="fade-up">
   <div class="row justify-content-center">
-    <div class="col-lg-10">
+    <div class="col-md-10 col-lg-8">
       <h1 class="display-4 mb-3 fw-bold">
-        Welcome to <span class="text-warning"><i>KuraSmart</i></span>
+        Welcome to <span style="color: #9e8005;"><i>KuraSmart</i></span>
       </h1>
       <p class="lead mb-4 text-muted">
-        <span id="typed-text"></span>
+        <span id="typed-text"></span><span id="cursor" style="color: #9e8005;">|</span>
       </p>
-      <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
-        <a href="{{ url_for('web_auth.login') }}" class="btn btn-warning btn-lg px-4 text-white">Login</a>
-        <a href="{{ url_for('web_auth.register') }}" class="btn btn-outline-dark btn-lg px-4">Register</a>
+    </div>
+  </div>
+</section>
+
+<!-- === Information Section (NEW) === -->
+<section class="py-5" style="background-color: #FFFDF7;" data-aos="fade-up">
+  <div class="container">
+    <div class="row mb-4">
+      <div class="col text-center">
+        <h2 class="fw-bold mb-3" style="color: #9e8005;">Transforming the Way Communities Vote</h2>
+        <p class="lead text-muted">
+          KuraSmart is more than just a voting platform — it's a digital democracy tool built for transparency, ease, and inclusivity.
+          We are committed to bringing trusted voting to every level of society, from universities to labor unions and community organizations.
+        </p>
+      </div>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-6" data-aos="fade-right">
+        <h5 class="fw-semibold">📌 Simple to Set Up</h5>
+        <p class="text-muted">Create, configure, and launch your election in minutes. No technical expertise needed.</p>
+        <h5 class="fw-semibold">📊 Transparent from Start to Finish</h5>
+        <p class="text-muted">Auditable trails and verifiable results ensure every vote is counted accurately.</p>
+        <h5 class="fw-semibold">🕒 Instant Results</h5>
+        <p class="text-muted">Track voting in real time with beautifully designed dashboards and reporting tools.</p>
+      </div>
+      <div class="col-md-6" data-aos="fade-left">
+        <h5 class="fw-semibold">🔒 Enterprise-Level Security</h5>
+        <p class="text-muted">Your voters' privacy and ballot integrity are protected by industry-standard encryption.</p>
+        <h5 class="fw-semibold">🌍 Designed for Diversity</h5>
+        <p class="text-muted">From national elections to school clubs, we support any voting structure, big or small.</p>
+        <h5 class="fw-semibold">🧩 Flexible & Customizable</h5>
+        <p class="text-muted">Create your own ballot styles, question types, voting rules, and more—all from an intuitive dashboard.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Carousel -->
-<section class="container mt-5" data-aos="fade-up">
-  <div id="votingCarousel" class="carousel slide shadow rounded" data-bs-ride="carousel">
-    <div class="carousel-inner">
-      <div class="carousel-item active">
-        <img src="{{ url_for('static', filename='img/r.png') }}" class="d-block w-100 height-20" alt="Voting">
-      </div>
-      <div class="carousel-item">
-        <img src="{{ url_for('static', filename='img/ALB_3588.jpg') }}" class="d-block w-100" alt="Security">
-      </div>
-      <div class="carousel-item">
-        <img src="{{ url_for('static', filename='img/images.jpeg') }}" class="d-block w-100" alt="Community">
-      </div>
-    </div>
-    <button class="carousel-control-prev" type="button" data-bs-target="#votingCarousel" data-bs-slide="prev">
-      <span class="carousel-control-prev-icon"></span>
-    </button>
-    <button class="carousel-control-next" type="button" data-bs-target="#votingCarousel" data-bs-slide="next">
-      <span class="carousel-control-next-icon"></span>
-    </button>
-  </div>
-</section>
+<!-- === Features Section === -->
+<section class="py-5 mt-4" data-aos="fade-up"
+  style="background: linear-gradient(135deg, #001f4d 0%, #002f6c 40%, #f7c800 100%);">
 
-<!-- Features -->
-<section class="bg-light py-5 mt-5" data-aos="fade-up">
   <div class="container">
     <div class="row text-center">
       <div class="col-md-4 mb-4" data-aos="zoom-in" data-aos-delay="100">
-        <i class="fas fa-lock fa-3x text-warning mb-3"></i>
+        <i class="fas fa-lock fa-3x mb-3" style="color: #F7DC6F;"></i>
         <h5 class="fw-semibold">Secure</h5>
-        <p class="text-muted">End-to-end encrypted to protect voter privacy.</p>
+        <p class="text-white">End-to-end encrypted voting ensures your data stays safe and private.</p>
       </div>
       <div class="col-md-4 mb-4" data-aos="zoom-in" data-aos-delay="200">
-        <i class="fas fa-chart-line fa-3x text-warning mb-3"></i>
-        <h5 class="fw-semibold">Live Analytics</h5>
-        <p class="text-muted">Get instant insights into vote counts & results.</p>
+        <i class="fas fa-chart-line fa-3x mb-3" style="color: #F7DC6F;"></i>
+        <h5 class="fw-semibold">Real-time Results</h5>
+        <p class="text-muted">Live vote tracking with interactive analytics for full transparency.</p>
       </div>
       <div class="col-md-4 mb-4" data-aos="zoom-in" data-aos-delay="300">
-        <i class="fas fa-users fa-3x text-warning mb-3"></i>
+        <i class="fas fa-users fa-3x mb-3" style="color: #F7DC6F;"></i>
         <h5 class="fw-semibold">Community Focused</h5>
-        <p class="text-muted">Trusted by schools, counties & student unions.</p>
+        <p class="text-muted">Tailored for schools, counties, unions, and grassroots communities.</p>
+      </div>
+    </div>
+
+    <!-- Login/Register Buttons -->
+    <div class="row mt-5">
+      <div class="col text-end">
+        <a href="{{ url_for('web_auth.login') }}" class="btn btn-lg text-dark me-2 bounce-top" style="background-color: #F7DC6F; border: none;">Login</a>
+        <a href="{{ url_for('web_auth.register') }}" class="btn btn-outline-dark btn-lg vibrate-1">Register</a>
       </div>
     </div>
   </div>
 </section>
 
-{% endblock %}
-
-{% block extra_scripts %}
-<!-- Typed.js -->
-<script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+<!-- === Typing Animation Script === -->
 <script>
-  var typed = new Typed('#typed-text', {
-    strings: [
-      "Secure. Transparent. Modern Voting.",
-      "Empowering Communities Through Digital Ballots.",
-      "Smart Voting For A Smarter Future."
-    ],
-    typeSpeed: 50,
-    backSpeed: 30,
-    backDelay: 2000,
-    loop: true
+  const phrases = [
+    "Secure, transparent elections for every community.",
+    "Smart voting for schools, counties, and unions.",
+    "Real-time results with full audit trails.",
+    "Empowering grassroots democracy through technology.",
+    "Easy, fast, and trusted online voting.",
+    "Your vote, your voice, your KuraSmart platform."
+  ];
+
+  const typedText = document.getElementById("typed-text");
+  const cursor = document.getElementById("cursor");
+
+  let phraseIndex = 0;
+  let letterIndex = 0;
+  let isDeleting = false;
+
+  function type() {
+    const currentPhrase = phrases[phraseIndex];
+
+    if (isDeleting) {
+      typedText.textContent = currentPhrase.substring(0, letterIndex--);
+    } else {
+      typedText.textContent = currentPhrase.substring(0, letterIndex++);
+    }
+
+    if (!isDeleting && letterIndex === currentPhrase.length) {
+      setTimeout(() => isDeleting = true, 1500);
+    } else if (isDeleting && letterIndex === 0) {
+      isDeleting = false;
+      phraseIndex = (phraseIndex + 1) % phrases.length;
+    }
+
+    setTimeout(type, isDeleting ? 40 : 80);
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    type();
+    setInterval(() => {
+      cursor.style.visibility = (cursor.style.visibility === 'hidden') ? 'visible' : 'hidden';
+    }, 500);
   });
 </script>
+
 {% endblock %}
