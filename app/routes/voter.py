@@ -160,7 +160,6 @@ def view_election(election_id):
     }
     for c in candidates:
         c.vote_count = candidate_votes.get(c.id, 0)
-    # Group and sort candidates per position by vote count
     candidates_with_votes = defaultdict(list)
     for pos in positions:
         filtered = [c for c in candidates if c.position_id == pos.id]
