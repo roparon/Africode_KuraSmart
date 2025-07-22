@@ -154,7 +154,6 @@ def view_election(election_id):
     election = Election.query.get_or_404(election_id)
     positions = Position.query.filter_by(election_id=election_id).all()
     candidates = Candidate.query.filter_by(election_id=election_id).all()
-
     candidate_votes = {
         c.id: Vote.query.filter_by(candidate_id=c.id).count()
         for c in candidates
