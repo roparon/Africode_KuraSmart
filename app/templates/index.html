@@ -5,47 +5,45 @@
 
 <!-- === Custom Styles === -->
 <style>
-/* Bounce animation for Login */
 .bounce-top {
   -webkit-animation: bounce-top 0.9s both;
-          animation: bounce-top 0.9s both;
+  animation: bounce-top 0.9s both;
 }
 
 @-webkit-keyframes bounce-top {
-  0% { -webkit-transform: translateY(-45px); transform: translateY(-45px); -webkit-animation-timing-function: ease-in; animation-timing-function: ease-in; opacity: 1; }
+  0% { -webkit-transform: translateY(-45px); transform: translateY(-45px); opacity: 1; }
   24% { opacity: 1; }
-  40% { -webkit-transform: translateY(-24px); transform: translateY(-24px); -webkit-animation-timing-function: ease-in; animation-timing-function: ease-in; }
-  65% { -webkit-transform: translateY(-12px); transform: translateY(-12px); -webkit-animation-timing-function: ease-in; animation-timing-function: ease-in; }
-  82% { -webkit-transform: translateY(-6px); transform: translateY(-6px); -webkit-animation-timing-function: ease-in; animation-timing-function: ease-in; }
-  93% { -webkit-transform: translateY(-4px); transform: translateY(-4px); -webkit-animation-timing-function: ease-in; animation-timing-function: ease-in; }
-  25%, 55%, 75%, 87% { -webkit-transform: translateY(0); transform: translateY(0); -webkit-animation-timing-function: ease-out; animation-timing-function: ease-out; }
-  100% { -webkit-transform: translateY(0); transform: translateY(0); -webkit-animation-timing-function: ease-out; animation-timing-function: ease-out; opacity: 1; }
+  40% { -webkit-transform: translateY(-24px); transform: translateY(-24px); }
+  65% { -webkit-transform: translateY(-12px); transform: translateY(-12px); }
+  82% { -webkit-transform: translateY(-6px); transform: translateY(-6px); }
+  93% { -webkit-transform: translateY(-4px); transform: translateY(-4px); }
+  25%, 55%, 75%, 87% { -webkit-transform: translateY(0); transform: translateY(0); }
+  100% { -webkit-transform: translateY(0); transform: translateY(0); opacity: 1; }
 }
 
 @keyframes bounce-top {
-  0% { transform: translateY(-45px); animation-timing-function: ease-in; opacity: 1; }
+  0% { transform: translateY(-45px); opacity: 1; }
   24% { opacity: 1; }
-  40% { transform: translateY(-24px); animation-timing-function: ease-in; }
-  65% { transform: translateY(-12px); animation-timing-function: ease-in; }
-  82% { transform: translateY(-6px); animation-timing-function: ease-in; }
-  93% { transform: translateY(-4px); animation-timing-function: ease-in; }
-  25%, 55%, 75%, 87% { transform: translateY(0); animation-timing-function: ease-out; }
-  100% { transform: translateY(0); animation-timing-function: ease-out; opacity: 1; }
+  40% { transform: translateY(-24px); }
+  65% { transform: translateY(-12px); }
+  82% { transform: translateY(-6px); }
+  93% { transform: translateY(-4px); }
+  25%, 55%, 75%, 87% { transform: translateY(0); }
+  100% { transform: translateY(0); opacity: 1; }
 }
 
-/* Vibrate animation for Register */
 .vibrate-1 {
   -webkit-animation: vibrate-1 0.3s linear infinite both;
   animation: vibrate-1 0.3s linear infinite both;
 }
 
 @-webkit-keyframes vibrate-1 {
-  0% { -webkit-transform: translate(0); transform: translate(0); }
-  20% { -webkit-transform: translate(-2px, 2px); transform: translate(-2px, 2px); }
-  40% { -webkit-transform: translate(-2px, -2px); transform: translate(-2px, -2px); }
-  60% { -webkit-transform: translate(2px, 2px); transform: translate(2px, 2px); }
-  80% { -webkit-transform: translate(2px, -2px); transform: translate(2px, -2px); }
-  100% { -webkit-transform: translate(0); transform: translate(0); }
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
 }
 
 @keyframes vibrate-1 {
@@ -72,7 +70,7 @@
   </div>
 </section>
 
-<!-- === Information Section (NEW) === -->
+<!-- === Information Section === -->
 <section class="py-5" style="background-color: #FFFDF7;" data-aos="fade-up">
   <div class="container">
     <div class="row mb-4">
@@ -98,7 +96,7 @@
         <p class="text-muted">Your voters' privacy and ballot integrity are protected by industry-standard encryption.</p>
         <h5 class="fw-semibold">🌍 Designed for Diversity</h5>
         <p class="text-muted">From national elections to school clubs, we support any voting structure, big or small.</p>
-        <h5 class="fw-semibold">🧩 Flexible & Customizable</h5>
+        <h5 class="fw-semibold">🧹 Flexible & Customizable</h5>
         <p class="text-muted">Create your own ballot styles, question types, voting rules, and more—all from an intuitive dashboard.</p>
       </div>
     </div>
@@ -106,10 +104,13 @@
 </section>
 
 <!-- === Features Section === -->
-<section class="py-5 mt-4" data-aos="fade-up"
+<section class="py-5 mt-4 position-relative" data-aos="fade-up"
   style="background: linear-gradient(135deg, #001f4d 0%, #002f6c 40%, #f7c800 100%);">
 
-  <div class="container">
+  <!-- Stars Background -->
+  <div class="position-absolute top-0 start-0 w-100 h-100" style="background-image: url('/static/star-pattern.svg'); background-size: cover; opacity: 0.1;"></div>
+
+  <div class="container position-relative">
     <div class="row text-center">
       <div class="col-md-4 mb-4" data-aos="zoom-in" data-aos-delay="100">
         <i class="fas fa-lock fa-3x mb-3" style="color: #F7DC6F;"></i>
@@ -119,16 +120,15 @@
       <div class="col-md-4 mb-4" data-aos="zoom-in" data-aos-delay="200">
         <i class="fas fa-chart-line fa-3x mb-3" style="color: #F7DC6F;"></i>
         <h5 class="fw-semibold">Real-time Results</h5>
-        <p class="text-muted">Live vote tracking with interactive analytics for full transparency.</p>
+        <p class="text-white">Live vote tracking with interactive analytics for full transparency.</p>
       </div>
       <div class="col-md-4 mb-4" data-aos="zoom-in" data-aos-delay="300">
         <i class="fas fa-users fa-3x mb-3" style="color: #F7DC6F;"></i>
         <h5 class="fw-semibold">Community Focused</h5>
-        <p class="text-muted">Tailored for schools, counties, unions, and grassroots communities.</p>
+        <p class="text-white">Tailored for schools, counties, unions, and grassroots communities.</p>
       </div>
     </div>
 
-    <!-- Login/Register Buttons -->
     <div class="row mt-5">
       <div class="col text-end">
         <a href="{{ url_for('web_auth.login') }}" class="btn btn-lg text-dark me-2 bounce-top" style="background-color: #F7DC6F; border: none;">Login</a>
@@ -138,7 +138,6 @@
   </div>
 </section>
 
-<!-- === Typing Animation Script === -->
 <script>
   const phrases = [
     "Secure, transparent elections for every community.",
