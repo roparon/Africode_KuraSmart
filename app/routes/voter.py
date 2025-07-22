@@ -165,7 +165,6 @@ def view_election(election_id):
         filtered = [c for c in candidates if c.position_id == pos.id]
         sorted_candidates = sorted(filtered, key=lambda c: c.vote_count, reverse=True)
         candidates_with_votes[pos.id] = sorted_candidates
-
     return render_template(
         'voter/election_details.html',
         election=election,
