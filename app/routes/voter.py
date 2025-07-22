@@ -127,8 +127,6 @@ def cast_vote(election_id):
         if existing_vote:
             flash('You have already voted for this position in this election.', 'info')
             return redirect(url_for('voter.view_election', election_id=election_id))
-
-        # Record vote
         vote = Vote(
             voter_id=current_user.id,
             election_id=election_id,
