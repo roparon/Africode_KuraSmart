@@ -103,7 +103,6 @@ def create_app():
     app.register_blueprint(notifications_bp)
     app.register_blueprint(static_pages)
 
-    # Notifications context
     @app.context_processor
     def inject_unread_notifs():
         if current_user.is_authenticated:
