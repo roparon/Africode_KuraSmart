@@ -71,7 +71,6 @@ def create_app():
     login_manager.login_view = 'web_auth.login'
     login_manager.login_message_category = 'info'
 
-    # Blueprints
     from app.api.auth import auth_bp
     from app.routes.protected import protected_bp
     from app.routes.verification import verification_bp
