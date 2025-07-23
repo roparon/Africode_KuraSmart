@@ -168,42 +168,40 @@ def logout():
 
 # -------------------------
 # Admin Dashboard
-# -------------------------
 @admin_web_bp.route('/dashboard')
+@login_required
 def dashboard():
+    if not (current_user.is_super_admin or current_user.role == UserRole.admin.value):
+        abort(403)
+
     form = ProfileImageForm()
 
-    if current_user.is_super_admin or current_user.role == UserRole.admin.value:
-        try:
-            total_voters = User.query.filter_by(role='voter').count()
-            voted_count = db.session.query(Vote.voter_id).distinct().count()
-            turnout_percent = round((voted_count / total_voters) * 100, 2) if total_voters else 0
+    try:
+        total_voters = User.query.filter_by(role='voter').count()
+        voted_count = db.session.query(Vote.voter_id).distinct().count()
+        turnout_percent = round((voted_count / total_voters) * 100, 2) if total_voters else 0
 
-            ongoing_elections = Election.query.filter(Election.status == 'active').all()
-            ending_soon = [
-                e for e in ongoing_elections
-                if e.end_date and e.end_date <= datetime.utcnow() + timedelta(hours=4)
-            ]
+        ongoing_elections = Election.query.filter(Election.status == 'active').all()
+        ending_soon = [
+            e for e in ongoing_elections
+            if e.end_date and e.end_date <= datetime.utcnow() + timedelta(hours=4)
+        ]
 
-            return render_template(
-                'admin/dashboard.html',
-                form=form,
-                total_voters=total_voters,
-                voted_count=voted_count,
-                turnout_percent=turnout_percent,
-                ongoing_elections=ongoing_elections,
-                ending_soon=ending_soon
-            )
+        return render_template(
+            'admin/dashboard.html',
+            form=form,
+            total_voters=total_voters,
+            voted_count=voted_count,
+            turnout_percent=turnout_percent,
+            ongoing_elections=ongoing_elections,
+            ending_soon=ending_soon
+        )
 
-        except Exception as e:
-            current_app.logger.error(f"Admin dashboard error: {e}")
-            flash("Error loading dashboard data.", "danger")
-            return redirect(url_for('web_auth.login'))
+    except Exception as e:
+        current_app.logger.error(f"Admin dashboard error: {e}")
+        flash("Error loading dashboard data.", "danger")
+        return redirect(url_for('web_auth.login'))
 
-    elif current_user.role == UserRole.voter.value:
-        return render_template('voter/dashboard.html')
-    else:
-        abort(403)
 
 # Manage Users
 # -------------------------

@@ -59,6 +59,7 @@
 
                     {% if not has_voted %}
                       <form method="POST" action="{{ url_for('voter.cast_vote', election_id=election.id) }}">
+                        {{ form.csrf_token }}
                         <input type="hidden" name="candidate_id" value="{{ candidate.id }}">
                         <input type="hidden" name="position_id" value="{{ position.id }}">
                         <button type="submit" class="btn btn-success btn-sm mt-1">🗳️ Vote</button>

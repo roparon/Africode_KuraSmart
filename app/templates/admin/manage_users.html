@@ -81,14 +81,20 @@
     {% endif %}
   {% endwith %}
   <!-- Search Bar -->
-  <form method="GET" action="{{ url_for('admin_web.manage_users') }}" class="mb-4">
-    <input
-      type="text" name="search"
-      class="form-control"
-      placeholder="Search users by name or email..."
-      value="{{ search or '' }}"
-    >
+  <form method="GET" action="{{ url_for('admin_web.manage_users') }}" class="mb-2" style="width: 50%;">
+    <div class="input-group">
+      <input
+        type="text"
+        name="search"
+        class="form-control"
+        placeholder="Search users by name or email..."
+        value="{{ search or '' }}"
+      >
+      <button class="btn btn-outline-success rounded-pill" type="submit">Search</button>
+    </div>
   </form>
+
+
 
   <!-- Users Table -->
   <div class="table-responsive">
