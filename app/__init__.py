@@ -112,7 +112,6 @@ def create_app():
             count = 0
         return {'unread_count': count}
 
-    # CLI command registration
     try:
         from app.commands import create_superadmin
         app.cli.add_command(create_superadmin)
