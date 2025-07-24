@@ -13,7 +13,7 @@
       </div>
     {% endfor %}
   {% endif %}
-{% endwith %}<!-- Voter Welcome & Profile Section -->
+{% endwith %}
 <div class="col-md-12">
     <h2 class="mb-4 fw-bold">
         Welcome Voter, <span class="text-primary">{{ current_user.full_name }}</span>
@@ -33,12 +33,6 @@
                      style="width: 120px; height: 120px; object-fit: cover; cursor: pointer;"
                      data-bs-toggle="modal"
                      data-bs-target="#updateProfileImageModal">
-
-                <!-- Optional Pencil Icon -->
-                <div class="position-absolute bottom-0 end-0 bg-white rounded-circle p-1 shadow"
-                     style="transform: translate(25%, 25%);">
-                    <i class="bi bi-pencil-fill text-primary"></i>
-                </div>
             </div>
 
             <!-- Voter Details -->
@@ -69,26 +63,37 @@
                 <h5 class="modal-title">Update Profile Image</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            {% if not form %}
+                <div class="alert alert-danger">🚨 FORM NOT LOADED</div>
+            {% endif %}
+
 
             <form method="POST" enctype="multipart/form-data">
-                {{ form.csrf_token }}
-                <div class="modal-body">
-                    <div class="mb-3">
-                        {{ form.image.label(class="form-label") }}
-                        {{ form.image(class="form-control") }}
-                        {% for error in form.image.errors %}
-                            <div class="text-danger small">{{ error }}</div>
-                        {% endfor %}
+                {% if form %}
+                    {{ form.csrf_token }}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            {{ form.image.label(class="form-label") }}
+                            {{ form.image(class="form-control") }}
+                            {% for error in form.image.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
                     </div>
-                </div>
 
-                <div class="modal-footer">
-                    {{ form.submit(class="btn btn-primary") }}
-                </div>
+                    <div class="modal-footer">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                {% else %}
+                    <div class="modal-body">
+                        <div class="text-danger fw-bold">Form not loaded properly. Please try again later.</div>
+                    </div>
+                {% endif %}
             </form>
         </div>
     </div>
 </div>
+
 
 
 

@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from app.models import Election, Position, Candidate
 from werkzeug.utils import secure_filename
 from app.models import User
-from app.forms import ProfileImageForm
+from app.forms.profile_form import ProfileImageForm
 from app import db
 import os
 
@@ -17,20 +17,22 @@ def voter_dashboard():
     if current_user.role != 'voter':
         abort(403)
 
+    # Load elections and form
     elections = Election.query.order_by(Election.created_at.desc()).all()
     form = ProfileImageForm()
 
-    if form.validate_on_submit():
+    # Handle image upload if submitted
+    if request.method == 'POST' and form.validate_on_submit():
         image_file = form.image.data
-        if image_file:
-            from werkzeug.utils import secure_filename
-            import os
-            filename = secure_filename(image_file.filename)
-            upload_path = os.path.join('app', 'static', 'profile_images')
-            os.makedirs(upload_path, exist_ok=True)
-            image_path = os.path.join(upload_path, filename)
-            image_file.save(image_path)
 
+        if image_file:
+            filename = secure_filename(image_file.filename)
+            upload_folder = os.path.join('app', 'static', 'profile_images')
+            os.makedirs(upload_folder, exist_ok=True)
+            file_path = os.path.join(upload_folder, filename)
+            image_file.save(file_path)
+
+            # Save relative path to user profile
             current_user.profile_image = f'profile_images/{filename}'
             db.session.commit()
 
