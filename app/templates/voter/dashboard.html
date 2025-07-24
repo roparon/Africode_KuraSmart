@@ -18,56 +18,106 @@
     <h2 class="mb-4 fw-bold">
         Welcome Voter, <span class="text-primary">{{ current_user.full_name }}</span>
     </h2>
+<!-- 🌞 Desert-Inspired Profile Card -->
+<div class="card shadow-sm border-0 rounded-4 mb-5"
+     style="background-color: #fff8e6;" data-aos="fade-up" data-aos-delay="100">
+    <div class="card-header rounded-top-4 py-3 px-4"
+         style="background: linear-gradient(to right, #f3cd6b, #f0b64d); color: #5a3e1b;">
+        <h5 class="mb-0 fw-semibold">
+            <i class="bi bi-person-circle me-2"></i>Your Profile Overview
+        </h5>
+    </div>
 
-    <!-- Profile & Account Card -->
-    <div class="card shadow-lg mb-4 border-0 rounded-4" data-aos="fade-up" data-aos-delay="100">
-        <div class="card-header bg-gradient-primary text-white fw-semibold rounded-top-4">
-            Your Account Information
-        </div>
-        <div class="card-body d-flex flex-column flex-md-row align-items-center gap-4">
-            <!-- Profile Image & Edit -->
-            <div class="position-relative d-inline-block profile-image-container">
-                <img src="{{ url_for('static', filename=current_user.profile_image or 'profile_images/default-profile.png') }}"
-                     alt="Profile Image"
-                     class="rounded-circle border border-3 shadow-sm"
-                     style="width: 120px; height: 120px; object-fit: cover; cursor: pointer;"
-                     data-bs-toggle="modal"
-                     data-bs-target="#updateProfileImageModal">
+    <div class="card-body px-1 py-2">
+        <div class="row align-items-center g-5">
+            <!-- 🖼️ Enlarged Profile Image -->
+            <div class="col-12 col-md-auto text-center">
+                <div class="position-relative">
+                    <img src="{{ url_for('static', filename=current_user.profile_image or 'profile_images/default-profile.png') }}"
+                         alt="Profile Image"
+                         class="rounded-circle shadow border border-3"
+                         style="width: 230px; height: 230px; object-fit: cover; cursor: pointer;"
+                         data-bs-toggle="modal"
+                         data-bs-target="#updateProfileImageModal">
+                    <span class="position-absolute bottom-0 end-0 translate-middle p-1 bg-white rounded-circle border">
+                        <i class="bi bi-camera-fill text-warning fs-6"></i>
+                    </span>
+                </div>
+                <p class="mt-3 fw-bold text-dark fs-5">{{ current_user.full_name }}</p>
             </div>
 
-            <!-- Voter Details -->
-            <div class="flex-grow-1">
-                <p><strong>Email:</strong> {{ current_user.email }}</p>
-                <p><strong>National ID:</strong> {{ current_user.national_id }}</p>
-                <p><strong>Voter Type:</strong> {{ current_user.voting_type|capitalize }}</p>
-                <p><strong>Status:</strong>
-                    {% if current_user.is_verified %}
-                        <span class="text-success fw-bold">Verified</span>
-                    {% else %}
-                        <span class="text-danger fw-bold">Not Verified</span>
-                    {% endif %}
-                </p>
-                <p><strong>County:</strong> {{ current_user.county or 'N/A' }}</p>
-                <p><strong>Sub-County:</strong> {{ current_user.sub_county or 'N/A' }}</p>
-                <p><strong>Registered On:</strong> {{ current_user.created_at.strftime('%Y-%m-%d') }}</p>
+            <!-- 📋 Full Profile Details -->
+            <div class="col">
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <p class="mb-1 text-muted small">Email</p>
+                        <p class="fw-medium text-dark">{{ current_user.email }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="mb-1 text-muted small">National ID</p>
+                        <p class="fw-medium text-dark">{{ current_user.national_id }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="mb-1 text-muted small">Voter Type</p>
+                        <p class="fw-medium text-dark">{{ current_user.voting_type|capitalize }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="mb-1 text-muted small">Status</p>
+                        <p class="fw-bold {% if current_user.is_verified %}text-success{% else %}text-danger{% endif %}">
+                            {% if current_user.is_verified %}Verified{% else %}Not Verified{% endif %}
+                        </p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="mb-1 text-muted small">Date of Birth</p>
+                        <p class="fw-medium text-dark">{{ current_user.dob or 'N/A' }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="mb-1 text-muted small">Gender</p>
+                        <p class="fw-medium text-dark">{{ current_user.gender or 'N/A' }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="mb-1 text-muted small">County</p>
+                        <p class="fw-medium text-dark">{{ current_user.county or 'N/A' }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="mb-1 text-muted small">Sub-County</p>
+                        <p class="fw-medium text-dark">{{ current_user.sub_county or 'N/A' }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="mb-1 text-muted small">Division</p>
+                        <p class="fw-medium text-dark">{{ current_user.division or 'N/A' }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="mb-1 text-muted small">Location</p>
+                        <p class="fw-medium text-dark">{{ current_user.location or 'N/A' }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="mb-1 text-muted small">Sub-Location</p>
+                        <p class="fw-medium text-dark">{{ current_user.sub_location or 'N/A' }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="mb-1 text-muted small">Registered On</p>
+                        <p class="fw-medium text-dark">{{ current_user.created_at.strftime('%Y-%m-%d') }}</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- 🔄 Modal for Updating Profile Image -->
+<!-- 📸 Modal: Update Profile Image -->
 <div class="modal fade" id="updateProfileImageModal" tabindex="-1" aria-labelledby="updateImageModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4">
-            <div class="modal-header bg-primary text-white rounded-top-4">
-                <h5 class="modal-title">Update Profile Image</h5>
+            <div class="modal-header text-white rounded-top-4"
+                 style="background: linear-gradient(to right, #f3cd6b, #f0b64d);">
+                <h5 class="modal-title"><i class="bi bi-image"></i> Update Profile Picture</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <form method="POST" enctype="multipart/form-data">
                 {% if form %}
                     {{ form.hidden_tag() }}
-
                     <div class="modal-body">
                         <div class="mb-3">
                             {{ form.image.label(class="form-label") }}
@@ -79,14 +129,13 @@
                             {% endif %}
                         </div>
                     </div>
-
                     <div class="modal-footer">
-                        {{ form.submit(class="btn btn-primary") }}
+                        {{ form.submit(class="btn btn-warning text-dark fw-semibold") }}
                     </div>
                 {% else %}
                     <div class="modal-body">
-                        <div class="alert alert-danger fw-bold">
-                             FORM NOT LOADED<br>
+                        <div class="alert alert-danger fw-bold text-center">
+                            FORM NOT LOADED<br>
                             Please try again later.
                         </div>
                     </div>
