@@ -43,8 +43,6 @@ def voter_dashboard():
                            user=current_user,
                            elections=elections,
                            form=form)
-
-
 @voter_bp.route('/election/<int:election_id>')
 @login_required
 def view_election(election_id):

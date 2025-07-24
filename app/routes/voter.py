@@ -3,18 +3,27 @@ from flask_login import login_required, current_user
 from app.models import Notification, Election, Vote, Candidate, Position
 from datetime import datetime
 from sqlalchemy import and_
+from werkzeug.utils import secure_filename
+from app.forms.profile_form import ProfileImageForm
 from app.extensions import db
+import os
+
 
 voter_bp = Blueprint('voter', __name__)
 
 
-@voter_bp.route('/dashboard')
+
+
+  # Adjust path as needed
+
+
+@voter_bp.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def voter_dashboard():
     try:
         now = datetime.utcnow()
 
-        # Filter elections
+        # Fetch elections based on time
         active_elections = Election.query.filter(
             and_(
                 Election.start_date <= now,
@@ -34,7 +43,7 @@ def voter_dashboard():
             Election.end_date < now
         ).order_by(Election.end_date.desc()).all()
 
-        # Merge results
+        # Format elections with status
         def format_elections(elections, status):
             return [{
                 'id': e.id,
@@ -50,10 +59,36 @@ def voter_dashboard():
             format_elections(ended_elections, 'ended')
         )
 
+        # Get voted election IDs for this user
+        voted_election_ids = [vote.election_id for vote in Vote.query.filter_by(voter_id=current_user.id).all()]
+
+
+        # Initialize profile image form
+        form = ProfileImageForm()
+
+        # Handle form submission
+        if request.method == 'POST' and form.validate_on_submit():
+            image_file = form.image.data
+            if image_file:
+                filename = secure_filename(image_file.filename)
+                upload_folder = os.path.join('app', 'static', 'profile_images')
+                os.makedirs(upload_folder, exist_ok=True)
+                file_path = os.path.join(upload_folder, filename)
+                image_file.save(file_path)
+
+                current_user.profile_image = f'profile_images/{filename}'
+                db.session.commit()
+
+                flash("✅ Profile image updated successfully.", "success")
+                return redirect (url_for('voter.voter_dashboard'))
+
+        # ✅ Pass everything needed to template
         return render_template(
             'voter/dashboard.html',
             user=current_user,
-            all_elections=all_elections
+            all_elections=all_elections,
+            voted_election_ids=voted_election_ids,
+            form=form
         )
 
     except Exception as e:
