@@ -13,63 +13,83 @@
       </div>
     {% endfor %}
   {% endif %}
-{% endwith %}
-<div class="card mb-4 shadow-sm" style="background-color: #EDC9AF;">
-    <div class="card-body">
-        <div class="row">
-            <!-- Left Column: Profile Image + Name + Upload -->
-            <div class="col-md-6 d-flex flex-column align-items-center justify-content-center text-center border-end">
-                {% set image_path = user.profile_image if user.profile_image else 'profile_images/default-profile.png' %}
-                <img src="{{ url_for('static', filename=image_path) }}"
-                     alt="Profile Image"
-                     class="img-fluid rounded-circle mb-3"
-                     style="width: 140px; height: 140px; object-fit: cover;">
-                <h4 class="fw-bold">{{ user.full_name }}</h4>
+{% endwith %}<!-- Voter Welcome & Profile Section -->
+<div class="col-md-12">
+    <h2 class="mb-4 fw-bold">
+        Welcome Voter, <span class="text-primary">{{ current_user.full_name }}</span>
+    </h2>
 
-                <!-- Upload Form -->
-                {% if form %}
-                <form method="POST" enctype="multipart/form-data" class="mt-3 w-75">
-                    {{ form.csrf_token }}
-                    <div class="form-group mb-2 text-start w-100">
-                        {{ form.image.label(class="form-label") }}
-                        {{ form.image(class="form-control form-control-sm") }}
-                    </div>
-                    <div class="text-center">
-                        {{ form.submit(class="btn btn-sm btn-outline-primary") }}
-                    </div>
-                </form>
-                {% endif %}
+    <!-- Profile & Account Card -->
+    <div class="card shadow-lg mb-4 border-0 rounded-4" data-aos="fade-up" data-aos-delay="100">
+        <div class="card-header bg-gradient-primary text-white fw-semibold rounded-top-4">
+            Your Account Information
+        </div>
+        <div class="card-body d-flex flex-column flex-md-row align-items-center gap-4">
+            <!-- Profile Image & Edit -->
+            <div class="position-relative d-inline-block profile-image-container">
+                <img src="{{ url_for('static', filename=current_user.profile_image or 'profile_images/default-profile.png') }}"
+                     alt="Profile Image"
+                     class="rounded-circle border border-3 shadow-sm"
+                     style="width: 120px; height: 120px; object-fit: cover; cursor: pointer;"
+                     data-bs-toggle="modal"
+                     data-bs-target="#updateProfileImageModal">
+
+                <!-- Optional Pencil Icon -->
+                <div class="position-absolute bottom-0 end-0 bg-white rounded-circle p-1 shadow"
+                     style="transform: translate(25%, 25%);">
+                    <i class="bi bi-pencil-fill text-primary"></i>
+                </div>
             </div>
 
-            <!-- Right Column: User Details -->
-            <div class="col-md-6">
-                <h5 class="card-title mb-3">🧾 Profile Summary</h5>
-                <p><strong>Email:</strong> {{ user.email }}</p>
-                <p><strong>Voter Type:</strong> {{ user.voting_type|capitalize }}</p>
+            <!-- Voter Details -->
+            <div class="flex-grow-1">
+                <p><strong>Email:</strong> {{ current_user.email }}</p>
+                <p><strong>National ID:</strong> {{ current_user.national_id }}</p>
+                <p><strong>Voter Type:</strong> {{ current_user.voting_type|capitalize }}</p>
                 <p><strong>Status:</strong>
-                    {% if user.is_verified %}
+                    {% if current_user.is_verified %}
                         <span class="text-success fw-bold">Verified</span>
                     {% else %}
                         <span class="text-danger fw-bold">Not Verified</span>
                     {% endif %}
                 </p>
-                <p><strong>National ID:</strong> {{ user.national_id }}</p>
-                <p><strong>Date of Birth:</strong> {{ user.dob }}</p>
-                <p><strong>Gender:</strong> {{ user.gender }}</p>
-                <p><strong>County:</strong> {{ user.county }}</p>
-                <p><strong>Sub-County:</strong> {{ user.sub_county }}</p>
-                <p><strong>Division:</strong> {{ user.division }}</p>
-                <p><strong>Location:</strong> {{ user.location }}</p>
-                <p><strong>Sub-location:</strong> {{ user.sub_location }}</p>
-
-                <a href="{{ url_for('auth_bp.update_profile') }}"
-                   class="btn btn-sm btn-outline-secondary mt-3">
-                    Update Profile
-                </a>
+                <p><strong>County:</strong> {{ current_user.county or 'N/A' }}</p>
+                <p><strong>Sub-County:</strong> {{ current_user.sub_county or 'N/A' }}</p>
+                <p><strong>Registered On:</strong> {{ current_user.created_at.strftime('%Y-%m-%d') }}</p>
             </div>
         </div>
     </div>
 </div>
+
+<!-- 🔄 Modal for Updating Profile Image -->
+<div class="modal fade" id="updateProfileImageModal" tabindex="-1" aria-labelledby="updateImageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4">
+            <div class="modal-header bg-primary text-white rounded-top-4">
+                <h5 class="modal-title">Update Profile Image</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data">
+                {{ form.csrf_token }}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        {{ form.image.label(class="form-label") }}
+                        {{ form.image(class="form-control") }}
+                        {% for error in form.image.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 
 
 

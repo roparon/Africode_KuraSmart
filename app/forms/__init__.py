@@ -1,3 +1,4 @@
 from .notification_form import NotificationForm
-from .forms import ProfileImageForm
+from .profile_form import ProfileImageForm
+
 
