@@ -19,11 +19,14 @@
         <div class="row">
             <!-- Left Column: Profile Image + Name -->
             <div class="col-md-6 d-flex flex-column align-items-center justify-content-center text-center border-end">
-                <img src="{{ url_for('static', filename='img/default-profile.png') }}"
-                     alt="Profile Image"
-                     class="img-fluid rounded-circle mb-3"
-                     style="width: 140px; height: 140px; object-fit: cover;">
-                <h4 class="fw-bold">{{ user.full_name }}</h4>
+                {% set image_path = 'profile_pics/' + user.profile_image if user.profile_image else 'img/default-profile.png' %}
+                <img src="{{ url_for('static', filename=image_path) }}"
+                    alt="Profile Image"
+                    class="img-fluid rounded-circle mb-3"
+                    style="width: 140px; height: 140px; object-fit: cover;">
+                    <h4 class="fw-bold">{{ user.full_name }}</h4>
+
+
             </div>
 
             <!-- Right Column: Full User Details -->

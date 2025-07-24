@@ -40,7 +40,7 @@ class User(db.Model, UserMixin):
     division = db.Column(db.String(100), nullable=True)
     location = db.Column(db.String(100), nullable=True)
     sub_location = db.Column(db.String(100), nullable=True)
-    profile_image_url = db.Column(db.String(255), nullable=True)
+    profile_image = db.Column(db.String(255), nullable=True, default='profile_images/default-profile.png')
     is_verified = db.Column(db.Boolean, default=False, index=True)
     is_superadmin = db.Column(db.Boolean, default=False)
     role = db.Column(db.Enum(UserRole), default=UserRole.voter, nullable=False, index=True)
