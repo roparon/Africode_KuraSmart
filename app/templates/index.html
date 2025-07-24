@@ -4,131 +4,188 @@
 {% block content %}
 
 <style>
-.bounce-top {
-  -webkit-animation: bounce-top 0.9s both;
-          animation: bounce-top 0.9s both;
-}
+  /* Hero animations */
+  .bounce-top {
+    animation: bounce-top 0.9s both;
+  }
 
-@-webkit-keyframes bounce-top {
-  0% { -webkit-transform: translateY(-45px); transform: translateY(-45px); -webkit-animation-timing-function: ease-in; animation-timing-function: ease-in; opacity: 1; }
-  24% { opacity: 1; }
-  40% { -webkit-transform: translateY(-24px); transform: translateY(-24px); -webkit-animation-timing-function: ease-in; animation-timing-function: ease-in; }
-  65% { -webkit-transform: translateY(-12px); transform: translateY(-12px); -webkit-animation-timing-function: ease-in; animation-timing-function: ease-in; }
-  82% { -webkit-transform: translateY(-6px); transform: translateY(-6px); -webkit-animation-timing-function: ease-in; animation-timing-function: ease-in; }
-  93% { -webkit-transform: translateY(-4px); transform: translateY(-4px); -webkit-animation-timing-function: ease-in; animation-timing-function: ease-in; }
-  25%, 55%, 75%, 87% { -webkit-transform: translateY(0); transform: translateY(0); -webkit-animation-timing-function: ease-out; animation-timing-function: ease-out; }
-  100% { -webkit-transform: translateY(0); transform: translateY(0); -webkit-animation-timing-function: ease-out; animation-timing-function: ease-out; opacity: 1; }
-}
+  @keyframes bounce-top {
+    0% { transform: translateY(-45px); opacity: 1; animation-timing-function: ease-in; }
+    24% { opacity: 1; }
+    40% { transform: translateY(-24px); animation-timing-function: ease-in; }
+    65% { transform: translateY(-12px); animation-timing-function: ease-in; }
+    82% { transform: translateY(-6px); animation-timing-function: ease-in; }
+    93% { transform: translateY(-4px); animation-timing-function: ease-in; }
+    25%, 55%, 75%, 87% { transform: translateY(0); animation-timing-function: ease-out; }
+    100% { transform: translateY(0); opacity: 1; animation-timing-function: ease-out; }
+  }
 
-@keyframes bounce-top {
-  0% { transform: translateY(-45px); animation-timing-function: ease-in; opacity: 1; }
-  24% { opacity: 1; }
-  40% { transform: translateY(-24px); animation-timing-function: ease-in; }
-  65% { transform: translateY(-12px); animation-timing-function: ease-in; }
-  82% { transform: translateY(-6px); animation-timing-function: ease-in; }
-  93% { transform: translateY(-4px); animation-timing-function: ease-in; }
-  25%, 55%, 75%, 87% { transform: translateY(0); animation-timing-function: ease-out; }
-  100% { transform: translateY(0); animation-timing-function: ease-out; opacity: 1; }
-}
+  .vibrate-1 {
+    animation: vibrate-1 0.3s linear infinite both;
+  }
 
-.vibrate-1 {
-  -webkit-animation: vibrate-1 0.3s linear infinite both;
-  animation: vibrate-1 0.3s linear infinite both;
-}
+  @keyframes vibrate-1 {
+    0% { transform: translate(0); }
+    20% { transform: translate(-2px, 2px); }
+    40% { transform: translate(-2px, -2px); }
+    60% { transform: translate(2px, 2px); }
+    80% { transform: translate(2px, -2px); }
+    100% { transform: translate(0); }
+  }
 
-@-webkit-keyframes vibrate-1 {
-  0% { -webkit-transform: translate(0); transform: translate(0); }
-  20% { -webkit-transform: translate(-2px, 2px); transform: translate(-2px, 2px); }
-  40% { -webkit-transform: translate(-2px, -2px); transform: translate(-2px, -2px); }
-  60% { -webkit-transform: translate(2px, 2px); transform: translate(2px, 2px); }
-  80% { -webkit-transform: translate(2px, -2px); transform: translate(2px, -2px); }
-  100% { -webkit-transform: translate(0); transform: translate(0); }
-}
+  /* Animated border */
+  @keyframes borderColorCycle {
+    0% { border-color: #9e8005; }
+    10% { border-color: #F7DC6F; }
+    20% { border-color: #f39c12; }
+    30% { border-color: #3498db; }
+    40% { border-color: #8e44ad; }
+    50% { border-color: #2ecc71; }
+    60% { border-color: #e67e22; }
+    70% { border-color: #1abc9c; }
+    80% { border-color: #e74c3c; }
+    90% { border-color: #95a5a6; }
+    100% { border-color: #9e8005; }
+  }
 
-@keyframes vibrate-1 {
-  0% { transform: translate(0); }
-  20% { transform: translate(-2px, 2px); }
-  40% { transform: translate(-2px, -2px); }
-  60% { transform: translate(2px, 2px); }
-  80% { transform: translate(2px, -2px); }
-  100% { transform: translate(0); }
-}
+  .animated-border {
+    animation: borderColorCycle 10s linear infinite;
+    border-width: 2px;
+    border-style: solid;
+    transition: border-color 0.5s ease-in-out;
+  }
+
+  /* Text Shine for "KuraSmart" */
+  .text-shine {
+    background: linear-gradient(
+      to right,
+      #9f9f9f 0%,
+      #fffdfd 20%,
+      #868686 40%,
+      #ffffff 60%,
+      #9f9f9f 80%
+    );
+    background-size: 200% auto;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine 3s linear infinite;
+    font-weight: 700;
+    text-shadow: 0 1px 3px rgba(247, 195, 38, 0.9);
+    display: inline-block;
+  }
+
+  @keyframes shine {
+    0% { background-position: -100% center; }
+    100% { background-position: 100% center; }
+  }
+
+  /* Responsive typography tweak */
+  @media (max-width: 576px) {
+    h1.display-4 {
+      font-size: 2rem;
+    }
+    .kurasmart-large {
+      font-size: 1.3em;
+    }
+    .lead {
+      font-size: 1rem;
+    }
+  }
+
+  @media (min-width: 577px) and (max-width: 768px) {
+    .kurasmart-large {
+      font-size: 1.5em;
+    }
+  }
+
+  @media (min-width: 769px) {
+    .kurasmart-large {
+      font-size: 1.8em;
+    }
+  }
 </style>
 
-<section class="container py-5 text-center" data-aos="fade-up">
+<div class="container py-5 text-center animated-border rounded p-4 shadow-sm mb-5" data-aos="fade-up">
   <div class="row justify-content-center">
     <div class="col-md-10 col-lg-8">
       <h1 class="display-4 mb-3 fw-bold">
-        Welcome to <span style="color: #9e8005;"><i>KuraSmart</i></span>
+        Welcome to <span class="text-shine kurasmart-large"><i>KuraSmart</i></span>
       </h1>
       <p class="lead mb-4 text-muted">
         <span id="typed-text"></span><span id="cursor" style="color: #9e8005;">|</span>
       </p>
     </div>
   </div>
-</section>
+</div>
 
-<section class="py-5" style="background-color: #c0b9af;" data-aos="fade-up">
-  <div class="container">
-    <div class="row mb-4">
-      <div class="col text-center">
-        <h2 class="fw-bold mb-3" style="color: #9e8005;">Transforming the Way Communities Vote</h2>
-        <p class="lead text-muted">
-          KuraSmart is more than just a voting platform — it's a digital democracy tool built for transparency, ease, and inclusivity.
-          We are committed to bringing trusted voting to every level of society, from universities to labor unions and community organizations.
-        </p>
+<!-- Tagline -->
+<div class="container-fluid py-5 animated-border rounded p-4 shadow-sm mb-5" style="background-color: #272727;" data-aos="fade-up">
+  <div class="container text-center">
+    <h2 class="fw-bold mb-3" style="color: #fcbf49;">Transforming the Way Communities Vote</h2>
+    <p class="lead text-white">
+      KuraSmart is more than just a voting platform — it's a digital democracy tool built for transparency, ease, and inclusivity.
+    </p>
+  </div>
+</div>
+
+<!-- Feature Block: Left -->
+<div class="container py-5 animated-border rounded p-4 shadow-sm mb-5" data-aos="fade-right">
+  <div class="row gx-4"> 
+    {% for feature in [
+      {"icon":"🔒", "title":"Enterprise-Level Security", "text":"Your voters' privacy and ballot integrity are protected by industry-standard encryption."},
+      {"icon":"🌍", "title":"Designed for Diversity", "text":"From national elections to school clubs, we support any voting structure, big or small."},
+      {"icon":"🧩", "title":"Flexible & Customizable", "text":"Create your own ballot styles, question types, voting rules, and more—all from an intuitive dashboard."}
+    ] %}
+    <div class="col-md-4 mb-4">
+      <div class="h-100 py-4 px-3 animated-border rounded shadow-sm" data-aos="fade-left">
+        <h5 class="fw-semibold">{{ feature.icon }} {{ feature.title }}</h5>
+        <p class="text-muted">{{ feature.text }}</p>
       </div>
     </div>
-    <div class="row g-4">
-      <div class="col-md-6" data-aos="fade-right">
-        <h5 class="fw-semibold">📌 Simple to Set Up</h5>
-        <p class="text-muted">Create, configure, and launch your election in minutes. No technical expertise needed.</p>
-        <h5 class="fw-semibold">📊 Transparent from Start to Finish</h5>
-        <p class="text-muted">Auditable trails and verifiable results ensure every vote is counted accurately.</p>
-        <h5 class="fw-semibold">🕒 Instant Results</h5>
-        <p class="text-muted">Track voting in real time with beautifully designed dashboards and reporting tools.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Feature Block: Right -->
+<div class="container py-5 animated-border rounded p-4 shadow-sm mb-5" data-aos="fade-left">
+  <div class="row gx-4">
+    {% for feature in [
+      {"icon":"📌", "title":"Simple to Set Up", "text":"Create, configure, and launch your election in minutes. No technical expertise needed."},
+      {"icon":"📊", "title":"Transparent from Start to Finish", "text":"Auditable trails and verifiable results ensure every vote is counted accurately."},
+      {"icon":"🕒", "title":"Instant Results", "text":"Track voting in real time with beautifully designed dashboards and reporting tools."}
+    ] %}
+    <div class="col-md-4 mb-4">
+      <div class="h-100 py-4 px-3 animated-border rounded shadow-sm" data-aos="fade-left">
+        <h5 class="fw-semibold">{{ feature.icon }} {{ feature.title }}</h5>
+        <p class="text-muted">{{ feature.text }}</p>
       </div>
-      <div class="col-md-6" data-aos="fade-left">
-        <h5 class="fw-semibold">🔒 Enterprise-Level Security</h5>
-        <p class="text-muted">Your voters' privacy and ballot integrity are protected by industry-standard encryption.</p>
-        <h5 class="fw-semibold">🌍 Designed for Diversity</h5>
-        <p class="text-muted">From national elections to school clubs, we support any voting structure, big or small.</p>
-        <h5 class="fw-semibold">🧩 Flexible & Customizable</h5>
-        <p class="text-muted">Create your own ballot styles, question types, voting rules, and more—all from an intuitive dashboard.</p>
-      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Call to Action -->
+<div class="container py-5 animated-border rounded p-4 shadow-sm" data-aos="fade-up">
+  <div class="row">
+    <div class="col-md-8">
+      <h3 class="fw-bold mb-3" style="color: #9e8005;">Ready to Experience Smarter Voting?</h3>
+      <p class="text-muted fs-5">
+        Join thousands of organizations revolutionizing how decisions are made. <br>
+        With <strong>KuraSmart</strong>, you get real-time results, industry-grade security, and effortless setup—all in one platform.
+      </p>
+      <p class="text-muted fst-italic">
+        Whether you're leading a student council, union, or national committee, your voice deserves a platform that’s as powerful as your vision.
+      </p>
+    </div>
+    <div class="col-md-4 text-end align-self-center">
+      <a href="{{ url_for('web_auth.login') }}" class="btn btn-lg text-dark me-2 bounce-top" style="background-color: #fcbf49; border: none;">Login</a>
+      <a href="{{ url_for('web_auth.register') }}" class="btn btn-outline-dark btn-lg vibrate-1">Register</a>
     </div>
   </div>
-</section>
+</div>
 
-<section class=" py-5 mt-4" data-aos="fade-up" style="background-color: #c0b9af;">
-  <div class="container">
-    <div class="row text-center">
-      <div class="col-md-4 mb-4" data-aos="zoom-in" data-aos-delay="100">
-        <i class="fas fa-lock fa-3x mb-3" style="color: #F7DC6F;"></i>
-        <h5 class="fw-semibold">Secure</h5>
-        <p class="text-muted">End-to-end encrypted voting ensures your data stays safe and private.</p>
-      </div>
-      <div class="col-md-4 mb-4" data-aos="zoom-in" data-aos-delay="200">
-        <i class="fas fa-chart-line fa-3x mb-3" style="color: #F7DC6F;"></i>
-        <h5 class="fw-semibold">Real-time Results</h5>
-        <p class="text-muted">Live vote tracking with interactive analytics for full transparency.</p>
-      </div>
-      <div class="col-md-4 mb-4" data-aos="zoom-in" data-aos-delay="300">
-        <i class="fas fa-users fa-3x mb-3" style="color: #F7DC6F;"></i>
-        <h5 class="fw-semibold">Community Focused</h5>
-        <p class="text-muted">Tailored for schools, counties, unions, and grassroots communities.</p>
-      </div>
-    </div>
-
-    <div class="row mt-5">
-      <div class="col text-end">
-        <a href="{{ url_for('web_auth.login') }}" class="btn btn-lg text-dark me-2 bounce-top" style="background-color: #F7DC6F; border: none;">Login</a>
-        <a href="{{ url_for('web_auth.register') }}" class="btn btn-outline-dark btn-lg vibrate-1">Register</a>
-      </div>
-    </div>
-  </div>
-</section>
-
+<!-- Typing Animation Script -->
 <script>
   const phrases = [
     "Secure, transparent elections for every community.",
@@ -148,7 +205,6 @@
 
   function type() {
     const currentPhrase = phrases[phraseIndex];
-
     if (isDeleting) {
       typedText.textContent = currentPhrase.substring(0, letterIndex--);
     } else {
