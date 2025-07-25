@@ -249,6 +249,12 @@ class Notification(db.Model):
     read = db.Column(db.Boolean, default=False)
     send_email = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id', name='fk_notifications_user_id_users'),
+        nullable=False
+    )
+    user = db.relationship('User', backref='notifications')
 
     def __repr__(self):
         return f'<Notification {self.subject}>'

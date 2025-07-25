@@ -203,7 +203,7 @@
 
           {% if current_user.is_authenticated %}
             <li class="nav-item">
-              <a class="nav-link {% if request.endpoint in ['admin_web.dashboard', 'voter_web.dashboard'] %}active{% endif %}" href="{{ url_for('admin_web.dashboard') }}">
+              <a class="nav-link {% if request.endpoint in ['admin_web.dashboard'] %}active{% endif %}" href="{{ url_for('admin_web.dashboard') }}">
                 Dashboard
               </a>
             </li>

@@ -30,11 +30,23 @@
                 <a class="list-group-item list-group-item-action active" data-bs-toggle="collapse" href="#profileCollapse" role="button" aria-expanded="false" aria-controls="profileCollapse">
                     <i class="bi bi-person-circle me-2"></i> Profile
                 </a>
-                <a href="{{ url_for('admin_web.election_results') }}" class="list-group-item list-group-item-action">🕘 Voting History</a>
-                <a href="{{ url_for('voter.user_notifications') }}" class="list-group-item list-group-item-action">🔔 Notifications</a>
-                <a href="{{ url_for('main.index') }}#support" class="list-group-item list-group-item-action">🆘 Help & Support</a>
+                <a href="{{ url_for('admin_web.election_results') }}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-clock-history me-2"></i> Voting History
+                </a>
+                <a href="{{ url_for('voter.user_notifications') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-bell-fill me-2 text-warning"></i> Notifications</span>
+                {% if unread_count > 0 %}
+                    <span class="badge bg-danger rounded-pill">{{ unread_count }}</span>
+                {% endif %}
+                </a>
+
+
+                <a href="{{ url_for('main.index') }}#support" class="list-group-item list-group-item-action">
+                    <i class="bi bi-question-circle-fill me-2"></i> Help & Support
+                </a>
             </div>
         </div>
+
 
         <!-- Main Content -->
         <div class="col-lg-9">
@@ -124,6 +136,7 @@
                     </a>
                 </div>
                 {% endfor %}
+                <a href="{{ request.referrer or url_for('dashboard.dashboard_home') }}" class="btn btn-outline-secondary mb-4">← Back</a>
             </div>
         </div>
     </div>

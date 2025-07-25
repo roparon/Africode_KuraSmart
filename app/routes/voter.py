@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, flash, url_for, redirect, request
+from flask import Blueprint, render_template, flash, url_for, redirect, request, abort
 from flask_login import login_required, current_user
 from app.models import Notification, Election, Vote, Candidate, Position
 from datetime import datetime
@@ -11,10 +11,6 @@ import os
 
 voter_bp = Blueprint('voter', __name__)
 
-
-
-
-  # Adjust path as needed
 
 
 @voter_bp.route('/dashboard', methods=['GET', 'POST'])
@@ -95,16 +91,21 @@ def voter_dashboard():
         flash(f"Error loading dashboard: {str(e)}", "danger")
         return redirect(url_for('main.index'))
 
-
 @voter_bp.route('/notifications')
 @login_required
 def user_notifications():
     try:
-        notifs = Notification.query.order_by(Notification.created_at.desc()).limit(20).all()
+        # Assuming each notification is linked to a user
+        notifs = Notification.query \
+            .filter_by(user_id=current_user.id) \
+            .order_by(Notification.created_at.desc()) \
+            .limit(50).all()
+
         return render_template('voter/notifications.html', notifications=notifs)
+
     except Exception as e:
         flash(f"Error loading notifications: {str(e)}", "danger")
-        return redirect(url_for('voter.voter_dashboard'))
+        return redirect(url_for('voter.voter_dashboard'))  # or another safe fallback view
 
 
 @voter_bp.route('/notifications/mark_read/<int:notif_id>', methods=['POST'])
@@ -127,12 +128,19 @@ def mark_read(notif_id):
 def delete_notification(notif_id):
     try:
         notif = Notification.query.get_or_404(notif_id)
+
+        # Ensure user owns the notification
+        if notif.user_id != current_user.id:
+            abort(403)
+
         db.session.delete(notif)
         db.session.commit()
         flash('Notification deleted.', 'warning')
+
     except Exception as e:
         db.session.rollback()
         flash(f"Error deleting notification: {str(e)}", 'danger')
+
     return redirect(url_for('voter.user_notifications'))
 
 

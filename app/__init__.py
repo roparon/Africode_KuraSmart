@@ -102,18 +102,19 @@ def create_app():
     app.register_blueprint(notifications_bp)
     app.register_blueprint(static_pages)
 
+
     @app.context_processor
-    def inject_unread_notifs():
+    def inject_unread_count():
         if current_user.is_authenticated:
-            count = Notification.query.filter_by(read=False).count()
-        else:
-            count = 0
-        return {'unread_count': count}
+            count = Notification.query.filter_by(user_id=current_user.id, read=False).count()
+            return {'unread_count': count}
+        return {}
 
     try:
         from app.commands import create_superadmin
         app.cli.add_command(create_superadmin)
     except ImportError:
         pass
+
 
     return app

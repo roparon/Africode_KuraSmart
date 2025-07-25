@@ -469,12 +469,9 @@ def manage_elections():
                 ).first()
                 photo_file = cand_form.form.profile_photo.data
                 photo_filename = None
-                print(f"DEBUG: photo_file={photo_file}, filename={getattr(photo_file, 'filename', None)}")
 
                 if photo_file and hasattr(photo_file, 'filename') and photo_file.filename:
-                    print(f"DEBUG: Candidate form has photo file: {photo_file.filename}")
                     photo_filename = save_candidate_photo(photo_file)
-                    print(f"DEBUG: Photo filename assigned: {photo_filename}")
                 else:
                     print("DEBUG: No photo file provided for candidate.")
 
@@ -486,10 +483,8 @@ def manage_elections():
                     candidate.position = position.name
                     candidate.position_id = position.id
                     if photo_filename:
-                        print(f"DEBUG: Updating candidate {candidate.id} profile_photo to {photo_filename}")
                         candidate.profile_photo = photo_filename  
                 elif not existing:
-                    print(f"DEBUG: Creating new candidate with photo {photo_filename}")
                     candidate = Candidate(
                         full_name=full_name,
                         party_name=cand_form.form.party_name.data,
@@ -502,7 +497,6 @@ def manage_elections():
                     )
                     db.session.add(candidate)
                 else:
-                    print(f"DEBUG: Candidate already exists for position {position.name}")
                     flash(f"⚠️ You are already registered as a candidate for '{position.name}' in this election.", "warning")
 
             try:
@@ -1084,33 +1078,41 @@ def update_profile_image():
         return redirect(url_for('admin_web.dashboard'))
     else:
         return redirect(url_for('voter.voter_dashboard'))
-
+    
+    
 @admin_web_bp.route('/notifications', methods=['GET', 'POST'])
 @login_required
 def manage_notifications():
     if not current_user.is_superadmin:
         abort(403)
+
     form = NotificationForm()
     try:
         if form.validate_on_submit():
-            notif = Notification(
-                subject=form.title.data,
-                message=form.message.data,
-                send_email=form.send_email.data
-            )
-            db.session.add(notif)
-            db.session.commit()
-            if form.send_email.data:
-                users = User.query.all()
-                for u in users:
+            users = User.query.all()
+            for user in users:
+                notif = Notification(
+                    subject=form.title.data,
+                    message=form.message.data,
+                    send_email=form.send_email.data,
+                    user_id=user.id,  # ✅ Ensure user_id is set
+                    read=False  # Optional: ensure default
+                )
+                db.session.add(notif)
+
+                if form.send_email.data:
                     try:
-                        send_email(u.email, notif.subject, notif.message)
+                        send_email(user.email, notif.subject, notif.message)
                     except Exception:
-                        current_app.logger.exception(f"Failed email to {u.email}")
+                        current_app.logger.exception(f"Failed email to {user.email}")
+
+            db.session.commit()
             flash('Notification sent successfully!', 'success')
             return redirect(url_for('admin_web.manage_notifications'))
+
         notifications = Notification.query.order_by(Notification.created_at.desc()).all()
         return render_template('admin/notifications.html', form=form, notifications=notifications)
+
     except Exception as e:
         db.session.rollback()
         flash(f"Error in notifications: {e}", "danger")
@@ -1137,6 +1139,36 @@ def edit_notification(notif_id):
         db.session.rollback()
         flash(f"Error updating notification: {e}", "danger")
         return redirect(url_for('admin_web.manage_notifications'))
+
+
+@admin_web_bp.context_processor
+def inject_notifications():
+    if current_user.is_authenticated:
+        unread_notifications = Notification.query.filter_by(user_id=current_user.id, read=False).order_by(Notification.created_at.desc()).all()
+        return dict(unread_notifications=unread_notifications)
+    return dict(unread_notifications=[])
+
+@admin_web_bp.route('/notification/<int:notif_id>')
+@login_required
+def view_notification(notif_id):
+    notif = Notification.query.filter_by(id=notif_id, user_id=current_user.id).first_or_404()
+    notif.read = True
+    db.session.commit()
+    flash(f"Notification: {notif.subject}", "info")
+    return redirect(url_for('dashboard'))
+
+
+@voter_bp.route('/notifications/read/<int:notif_id>', methods=['POST'])
+@login_required
+def mark_read(notif_id):
+    notif = Notification.query.get_or_404(notif_id)
+    if notif.user_id != current_user.id:
+        abort(403)
+    notif.read = True
+    db.session.commit()
+    return redirect(request.referrer or url_for('voter.user_notifications'))
+
+
 
 @admin_web_bp.route('/notifications/delete/<int:notif_id>', methods=['POST'])
 @login_required

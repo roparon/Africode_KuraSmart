@@ -1,30 +1,45 @@
 <style>
-  .sticky-footer-container {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    z-index: 9999;
-    font-family: 'Segoe UI', sans-serif;
-    color: #ffffff;
-    background-color: #222; /* Unified background */
-    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.4);
-  }
+.sticky-footer-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 9999;
+  font-family: 'Segoe UI', sans-serif;
+  color: #ffffff;
+  transform: translateY(100%);
+  animation: slideUp 0.6s ease-out forwards;
+}
 
-  .live-icon-wrapper {
-    text-align: left;
-    padding: 4px 0 2px;
-    padding-left: 10px;
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
   }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
 
-  .live-icon {
-    color: #e6110a;
-    font-weight: bold;
-    font-size: 0.95rem;
-    animation: pulse 1.5s infinite;
-    transform: translateY(-12px);
-    display: inline-block;
-  }
+
+.live-icon-wrapper {
+  text-align: left;
+  padding: 4px 0 2px;
+  padding-left: 10px;
+  /* Removed bottom — it's not effective here */
+}
+
+.live-icon {
+  position: relative; /* Enable top positioning */
+  top: 13.4px; /* Move it downward */
+  color: #e6110a;
+  font-weight: bold;
+  font-size: 0.95rem;
+  animation: pulse 1.5s infinite;
+  display: inline-block;
+}
+
 
   @keyframes pulse {
     0%, 100% { opacity: 1; }
@@ -101,26 +116,7 @@
       text: "Welcome to KuraSmart — your secure and transparent digital voting platform, proudly built to empower every citizen with a safe, fair, and accessible way to make their voice heard. Cast your vote with confidence, knowing your participation matters!",
       customClass: "welcome-highlight"
     },
-    { text: "Tip: Review your vote confirmation receipt carefully." },
-    { text: "🔍 Transparency is our core principle." },
-    { text: "📖 Learn more about candidates before voting." },
-    { text: "Report any unusual activity immediately." },
-    { text: "👤 Use valid ID credentials to access your ballot." },
-    { text: "Stay informed with your election schedule." },
-    { text: "🛡️ All data is encrypted and securely stored." },
-    { text: "🌐 Only vote on trusted, secure networks." },
-    { text: "📞 Election officers are ready to assist you." },
-    { text: "🗳️ Confirm your vote in your dashboard." },
-    { text: "⚠️ Never share your login credentials with anyone." },
-    { text: "✅ Every vote counts. Make your voice heard." },
-    { text: "📢 Support is available for all registered voters." },
-    { text: "📊 Live updates: Turnout and participation metrics." },
-    { text: "🔐 Your vote is safe & secure with end-to-end encryption." },
-    { text: "🌍 KuraSmart ensures equal access for all — whether you're in the city or the village, your vote carries the same power." },
-    { text: "🧠 Make informed choices! Read candidate profiles and manifestos before casting your vote." },
-    { text: "🔒 Your privacy is our priority — all voting activity is encrypted and never shared." },
-    { text: "⏳ Don’t wait until the last minute — vote early and avoid peak-time traffic!" },
-    { text: "📬 Didn’t receive a confirmation email? Check your dashboard or contact support immediately." }
+    { text: "Tip: Review your vote confirmation receipt carefully.📬 Didn’t receive a confirmation email? Check your dashboard or contact support immediately.⏳ Don’t wait until the last minute — vote early and avoid peak-time traffic!🔒 Your privacy is our priority — all voting activity is encrypted and never shared.🧠 Make informed choices! Read candidate profiles and manifestos before casting your vote🌍 KuraSmart ensures equal access for all — whether you're in the city or the village, your vote carries the same power.🔐 Your vote is safe & secure with end-to-end encryption.📊 Live updates: Turnout and participation metrics.📢 Support is available for all registered voters.✅ Every vote counts. Make your voice heard.⚠️ Never share your login credentials with anyone.🔍 Transparency is our core principle.📖 Learn more about candidates before voting.👤 Use valid ID credentials to access your ballot.Stay informed with your election schedule.🛡️ All data is encrypted and securely stored.🌐 Only vote on trusted, secure networks.📞 Election officers are ready to assist you.🗳️ Confirm your vote in your dashboard." },
   ];
 
   const tickerTrack = document.getElementById('tickerTrack');
