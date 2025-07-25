@@ -17,9 +17,8 @@
 }
 </style>
 
-<div class="container-fluid">
-
-    <div class="row">
+<div style="min-height: 100vh; background: conic-gradient(from 135deg, #fcbf49 0% 70%, #1e3a8a 70% 85%, #000000 85% 100%);">
+      <div class="row">
         <!-- Sidebar -->
         <div class="col-lg-3 mb-4" id="sidebarTabs">
             <div class="list-group">
@@ -170,16 +169,22 @@
             </div>
 
             <!-- Election Search -->
-             <div class="input-group mb-4 shadow-sm rounded-4" data-aos="fade-up">
-                <span class="input-group-text bg-white border-end-0 rounded-start-4">
-                    <i class="bi bi-search text-muted"></i>
-                </span>
-                <input type="text"
-                        id="electionSearch"
-                        placeholder="Search elections..."
-                        class="form-control border-start-0 rounded-end-4"
-                        aria-label="Search elections">
+                <form method="GET" class="mb-4">
+                <div class="input-group shadow-sm rounded-pill bg-white w-75">
+                    <input 
+                    type="text" 
+                    name="search_title" 
+                    class="form-control border-0 rounded-pill ps-4" 
+                    placeholder="Search by Election Title" 
+                    value="{{ search_title }}">
+                    
+                    <button type="submit" class="btn btn-outline-success rounded-circle" aria-label="Search">
+                    <i class="bi bi-search"></i>
+                    </button>
                 </div>
+                </form>
+
+
 
             <!-- Elections Header -->
             <div class="d-flex justify-content-center my-3">
@@ -190,41 +195,47 @@
 
             <!-- Elections -->
             <div class="row g-4" id="electionGrid">
-                {% for election in all_elections %}
+            {% for election in all_elections %}
                 {% set has_voted = election.id in voted_election_ids %}
-                <div class="col-md-6 col-lg-4">
-                    <a href="{{ url_for('voter.view_election', election_id=election.id) }}" class="text-decoration-none text-dark">
-                        <div class="election-card {{ election.current_status }} {% if election.current_status == 'active' %}neon-pulse{% endif %}">
-                            <div class="card h-100 shadow-sm">
-                                <div class="card-body">
-                                    <h4 class="card-title">{{ election.title }}</h4>
-                                    <p class="card-subtitle text-muted">
-                                        {% if election.current_status == 'active' %}
-                                            Ends: {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}
-                                        {% elif election.current_status == 'pending' %}
-                                            Starts: {{ election.start_date.strftime('%Y-%m-%d %H:%M') }}
-                                        {% else %}
-                                            Ended: {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}
-                                        {% endif %}
-                                    </p>
-                                    <div class="mt-3 text-center">
-                                        {% if election.current_status == 'active' and user.is_verified and not has_voted %}
-                                            <span class="badge bg-success">Ongoing — Vote Now</span>
-                                        {% elif has_voted %}
-                                            <span class="badge bg-primary">✅ You Voted</span>
-                                        {% elif election.current_status == 'ended' %}
-                                            <span class="badge bg-danger">Ended</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">Pending</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
+                <div class="col-md-6 col-lg-4" data-aos="fade-up">
+                <a href="{{ url_for('voter.view_election', election_id=election.id) }}" class="text-decoration-none">
+                    
+                    <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden
+                    {% if election.current_status == 'pending' %} neon-border-animated {% endif %}">
+                    
+                    <div class="card-body">
+                        <h5 class="card-title fw-semibold text-dark">
+                        {{ election.title }}
+                        </h5>
+
+                        <p class="card-subtitle mb-2 text-muted small">
+                        {% if election.current_status == 'active' %}
+                            Ends: {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}
+                        {% elif election.current_status == 'pending' %}
+                            Starts: {{ election.start_date.strftime('%Y-%m-%d %H:%M') }}
+                        {% else %}
+                            Ended: {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}
+                        {% endif %}
+                        </p>
+
+                        <div class="mt-3 text-center">
+                        {% if election.current_status == 'active' and user.is_verified and not has_voted %}
+                            <span class="badge bg-success px-3 py-2">🗳️ Ongoing — Vote Now</span>
+                        {% elif has_voted %}
+                            <span class="badge bg-primary px-3 py-2">✅ You Voted</span>
+                        {% elif election.current_status == 'ended' %}
+                            <span class="badge bg-danger px-3 py-2">Ended</span>
+                        {% else %}
+                            <span class="badge bg-secondary px-3 py-2">Pending</span>
+                        {% endif %}
                         </div>
-                    </a>
+
+                    </div>
+                    </div>
+
+                </a>
                 </div>
-                {% endfor %}
-                <a href="{{ request.referrer or url_for('dashboard.dashboard_home') }}" class="btn btn-outline-secondary mb-4">← Back</a>
+            {% endfor %}
             </div>
         </div>
     </div>
@@ -270,25 +281,28 @@ function toggleSidebar() {
 </script>
 
 <style>
-.election-card {
-  background-color: #f5f5f5;
-  border-radius: 22px;
-  padding: 0.8rem;
+/* 🔵 General Card Styling */
+.card {
+  background-color: #f9f9f9;
+  border-radius: 1.5rem;
   font-family: 'Open Sans', sans-serif;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   height: 100%;
   position: relative;
 }
-.election-card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+.card:hover {
+  transform: scale(1.015);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
+
 .active.neon-pulse {
-  background: #000;
+  background-color: #000;
   color: #fff;
   border: 2px solid #0ff;
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.3);
 }
+
 .active.neon-pulse::before,
 .active.neon-pulse::after {
   content: "";
@@ -300,35 +314,76 @@ function toggleSidebar() {
   opacity: 0;
   pointer-events: none;
 }
+
 .active.neon-pulse::after {
   animation-delay: 1s;
 }
+
 @keyframes pulseOut {
-  0% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(1.5); opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
 }
-.pending {
-  background-color: #eaeaea;
-  opacity: 0.85;
-  border: 1px solid #ccc;
+
+/* 🟡 PENDING — Color-shifting Neon Border */
+.pending.neon-border-animated {
+  border: 2px solid #fff;
+  border-radius: 1.5rem;
+  animation: neonPulse 4s infinite linear;
 }
+
+@keyframes neonPulse {
+  0% {
+    box-shadow: 0 0 6px #ff4ec4, 0 0 12px #ff4ec4;
+    border-color: #ff4ec4;
+  }
+  25% {
+    box-shadow: 0 0 6px #00e0ff, 0 0 12px #00e0ff;
+    border-color: #00e0ff;
+  }
+  50% {
+    box-shadow: 0 0 6px #7eff6b, 0 0 12px #7eff6b;
+    border-color: #7eff6b;
+  }
+  75% {
+    box-shadow: 0 0 6px #ffc107, 0 0 12px #ffc107;
+    border-color: #ffc107;
+  }
+  100% {
+    box-shadow: 0 0 6px #ff4ec4, 0 0 12px #ff4ec4;
+    border-color: #ff4ec4;
+  }
+}
+
+/* 🔴 ENDED — Grayscale & Ribbon */
 .ended {
-  background-color: #ee0404;
+  background-color: #f0f0f0;
   filter: grayscale(70%);
   position: relative;
+  overflow: hidden;
 }
+
 .ended::after {
   content: 'ENDED';
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 12px;
+  right: 12px;
   background-color: #cc0000;
-  color: hsl(40, 13%, 95%);
-  padding: 4px 8px;
+  color: #fff;
+  padding: 4px 10px;
   font-size: 0.75rem;
-  font-weight: bold;
-  border-radius: 4px;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 1;
 }
+
+/* 📱 Responsive tweaks */
 @media (max-width: 768px) {
   .list-group-item {
     font-size: 0.9rem;
@@ -336,4 +391,6 @@ function toggleSidebar() {
   }
 }
 </style>
+
+
 {% endblock %}

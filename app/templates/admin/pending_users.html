@@ -9,19 +9,6 @@
       Approve Users
     </h2>
 
-    {# Flash messages #}
-    {% with messages = get_flashed_messages(with_categories=True) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
-            <i class="bi bi-{{ 'check-circle-fill' if category == 'success' else 'exclamation-triangle-fill' }} me-2"></i>
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-
     {% for role_group, group_label in [('admin', 'Admin Users'), ('voter', 'Voter Users')] %}
     <div class="card shadow-sm mb-5 rounded-4" data-aos="fade-right">
       <div class="card-header bg-gradient-primary text-white fw-semibold rounded-top-4">
