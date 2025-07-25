@@ -45,6 +45,9 @@
         <p class="text-center text-muted">No audit logs available.</p>
         {% endif %}
       </div>
+      <a href="{{ request.referrer or url_for('dashboard.dashboard_home') }}" class="btn btn-outline-secondary mb-4 w-30">
+      ← Back
+      </a>
     </div>
   </div>
 </div>
@@ -75,7 +78,6 @@
 }
 </style>
 {% endblock %}
-
 {% block scripts %}
 <script>
   AOS.init({ duration: 600, once: true, easing: 'ease-out-cubic' });
