@@ -218,6 +218,7 @@ class Vote(db.Model):
     election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=False)
     candidate_id = db.Column(db.Integer, db.ForeignKey('candidate.id'), nullable=False)
     position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     voter = db.relationship('User', back_populates='votes')
     election = db.relationship('Election', back_populates='votes')

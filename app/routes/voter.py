@@ -237,3 +237,13 @@ def view_election(election_id):
         candidates_with_votes=candidates_with_votes,
         form=form  # ✅ pass the form to the template
     )
+
+@voter_bp.route('/voting-history')
+@login_required
+def voting_history():
+    user_votes = Vote.query.filter_by(voter_id=current_user.id).order_by(Vote.timestamp.desc()).all()
+
+    return render_template(
+        'voter/voting_history.html',
+        votes=user_votes
+    )
