@@ -6,13 +6,17 @@ from wtforms import (
 from wtforms.validators import (
     DataRequired, Email, Length, EqualTo, ValidationError, Optional
 )
-from flask_wtf.file import FileAllowed
+from flask_wtf.file import FileAllowed, FileRequired
 from app.models import User
 from datetime import datetime, timedelta
 from app.forms.candidate_form import CandidateForm
+from zoneinfo import ZoneInfo
+from app.models import ElectionStatusEnum
+
 
 class ProfileImageForm(FlaskForm):
     image = FileField('Upload Profile Image', validators=[
+        FileRequired(message='Please select an image to upload.'),
         FileAllowed(['jpg', 'jpeg', 'png'], 'Only .jpg, .jpeg, .png allowed')
     ])
     submit = SubmitField('Update Image')
@@ -74,10 +78,6 @@ class VerificationRequestForm(FlaskForm):
     submit = SubmitField("Submit Verification Request", validators=[DataRequired()])
 
 
-from wtforms import SelectField
-from app.models import ElectionStatusEnum 
-
-
 class ElectionForm(FlaskForm):
     """Parent form that holds both election data and N candidates."""
     title = StringField("Title", validators=[DataRequired()])
@@ -96,24 +96,39 @@ class ElectionForm(FlaskForm):
         validators=[DataRequired()],
         coerce=str,
     )
+
     candidates = FieldList(FormField(CandidateForm), min_entries=1)
 
     submit = SubmitField("Save Changes")
 
     def validate_start_date(self, field):
-        if field.data < datetime.now():
+        # Convert field data to aware datetime in Africa/Nairobi timezone
+        user_start = field.data.replace(tzinfo=ZoneInfo("Africa/Nairobi"))
+        now_utc = datetime.now(ZoneInfo("UTC"))
+
+        if user_start.astimezone(ZoneInfo("UTC")) < now_utc:
             raise ValidationError("Start date cannot be in the past.")
 
     def validate_end_date(self, field):
-        if field.data <= self.start_date.data:
+        user_start = self.start_date.data.replace(tzinfo=ZoneInfo("Africa/Nairobi"))
+        user_end = field.data.replace(tzinfo=ZoneInfo("Africa/Nairobi"))
+
+        if user_end <= user_start:
             raise ValidationError("End time must be after the start time.")
-        if field.data > self.start_date.data + timedelta(hours=12, minutes=30):
+
+        if user_end > user_start + timedelta(hours=12, minutes=30):
             raise ValidationError("Election duration cannot exceed 12 h 30 min.")
+        
+        
 class PositionForm(FlaskForm):
     name = StringField('Position Name', validators=[DataRequired(), Length(min=2, max=100)])
     description = TextAreaField('Description')
     election_id = SelectField('Assign to Election', coerce=int)
     submit = SubmitField('Save Position')
+
+class VoteForm(FlaskForm):
+    candidate_id = HiddenField('Candidate ID', validators=[DataRequired()])
+    submit = SubmitField('Vote')
 
 
 class NotificationForm(FlaskForm):

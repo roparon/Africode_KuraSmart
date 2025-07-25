@@ -44,12 +44,13 @@
                     <div class="card-header bg-gradient-primary text-white fw-semibold rounded-top-4">Account Information</div>
                     <div class="card-body d-flex flex-column flex-md-row align-items-center gap-4">
                         <div class="position-relative d-inline-block profile-image-container">
-                            <img src="{{ url_for('static', filename=current_user.profile_image_url or 'img/default-avatar.png') }}"
-                                 alt="Profile Image"
-                                 class="rounded-circle border border-3 shadow-sm"
-                                 style="width: 120px; height: 120px; object-fit: cover; cursor: pointer;"
-                                 data-bs-toggle="modal"
-                                 data-bs-target="#updateProfileImageModal">
+                            <img src="{{ url_for('static', filename=current_user.profile_image or 'img/default-avatar.png') }}"
+                                alt="Profile Image"
+                                class="rounded-circle border border-3 shadow-sm"
+                                style="width: 120px; height: 120px; object-fit: cover; cursor: pointer;"
+                                data-bs-toggle="modal"
+                                data-bs-target="#updateProfileImageModal">
+
                             <div class="profile-edit-icon">
                                 <i class="bi bi-pencil-rounded"></i>
                             </div>
@@ -63,6 +64,7 @@
                         </div>
                     </div>
                 </div>
+
                 <style>
                 @keyframes float1 {
                 0%, 100% { transform: translateY(0); }

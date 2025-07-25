@@ -135,33 +135,48 @@ def delete_notification(notif_id):
         flash(f"Error deleting notification: {str(e)}", 'danger')
     return redirect(url_for('voter.user_notifications'))
 
+
 @voter_bp.route('/vote/<int:election_id>', methods=['POST'])
 @login_required
 def cast_vote(election_id):
     try:
         election = Election.query.get_or_404(election_id)
 
+        # ⏰ Check if current time is before the start of the election
+        if datetime.utcnow() < election.start_date:
+            flash('Voting has not yet started for this election.', 'warning')
+            return redirect(url_for('voter.view_election', election_id=election_id))
+
+        # ✅ Check if the election is active
         if election.current_status != 'active':
             flash('Voting is not currently open for this election.', 'warning')
             return redirect(url_for('voter.view_election', election_id=election_id))
 
+        # 🔐 Check if the user is verified
         if not current_user.is_verified:
             flash('Your account is not verified for voting.', 'warning')
             return redirect(url_for('voter.view_election', election_id=election_id))
 
+        # 🗳️ Get form inputs
         candidate_id = request.form.get('candidate_id')
         position_id = request.form.get('position_id')
+
         if not candidate_id or not position_id:
             flash('No candidate or position selected.', 'warning')
             return redirect(url_for('voter.view_election', election_id=election_id))
+
+        # 🧾 Check for duplicate vote
         existing_vote = Vote.query.filter_by(
             voter_id=current_user.id,
             election_id=election_id,
             position_id=position_id
         ).first()
+
         if existing_vote:
             flash('You have already voted for this position in this election.', 'info')
             return redirect(url_for('voter.view_election', election_id=election_id))
+
+        # ✅ Submit the vote
         vote = Vote(
             voter_id=current_user.id,
             election_id=election_id,
@@ -172,6 +187,7 @@ def cast_vote(election_id):
         db.session.commit()
 
         flash('Vote submitted successfully!', 'success')
+
     except Exception as e:
         db.session.rollback()
         flash(f'Error submitting vote: {str(e)}', 'danger')
@@ -179,26 +195,37 @@ def cast_vote(election_id):
     return redirect(url_for('voter.view_election', election_id=election_id))
 
 from collections import defaultdict
-@voter_bp.route('/election/<int:election_id>')
+from app.forms import VoteForm
+
+@voter_bp.route('/election/<int:election_id>', methods=['GET', 'POST'])
 @login_required
 def view_election(election_id):
     election = Election.query.get_or_404(election_id)
     positions = Position.query.filter_by(election_id=election_id).all()
     candidates = Candidate.query.filter_by(election_id=election_id).all()
+
+    # Prepare vote form
+    form = VoteForm()
+
+    # Add vote counts to each candidate
     candidate_votes = {
         c.id: Vote.query.filter_by(candidate_id=c.id).count()
         for c in candidates
     }
     for c in candidates:
         c.vote_count = candidate_votes.get(c.id, 0)
+
+    # Organize candidates by position
     candidates_with_votes = defaultdict(list)
     for pos in positions:
         filtered = [c for c in candidates if c.position_id == pos.id]
         sorted_candidates = sorted(filtered, key=lambda c: c.vote_count, reverse=True)
         candidates_with_votes[pos.id] = sorted_candidates
+
     return render_template(
         'voter/election_details.html',
         election=election,
         positions=positions,
-        candidates_with_votes=candidates_with_votes
+        candidates_with_votes=candidates_with_votes,
+        form=form  # ✅ pass the form to the template
     )

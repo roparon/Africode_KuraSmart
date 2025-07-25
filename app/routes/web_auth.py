@@ -24,6 +24,7 @@ import os
 web_auth_bp = Blueprint('web_auth', __name__)
 admin_web_bp = Blueprint('admin_web', __name__, url_prefix='/admin')
 voter_bp = Blueprint('voter', __name__, url_prefix='/voter')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 
 @web_auth_bp.route('/register', methods=['GET', 'POST'])
@@ -776,8 +777,6 @@ def cast_vote(election_id):
 
 
 
-from sqlalchemy import func
-from app.models import Candidate, Vote, Position  # adjust if needed
 
 @voter_bp.route('/election/<int:election_id>')
 @login_required
@@ -838,62 +837,6 @@ def view_election(election_id):
         has_voted=has_voted,
         user=current_user
     )
-
-
-# @voter_bp.route('/election/<int:election_id>')
-# @login_required
-# def view_election(election_id):
-#     if current_user.role != UserRole.voter.value:
-#         abort(403)
-
-#     election = Election.query.get_or_404(election_id)
-
-#     if election.status not in ['active', 'pending', 'ended']:
-#         flash("This election is not accessible at the moment.", "warning")
-#         return redirect(url_for('voter_dashboard'))
-
-#     positions = Position.query.filter_by(election_id=election.id).all()
-
-#     # Subquery to get vote counts
-#     vote_counts = (
-#         db.session.query(Vote.candidate_id, func.count(Vote.id).label("vote_count"))
-#         .filter(Vote.election_id == election.id)
-#         .group_by(Vote.candidate_id)
-#         .subquery()
-#     )
-
-#     # Join candidates with vote counts
-#     candidates_raw = (
-#         db.session.query(Candidate, vote_counts.c.vote_count)
-#         .filter(Candidate.election_id == election.id)
-#         .outerjoin(vote_counts, Candidate.id == vote_counts.c.candidate_id)
-#         .all()
-#     )
-
-#     # Attach vote count to each candidate
-#     candidate_list = []
-#     for candidate, vote_count in candidates_raw:
-#         candidate.vote_count = vote_count or 0
-#         candidate_list.append(candidate)
-
-#     # Group candidates by position
-#     candidates_with_votes = {}
-#     for position in positions:
-#         candidates_for_position = [c for c in candidate_list if c.position_id == position.id]
-#         candidates_with_votes[position.id] = candidates_for_position
-
-#     votes = Vote.query.filter_by(voter_id=current_user.id, election_id=election.id).all()
-#     has_voted = len(votes) > 0
-
-#     return render_template(
-#         "election_details.html",
-#         election=election,
-#         positions=positions,
-#         candidates_with_votes=candidates_with_votes,
-#         has_voted=has_voted,
-#         user=current_user
-#     )
-
 
 
 @admin_web_bp.route('/elections/<int:election_id>/edit', methods=['GET', 'POST'])
@@ -1108,28 +1051,39 @@ def delete_position(position_id):
         flash(f"Error deleting position: {e}", "danger")
     return redirect(url_for('admin_web.manage_positions'))
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @admin_web_bp.route('/update-profile-image', methods=['POST'])
 @login_required
 def update_profile_image():
     form = ProfileImageForm()
+
     try:
         if form.validate_on_submit():
-            image_file = request.files.get('image')
+            image_file = form.image.data  # ✅ use the form's field directly
             if image_file and image_file.filename:
                 filename = secure_filename(image_file.filename)
                 image_path = os.path.join(current_app.root_path, 'static', 'img', filename)
                 image_file.save(image_path)
-                current_user.profile_image_url = f"img/{filename}"
+
+                current_user.profile_image = f"img/{filename}"
                 db.session.commit()
                 flash("Profile image updated successfully!", "success")
             else:
                 flash("Please select a valid image file.", "warning")
+        else:
+            print("Form errors:", form.errors)  # helpful for debugging
+            flash("Form submission failed. Check the image file and CSRF token.", "danger")
     except Exception as e:
         db.session.rollback()
         flash(f"Error saving profile image: {e}", "danger")
-    return redirect(url_for('admin_web.dashboard'))
+
+    if hasattr(current_user, "is_admin") and current_user.is_admin:
+        return redirect(url_for('admin_web.dashboard'))
+    else:
+        return redirect(url_for('voter.voter_dashboard'))
 
 @admin_web_bp.route('/notifications', methods=['GET', 'POST'])
 @login_required

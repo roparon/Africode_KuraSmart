@@ -90,6 +90,7 @@ class User(db.Model, UserMixin):
         return self.full_name
 
 
+from zoneinfo import ZoneInfo
 class Election(db.Model):
     __tablename__ = 'election'
     id = db.Column(db.Integer, primary_key=True)
@@ -115,17 +116,19 @@ class Election(db.Model):
     @property
     def current_status(self):
         """Dynamically calculates election status based on dates and activity."""
-        now = datetime.utcnow()
+        now = datetime.now(ZoneInfo("UTC"))  # Make 'now' timezone-aware
+
+        start = self.start_date.replace(tzinfo=ZoneInfo("UTC"))
+        end = self.end_date.replace(tzinfo=ZoneInfo("UTC"))
+
         if not self.is_active:
             return 'inactive'
-        if now < self.start_date:
+        if now < start:
             return 'pending'
-        elif self.start_date <= now <= self.end_date:
+        elif start <= now <= end:
             return 'active'
         else:
             return 'ended'
-        
-
 class Candidate(db.Model):
     __tablename__ = 'candidate'
 
