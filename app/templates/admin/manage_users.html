@@ -215,4 +215,7 @@
     </nav>
   {% endif %}
 </div>
+<a href="{{ request.referrer or url_for('dashboard.dashboard_home') }}" class="btn btn-outline-secondary mb-4">
+      ← Back
+</a>
 {% endblock %}

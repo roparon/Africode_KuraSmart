@@ -22,7 +22,6 @@
     <p><strong>End:</strong> {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</p>
     <p><strong>Countdown:</strong> <span id="countdown"></span></p>
   </div>
-
   {% if has_voted %}
     <div class="alert alert-success text-center">
       ✅ You have already voted in this election.
@@ -96,6 +95,9 @@
   </div>
   {% endfor %}
 </div>
+<a href="{{ request.referrer or url_for('dashboard.dashboard_home') }}" class="btn btn-outline-secondary mb-4">
+      ← Back
+</a>
 
 <script>
   const endDate = new Date("{{ election.end_date.isoformat() }}").getTime();
