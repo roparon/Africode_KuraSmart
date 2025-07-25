@@ -7,11 +7,14 @@
     z-index: 9999;
     font-family: 'Segoe UI', sans-serif;
     color: #ffffff;
+    background-color: #222; /* Unified background */
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.4);
   }
 
   .live-icon-wrapper {
     text-align: left;
     padding: 4px 0 2px;
+    padding-left: 10px;
   }
 
   .live-icon {
@@ -31,7 +34,7 @@
   .footer-ticker-wrapper {
     display: flex;
     align-items: center;
-    height: 38;
+    height: 40px;
     overflow: hidden;
     white-space: nowrap;
   }
@@ -48,51 +51,33 @@
   }
 
   @keyframes scroll-rtl {
-    0% {
-      transform: translateX(0%);
-    }
-    100% {
-      transform: translateX(-100%);
-    }
+    0%   { transform: translateX(0%); }
+    100% { transform: translateX(-100%); }
   }
 
   .ticker-item {
     display: inline-block;
-    white-space: nowrap;
-    padding: 3px 16px;
-    margin-right: 4px;
-    border-radius: 4px;
-    font-size: 1rem;
+    padding: 4px 18px;
+    margin-right: 8px;
+    border-radius: 20px;
+    font-size: 0.95rem;
     font-weight: 500;
     color: #fff;
+    background-color: #444; /* Unified ticker item background */
+    transition: background 0.3s ease;
+  }
+
+  .ticker-item:hover {
+    background-color: #555;
   }
 
   .welcome-highlight {
     font-style: italic;
     background: linear-gradient(90deg, #f43f5e, #f97316, #facc15, hsl(56, 87%, 85%));
-    color: #080208;
-    font-size: 0.95rem;
-    padding: 4px 18px;
+    color: #080208 !important;
+    font-weight: 600;
     box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
   }
-
-  /* Background classes */
-  .bg1  { background: #e6d330; }
-  .bg2  { background: #d6d84f; }
-  .bg3  { background: #f59e0b; }
-  .bg4  { background: #ef4444; }
-  .bg5  { background: #206b1d; }
-  .bg6  { background: #e70b79; }
-  .bg7  { background: #51e034; }
-  .bg8  { background: #37bb26; }
-  .bg9  { background: #f97316; }
-  .bg10 { background: #ddeb1c; }
-  .bg11 { background: #c0c267; }
-  .bg12 { background: #ebdd93; }
-  .bg13 { background: #dc2626; }
-  .bg14 { background: #f8e63e; }
-  .bg15 { background: #facc15; }
-  .bg16 { background: #f5b766; }
 
   @media (max-width: 768px) {
     .ticker-item {
@@ -114,36 +99,35 @@
   const tickerMessages = [
     {
       text: "Welcome to KuraSmart — your secure and transparent digital voting platform, proudly built to empower every citizen with a safe, fair, and accessible way to make their voice heard. Cast your vote with confidence, knowing your participation matters!",
-      bg: "bg4",
       customClass: "welcome-highlight"
     },
-    { text: "Tip: Review your vote confirmation receipt carefully.", bg: "bg16" },
-    { text: "🔍 Transparency is our core principle.", bg: "bg15" },
-    { text: "📖 Learn more about candidates before voting.", bg: "bg14" },
-    { text: "Report any unusual activity immediately.", bg: "bg13" },
-    { text: "👤 Use valid ID credentials to access your ballot.", bg: "bg12" },
-    { text: "Stay informed with your election schedule.", bg: "bg11" },
-    { text: "🛡️ All data is encrypted and securely stored.", bg: "bg10" },
-    { text: "🌐 Only vote on trusted, secure networks.", bg: "bg9" },
-    { text: "📞 Election officers are ready to assist you.", bg: "bg8" },
-    { text: "🗳️ Confirm your vote in your dashboard.", bg: "bg7" },
-    { text: "⚠️ Never share your login credentials with anyone.", bg: "bg6" },
-    { text: "✅ Every vote counts. Make your voice heard.", bg: "bg5" },
-    { text: "📢 Support is available for all registered voters.", bg: "bg4" },
-    { text: "📊 Live updates: Turnout and participation metrics.", bg: "bg3" },
-    { text: "🔐 Your vote is safe & secure with end-to-end encryption.", bg: "bg2" },
-    { text: "🌍 KuraSmart ensures equal access for all — whether you're in the city or the village, your vote carries the same power.", bg: "bg2" },
-    { text: "🧠 Make informed choices! Read candidate profiles and manifestos before casting your vote.", bg: "bg3" },
-    { text: "🔒 Your privacy is our priority — all voting activity is encrypted and never shared.", bg: "bg4" },
-    { text: "⏳ Don’t wait until the last minute — vote early and avoid peak-time traffic!", bg: "bg5" },
-    { text: "📬 Didn’t receive a confirmation email? Check your dashboard or contact support immediately.", bg: "bg6" }
+    { text: "Tip: Review your vote confirmation receipt carefully." },
+    { text: "🔍 Transparency is our core principle." },
+    { text: "📖 Learn more about candidates before voting." },
+    { text: "Report any unusual activity immediately." },
+    { text: "👤 Use valid ID credentials to access your ballot." },
+    { text: "Stay informed with your election schedule." },
+    { text: "🛡️ All data is encrypted and securely stored." },
+    { text: "🌐 Only vote on trusted, secure networks." },
+    { text: "📞 Election officers are ready to assist you." },
+    { text: "🗳️ Confirm your vote in your dashboard." },
+    { text: "⚠️ Never share your login credentials with anyone." },
+    { text: "✅ Every vote counts. Make your voice heard." },
+    { text: "📢 Support is available for all registered voters." },
+    { text: "📊 Live updates: Turnout and participation metrics." },
+    { text: "🔐 Your vote is safe & secure with end-to-end encryption." },
+    { text: "🌍 KuraSmart ensures equal access for all — whether you're in the city or the village, your vote carries the same power." },
+    { text: "🧠 Make informed choices! Read candidate profiles and manifestos before casting your vote." },
+    { text: "🔒 Your privacy is our priority — all voting activity is encrypted and never shared." },
+    { text: "⏳ Don’t wait until the last minute — vote early and avoid peak-time traffic!" },
+    { text: "📬 Didn’t receive a confirmation email? Check your dashboard or contact support immediately." }
   ];
 
   const tickerTrack = document.getElementById('tickerTrack');
   for (let i = 0; i < 3; i++) {
     tickerMessages.forEach(msg => {
       const span = document.createElement('span');
-      span.className = `ticker-item ${msg.bg} ${msg.customClass || ''}`;
+      span.className = `ticker-item ${msg.customClass || ''}`;
       span.textContent = msg.text;
       tickerTrack.appendChild(span);
     });
