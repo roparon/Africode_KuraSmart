@@ -165,6 +165,9 @@
 {% if form.errors %}
 <div class="modal-backdrop fade show"></div>
 {% endif %}
+<a href="{{ request.referrer or url_for('dashboard.dashboard_home') }}" class="btn btn-outline-secondary mb-4">
+      ← Back
+</a>
 {% endblock %}
 
 {% block head_extra %}
