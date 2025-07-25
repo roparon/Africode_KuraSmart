@@ -183,6 +183,8 @@ class Candidate(db.Model):
         except Exception:
             return None
         return User.query.get(user_id)
+    def vote_count(self):
+        return Vote.query.filter_by(candidate_id=self.id).count()
 
 
 class Position(db.Model):
@@ -192,7 +194,7 @@ class Position(db.Model):
     name = db.Column(db.String(100), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     election = db.relationship('Election', back_populates='positions')
-    candidates = db.relationship('Candidate', back_populates='position_rel', lazy='dynamic', cascade="all, delete-orphan")
+    candidates = db.relationship('Candidate', back_populates='position_rel', lazy='selectin', cascade="all, delete-orphan")
     votes = db.relationship('Vote', back_populates='position', lazy='dynamic', cascade="all, delete-orphan")
 
     def __repr__(self):
@@ -200,6 +202,14 @@ class Position(db.Model):
 
     def __str__(self):
         return self.name
+    
+    def total_votes(self):
+        return sum(candidate.vote_count() for candidate in self.candidates)
+
+    def leading_candidate(self):
+        if not self.candidates:
+            return None
+        return max(self.candidates, key=lambda c: c.vote_count())
 
 class Vote(db.Model):
     __tablename__ = 'vote'

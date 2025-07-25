@@ -981,29 +981,56 @@ def delete_election(election_id):
     return redirect(url_for('admin_web.manage_elections'))
 
 
+from sqlalchemy.orm import joinedload
 @admin_web_bp.route('/election-results')
 @login_required
 def election_results():
     try:
-        election_id = request.args.get('election_id', type=int)
+        # Get all elections for the dropdown
         elections = Election.query.order_by(Election.title).all()
-        selected = Election.query.get(election_id) if election_id else elections[0]
+        if not elections:
+            flash("No elections available.", "warning")
+            return redirect(url_for("admin_web.manage_elections"))
 
+        # Determine selected election
+        election_id = request.args.get("election_id", type=int)
+        selected = (
+            Election.query.options(
+                joinedload(Election.positions).joinedload(Position.candidates)
+            )
+            .filter_by(id=election_id)
+            .first() if election_id else elections[0]
+        )
+
+        if not selected:
+            flash("Selected election not found.", "danger")
+            return redirect(url_for("admin_web.election_results"))
+
+        # Fetch all votes for this election
+        votes = Vote.query.filter_by(election_id=selected.id).all()
         vote_counts = defaultdict(int)
-        candidates = Candidate.query.filter_by(election_id=selected.id).all()
-        for vote in Vote.query.filter_by(election_id=selected.id).all():
+        for vote in votes:
             vote_counts[vote.candidate_id] += 1
 
-        labels = [c.full_name for c in candidates]
-        counts = [vote_counts.get(c.id, 0) for c in candidates]
-        return render_template('admin/election_results.html',
-                               elections=elections,
-                               selected_election=selected,
-                               labels=labels,
-                               counts=counts)
+        # Inject dynamic properties into Position and Candidate
+        for position in selected.positions:
+            for candidate in position.candidates:
+                candidate._vote_count = vote_counts.get(candidate.id, 0)
+                candidate.vote_count = lambda c=candidate: c._vote_count  # Bind vote_count method
+
+            # Bind utility methods to position
+            position.total_votes = lambda pos=position: sum(c._vote_count for c in pos.candidates)
+            position.leading_candidate = lambda pos=position: max(pos.candidates, key=lambda c: c._vote_count, default=None)
+
+        return render_template(
+            'admin/election_results.html',
+            elections=elections,
+            selected_election=selected
+        )
+
     except Exception as e:
         flash(f"Error fetching election results: {e}", "danger")
-        return redirect(url_for('admin_web.manage_elections'))
+        return redirect(url_for("admin_web.manage_elections"))
 
 @admin_web_bp.route('/positions', methods=['GET', 'POST'])
 @login_required

@@ -5,13 +5,17 @@
 {% block content %}
 <div class="admin-dashboard-background py-5">
   <div class="container" data-aos="fade-up">
+
+    <!-- Page Title -->
     <h2 class="mb-4 fw-bold text-center">
-      <i class="bi bi-bar-chart-line me-2 text-success"></i>Election Results Summary
+      <i class="bi bi-bar-chart-line me-2 text-success"></i> Election Results
     </h2>
+
     <!-- Election Selector -->
-    <form method="GET" class="mb-4 text-center" data-aos="zoom-in">
+    <form method="GET" class="mb-5 text-center" data-aos="zoom-in">
       <div class="input-group w-50 mx-auto shadow-sm rounded-pill overflow-hidden">
-        <select class="form-select border-0 ps-3" name="election_id" onchange="this.form.submit()">
+        <select class="form-select border-0 ps-3" name="election_id" onchange="this.form.submit()" required>
+          <option disabled {% if not selected_election %}selected{% endif %}>Select an election...</option>
           {% for election in elections %}
             <option value="{{ election.id }}" {% if election.id == selected_election.id %}selected{% endif %}>
               {{ election.title }}
@@ -21,64 +25,101 @@
       </div>
     </form>
 
-    <!-- Results Card -->
-    <div class="card shadow border-0 rounded-4" data-aos="fade-up" data-aos-delay="100">
-      <div class="card-header bg-gradient-success text-white fw-semibold rounded-top-4">
-        Results for: {{ selected_election.title }}
+    {% if selected_election %}
+    <!-- Election Summary -->
+    <div class="card shadow border-0 rounded-4 mb-4" data-aos="fade-up" data-aos-delay="100">
+      <div class="card-header bg-success text-white fw-semibold rounded-top-4">
+        Summary: {{ selected_election.title }}
       </div>
       <div class="card-body">
-        {% set total_votes = counts|sum %}
-        {% if total_votes == 0 %}
-          <p class="text-center text-muted">No votes have been cast in this election yet.</p>
+        {% if not selected_election.positions %}
+          <p class="text-center text-muted">No positions or candidates found for this election.</p>
         {% else %}
-          {% for candidate in labels %}
-            {% set count = counts[loop.index0] %}
-            {% set percent = (count / total_votes * 100) | round(1) %}
-            <div class="mb-3">
-              <div class="d-flex justify-content-between">
-                <strong>{{ candidate }}</strong>
-                <span class="text-muted small">{{ percent }}% ({{ count }} vote{{ 's' if count != 1 else '' }})</span>
-              </div>
-              <div class="progress">
-                <div class="progress-bar bg-success" role="progressbar"
-                     style="width: '{{ percent|default(0) }}%';" aria-valuenow="{{ percent|default(0)|float }}"
-                     aria-valuemin="0" aria-valuemax="100">
-                </div>
-              </div>
+          {% for position in selected_election.positions %}
+            <div class="mb-5" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+              <h5 class="mb-3 fw-bold">{{ position.name }}</h5>
+              {% set total_votes = position.total_votes() %}
+              {% set leading_candidate = position.leading_candidate() %}
+              
+              {% if position.candidates %}
+                {% for candidate in position.candidates %}
+                  {% set count = candidate.vote_count() %}
+                  {% set percent = (count / total_votes * 100) if total_votes else 0 %}
+                  <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <strong class="text-dark">
+                        {{ candidate.full_name }}
+                        {% if leading_candidate and candidate.id == leading_candidate.id and total_votes > 0 %}
+                          <span class="badge bg-warning text-dark ms-2">Leading</span>
+                        {% endif %}
+                      </strong>
+                      <span class="text-muted small">
+                        {{ percent | round(1) }}% ({{ count }} vote{{ 's' if count != 1 else '' }})
+                      </span>
+                    </div>
+                    <div class="progress">
+                      <div class="progress-bar 
+                          {% if candidate.id == leading_candidate.id and total_votes > 0 %}
+                            bg-success
+                          {% else %}
+                            bg-secondary
+                          {% endif %}"
+                        role="progressbar"
+                        style="width: {{ percent | round(1) }}%"
+                        aria-valuenow="{{ percent | round(1) }}" aria-valuemin="0" aria-valuemax="100">
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <p class="text-muted">No candidates for this position.</p>
+              {% endif %}
             </div>
           {% endfor %}
         {% endif %}
       </div>
     </div>
-    <a href="{{ request.referrer or url_for('dashboard.dashboard_home') }}" class="btn btn-outline-secondary mb-4">
-      ← Back
-    </a>
+    {% endif %}
+
+    <!-- Back Button -->
+    <div class="text-center mt-4">
+      <a href="{{ request.referrer or url_for('dashboard.dashboard_home') }}" class="btn btn-outline-secondary">
+        ← Back
+      </a>
+    </div>
+
   </div>
 </div>
 {% endblock %}
 
 {% block head_extra %}
 <style>
-.admin-dashboard-background {
-  background: linear-gradient(to bottom right, #f1f4f8, #e9ecef);
-  min-height: 100vh;
-}
-.progress {
-  height: 1.25rem;
-  border-radius: 0.75rem;
-  background-color: #dee2e6;
-}
-.progress-bar {
-  font-size: 0.85rem;
-  font-weight: 500;
-  line-height: 1.25rem;
-  border-radius: 0.75rem;
-}
+  .admin-dashboard-background {
+    background: linear-gradient(to bottom right, #f1f4f8, #e9ecef);
+    min-height: 100vh;
+  }
+
+  .progress {
+    height: 1.25rem;
+    border-radius: 0.75rem;
+    background-color: #dee2e6;
+  }
+
+  .progress-bar {
+    font-size: 0.8rem;
+    font-weight: 500;
+    border-radius: 0.75rem;
+    transition: width 0.5s ease-in-out;
+  }
+
+  .form-select:focus {
+    box-shadow: none;
+  }
 </style>
 {% endblock %}
 
 {% block scripts %}
 <script>
-  AOS.init({ duration: 600, once: true, easing: 'ease-out-cubic' });
+  AOS.init({ duration: 700, once: true, easing: 'ease-out-cubic' });
 </script>
 {% endblock %}
