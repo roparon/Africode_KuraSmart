@@ -8,19 +8,8 @@ class CandidateForm(FlaskForm):
     full_name  = StringField("Full Name", validators=[DataRequired()])
     party_name = StringField("Party (optional)", validators=[Optional()])
     manifesto  = TextAreaField("Manifesto")
+    position = StringField("Position", validators=[DataRequired()])
 
-    position   = SelectField(
-        "Position",
-        choices=[
-            ("President", "President"),
-            ("Governor", "Governor"),
-            ("Senator", "Senator"),
-            ("Women Representative", "Women Representative"),
-            ("Member Of Parliament", "Member Of Parliament"),
-            ("Member Of County Assembly", "Member Of County Assembly"),
-        ],
-        validators=[DataRequired()]
-    )
 
     profile_photo = FileField(
         "Profile Photo",

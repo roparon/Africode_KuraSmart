@@ -59,7 +59,24 @@
                   </div>
                   <div class="col-md-6 mb-2">
                     {{ cand_form.position.label(class="form-label") }}
-                    {{ cand_form.position(class="form-select") }}
+                    <input 
+                      type="text" 
+                      name="{{ cand_form.position.name }}" 
+                      id="{{ cand_form.position.id }}" 
+                      class="form-control" 
+                      list="positionOptions" 
+                      value="{{ cand_form.position.data or '' }}"
+                      placeholder="Enter or select a position"
+                    >
+                    <datalist id="positionOptions">
+                      <option value="President">
+                      <option value="Governor">
+                      <option value="Senator">
+                      <option value="Women Representative">
+                      <option value="Member Of Parliament">
+                      <option value="Member Of County Assembly">
+                    </datalist>
+
                   </div>
                   <div class="col-md-6 mb-2">
                     {{ cand_form.manifesto.label(class="form-label") }}

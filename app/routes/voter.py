@@ -1,10 +1,12 @@
 from flask import Blueprint, render_template, flash, url_for, redirect, request, abort
 from flask_login import login_required, current_user
-from app.models import Notification, Election, Vote, Candidate, Position
+from app.models import Notification, Election, Vote, Candidate, Position, Candidate
 from datetime import datetime
 from sqlalchemy import and_
 from werkzeug.utils import secure_filename
 from app.forms.profile_form import ProfileImageForm
+from collections import defaultdict
+from app.forms import VoteForm
 from app.extensions import db
 import os
 
@@ -46,7 +48,8 @@ def voter_dashboard():
                 'title': e.title,
                 'start_date': e.start_date,
                 'end_date': e.end_date,
-                'current_status': status
+                'current_status': status,
+                'candidates': Candidate.query.filter_by(election_id=e.id).all()
             } for e in elections]
 
         all_elections = (
@@ -202,8 +205,7 @@ def cast_vote(election_id):
 
     return redirect(url_for('voter.view_election', election_id=election_id))
 
-from collections import defaultdict
-from app.forms import VoteForm
+
 
 @voter_bp.route('/election/<int:election_id>', methods=['GET', 'POST'])
 @login_required
@@ -212,31 +214,40 @@ def view_election(election_id):
     positions = Position.query.filter_by(election_id=election_id).all()
     candidates = Candidate.query.filter_by(election_id=election_id).all()
 
-    # Prepare vote form
-    form = VoteForm()
+    # Get all votes by current user in this election
+    user_votes = Vote.query.filter_by(voter_id=current_user.id, election_id=election_id).all()
+    voted_position_ids = {vote.position_id for vote in user_votes}
+    has_voted = bool(user_votes)
 
-    # Add vote counts to each candidate
-    candidate_votes = {
-        c.id: Vote.query.filter_by(candidate_id=c.id).count()
-        for c in candidates
-    }
-    for c in candidates:
-        c.vote_count = candidate_votes.get(c.id, 0)
+    # Count votes per candidate
+    vote_counts = defaultdict(int)
+    total_votes_by_position = defaultdict(int)
+    for vote in Vote.query.filter_by(election_id=election_id).all():
+        vote_counts[vote.candidate_id] += 1
+        total_votes_by_position[vote.position_id] += 1
 
-    # Organize candidates by position
+    # Add vote count to candidates and group by position
     candidates_with_votes = defaultdict(list)
     for pos in positions:
-        filtered = [c for c in candidates if c.position_id == pos.id]
-        sorted_candidates = sorted(filtered, key=lambda c: c.vote_count, reverse=True)
+        pos_candidates = [c for c in candidates if c.position_id == pos.id]
+        for c in pos_candidates:
+            c.vote_count = vote_counts.get(c.id, 0)
+        sorted_candidates = sorted(pos_candidates, key=lambda c: c.vote_count, reverse=True)
         candidates_with_votes[pos.id] = sorted_candidates
+
+    form = VoteForm()
 
     return render_template(
         'voter/election_details.html',
         election=election,
         positions=positions,
         candidates_with_votes=candidates_with_votes,
-        form=form  # ✅ pass the form to the template
+        total_votes_by_position=total_votes_by_position,
+        voted_position_ids=voted_position_ids,
+        has_voted=has_voted,
+        form=form
     )
+
 
 @voter_bp.route('/voting-history')
 @login_required

@@ -426,7 +426,6 @@ def save_candidate_photo(file):
         return filename
     return None
 
-
 @admin_web_bp.route('/manage-elections', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -437,6 +436,7 @@ def manage_elections():
     form = ElectionForm()
     now = datetime.now()
     current_datetime = now.strftime('%Y-%m-%dT%H:%M')
+
     try:
         if request.method == "POST" and form.validate_on_submit():
             election = Election.query.filter_by(title=form.title.data).first()
@@ -455,25 +455,29 @@ def manage_elections():
                 election.start_date = form.start_date.data
                 election.end_date = form.end_date.data
                 election.status = form.status.data
+
             for cand_form in form.candidates.entries:
                 full_name = cand_form.form.full_name.data.strip()
-                position_name = cand_form.form.position.data
-                position = Position.query.filter_by(name=position_name).first()
+                position_name = cand_form.form.position.data.strip()
+
+                # 🔥 Create position if it doesn't exist
+                position = Position.query.filter_by(name=position_name, election_id=election.id).first()
                 if not position:
-                    flash(f"Position '{position_name}' does not exist. Please create it first.", "danger")
-                    continue
+                    position = Position(name=position_name, election_id=election.id)
+                    db.session.add(position)
+                    db.session.commit()
+
                 existing = Candidate.query.filter_by(
                     user_id=current_user.id,
                     election_id=election.id,
                     position_id=position.id
                 ).first()
+
                 photo_file = cand_form.form.profile_photo.data
                 photo_filename = None
 
                 if photo_file and hasattr(photo_file, 'filename') and photo_file.filename:
                     photo_filename = save_candidate_photo(photo_file)
-                else:
-                    print("DEBUG: No photo file provided for candidate.")
 
                 if cand_form.form.original_candidate:
                     candidate = cand_form.form.original_candidate
@@ -483,7 +487,7 @@ def manage_elections():
                     candidate.position = position.name
                     candidate.position_id = position.id
                     if photo_filename:
-                        candidate.profile_photo = photo_filename  
+                        candidate.profile_photo = photo_filename
                 elif not existing:
                     candidate = Candidate(
                         full_name=full_name,
@@ -554,6 +558,7 @@ def manage_elections():
         db.session.rollback()
         flash(f"❌ Error managing elections: {e}", "danger")
         return redirect(url_for("admin_web.dashboard"))
+
 
 @admin_web_bp.route('/elections/<int:election_id>/activate', methods=['POST'])
 @login_required
@@ -715,17 +720,23 @@ def voter_dashboard():
     
 
 from app.utils.voting import check_if_user_has_voted
+
 @voter_bp.route('/election/<int:election_id>')
+@login_required
 def election_detail(election_id):
     election = Election.query.get_or_404(election_id)
     positions = Position.query.filter_by(election_id=election.id).all()
-    candidates = Candidate.query.filter(Candidate.position_id.in_([p.id for p in positions])).all()
+    position_ids = [p.id for p in positions]
+    candidates = Candidate.query.filter(Candidate.position_id.in_(position_ids)).all()
+    has_voted = check_if_user_has_voted(current_user, election.id)
 
-    return render_template("election_detail.html", 
-                           election=election, 
-                           positions=positions, 
-                           candidates=candidates,
-                           has_voted=check_if_user_has_voted(current_user, election.id))
+    return render_template(
+        "voter/election_detail.html",
+        election=election,
+        positions=positions,
+        candidates=candidates,
+        has_voted=has_voted
+    )
 
     
 @voter_bp.route('/cast_vote/<int:election_id>', methods=['GET', 'POST'])
@@ -767,69 +778,6 @@ def cast_vote(election_id):
         election=election,
         positions=positions,
         candidates=candidates
-    )
-
-
-
-
-@voter_bp.route('/election/<int:election_id>')
-@login_required
-def view_election(election_id):
-    if current_user.role != UserRole.voter.value:
-        abort(403)
-
-    election = Election.query.get_or_404(election_id)
-
-    if election.status not in ['active', 'pending', 'ended']:
-        flash("This election is not accessible at the moment.", "warning")
-        return redirect(url_for('voter_dashboard'))
-
-    positions = Position.query.filter_by(election_id=election.id).all()
-
-    # ✅ Subquery to count votes per candidate
-    vote_counts_subq = (
-        db.session.query(
-            Vote.candidate_id,
-            func.count(Vote.id).label('vote_count')
-        )
-        .filter(Vote.election_id == election.id)
-        .group_by(Vote.candidate_id)
-        .subquery()
-    )
-
-    # ✅ Join candidates with vote counts
-    candidates = (
-        db.session.query(Candidate, vote_counts_subq.c.vote_count)
-        .filter(Candidate.election_id == election.id)
-        .outerjoin(vote_counts_subq, Candidate.id == vote_counts_subq.c.candidate_id)
-        .all()
-    )
-
-    # ✅ Attach vote count to each candidate
-    candidate_list = []
-    for candidate, vote_count in candidates:
-        candidate.vote_count = vote_count or 0
-        candidate_list.append(candidate)
-
-    # ✅ Group candidates by position.id
-    candidates_with_votes = {}
-    for position in positions:
-        candidates_for_position = [
-            c for c in candidate_list if c.position_id == position.id
-        ]
-        candidates_with_votes[position.id] = candidates_for_position
-
-    # Has user already voted
-    votes = Vote.query.filter_by(voter_id=current_user.id, election_id=election.id).all()
-    has_voted = len(votes) > 0
-
-    return render_template(
-        'election_details.html',
-        election=election,
-        positions=positions,
-        candidates_with_votes=candidates_with_votes,
-        has_voted=has_voted,
-        user=current_user
     )
 
 
