@@ -10,18 +10,33 @@ background-color: #e9c93c;">
   <div class="card border-0 shadow-lg rounded-4 p-4 text-white" style="background: linear-gradient(135deg, #1e3a8a, #000000);">
     <h2 class="text-center mb-4 display-6 fw-semibold text-warning">{{ election.title }}</h2>
 
-    <p class="mb-3"><strong>Description:</strong><br>{{ election.description or 'No description provided.' }}</p>
-    <p><strong>Status:</strong> 
-      <span class="badge bg-light text-dark text-uppercase">{{ election.status.capitalize() }}</span>
-    </p>
-
-    <div class="row mb-3">
-      <div class="col-sm-6"><strong>Start:</strong><br>{{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</div>
-      <div class="col-sm-6"><strong>End:</strong><br>{{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</div>
+    <div class="mb-3">
+      <h6 class="text-uppercase text-secondary fw-bold">Description</h6>
+      <p class="mb-0 text-light">{{ election.description or 'No description provided.' }}</p>
     </div>
 
-    <p><strong>Countdown:</strong> <span id="countdown" class="fw-bold text-warning"></span></p>
+    <div class="mb-3">
+      <h6 class="text-uppercase text-secondary fw-bold">Status</h6>
+      <span class="badge bg-light text-dark text-uppercase">{{ election.status.capitalize() }}</span>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-sm-6">
+        <h6 class="text-uppercase text-secondary fw-bold">Start</h6>
+        <p class="mb-0 text-light">{{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</p>
+      </div>
+      <div class="col-sm-6">
+        <h6 class="text-uppercase text-secondary fw-bold">🛑 End</h6>
+        <p class="mb-0 text-light">{{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</p>
+      </div>
+    </div>
+
+    <div>
+      <h6 class="text-uppercase text-secondary fw-bold">Countdown</h6>
+      <p class="mb-0 fw-bold text-warning"><span id="countdown"></span></p>
+    </div>
   </div>
+
 
   {% if has_voted %}
     <div class="alert alert-success text-center mt-3">
