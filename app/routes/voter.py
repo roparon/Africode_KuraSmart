@@ -219,7 +219,6 @@ def view_election(election_id):
     voted_position_ids = {vote.position_id for vote in user_votes}
     has_voted = bool(user_votes)
 
-    # Count votes per candidate
     vote_counts = defaultdict(int)
     total_votes_by_position = defaultdict(int)
     for vote in Vote.query.filter_by(election_id=election_id).all():
