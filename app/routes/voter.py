@@ -226,7 +226,6 @@ def view_election(election_id):
         vote_counts[vote.candidate_id] += 1
         total_votes_by_position[vote.position_id] += 1
 
-    # Add vote count to candidates and group by position
     candidates_with_votes = defaultdict(list)
     for pos in positions:
         pos_candidates = [c for c in candidates if c.position_id == pos.id]
