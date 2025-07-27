@@ -4,13 +4,13 @@
 {% block content %}
 <div class="manage-elections-background py-5">
   <div class="container" data-aos="fade-up">
-    <h2 class="mb-4 fw-bold">
+    <h2 class="mb-4 fw-bold display-6 text-dark">
       <i class="bi bi-check2-square me-2 text-primary"></i>
       Manage Elections
     </h2>
 
-    <div class="card shadow-sm mb-5 rounded-4" data-aos="fade-right">
-      <div class="card-header bg-gradient-primary text-white fw-semibold rounded-top-4">
+    <div class="card soft-card mb-5" data-aos="fade-right">
+      <div class="card-header bg-gradient-primary text-white fw-semibold fs-5 rounded-top-4">
         Create New Election
       </div>
       <div class="card-body">
@@ -18,36 +18,36 @@
           {{ form.hidden_tag() }}
 
           <div class="mb-3">
-            {{ form.title.label(class="form-label") }}
+            {{ form.title.label(class="form-label fw-semibold text-dark") }}
             {{ form.title(class="form-control") }}
             {% for e in form.title.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
           </div>
 
           <div class="mb-3">
-            {{ form.description.label(class="form-label") }}
+            {{ form.description.label(class="form-label fw-semibold text-dark") }}
             {{ form.description(class="form-control", rows=3) }}
             {% for e in form.description.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
           </div>
 
           <div class="row">
             <div class="col-md-6 mb-3">
-              {{ form.start_date.label(class="form-label") }}
+              {{ form.start_date.label(class="form-label fw-semibold text-dark") }}
               {{ form.start_date(class="form-control", type="datetime-local", min=current_datetime) }}
               {% for e in form.start_date.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
             </div>
             <div class="col-md-6 mb-3">
-              {{ form.end_date.label(class="form-label") }}
+              {{ form.end_date.label(class="form-label fw-semibold text-dark") }}
               {{ form.end_date(class="form-control", type="datetime-local", min=current_datetime) }}
               {% for e in form.end_date.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
             </div>
           </div>
 
           <div class="mb-3">
-            <h5>Registered Candidates</h5>
-            <div class="text-muted small">Candidates can only be modified from the Edit Election page.</div>
+            <h5 class="fw-semibold text-dark">Registered Candidates</h5>
+            <div class="text-muted small mb-2">Candidates can only be modified from the Edit Election page.</div>
             <div id="candidates-list">
               {% for cand_form in form.candidates %}
-              <div class="card mb-3 p-3 candidate-entry bg-light">
+              <div class="card candidate-card mb-3 p-3">
                 <div class="row">
                   <div class="col-md-6 mb-2">
                     {{ cand_form.full_name.label(class="form-label") }}
@@ -58,17 +58,17 @@
                     {{ cand_form.party_name(class="form-control") }}
                   </div>
                   <div class="col-md-6 mb-2">
-                    {{ cand_form.position.label(class="form-label") }}
+                    {% set loop_id = 'positionOptions' ~ loop.index %}
                     <input 
                       type="text" 
                       name="{{ cand_form.position.name }}" 
                       id="{{ cand_form.position.id }}" 
                       class="form-control" 
-                      list="positionOptions" 
+                      list="{{ loop_id }}" 
                       value="{{ cand_form.position.data or '' }}"
                       placeholder="Enter or select a position"
                     >
-                    <datalist id="positionOptions">
+                    <datalist id="{{ loop_id }}">
                       <option value="President">
                       <option value="Governor">
                       <option value="Senator">
@@ -76,7 +76,6 @@
                       <option value="Member Of Parliament">
                       <option value="Member Of County Assembly">
                     </datalist>
-
                   </div>
                   <div class="col-md-6 mb-2">
                     {{ cand_form.manifesto.label(class="form-label") }}
@@ -90,43 +89,43 @@
                     {% endif %}
                   </div>
                 </div>
-
               </div>
               {% endfor %}
             </div>
           </div>
 
           <div class="mb-3">
-            {{ form.status.label(class="form-label") }}
+            {{ form.status.label(class="form-label fw-semibold text-dark") }}
             {{ form.status(class="form-select") }}
             {% for e in form.status.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
           </div>
 
           <div class="text-center mt-4">
-            {{ form.submit(class="btn btn-primary") }}
+            {{ form.submit(class="btn btn-primary px-4 py-2 rounded-pill") }}
           </div>
         </form>
       </div>
     </div>
 
     <form method="GET" class="mb-4">
-      <div class="input-group shadow-sm rounded-pill bg-white w-75">
-        <input type="text" name="search_title" class="form-control border-0 rounded-pill ps-4" placeholder="Search by Election Title" value="{{ search_title }}">
-        <button type="submit" class="btn btn-outline-success rounded-circle" aria-label="Search">
-          <i class="bi bi-search">search</i>
+      <div class="input-group shadow-sm rounded-pill bg-white w-75 mx-auto">
+        <input type="text" name="search_title" class="form-control border-0 rounded-start-pill ps-4" placeholder="Search by Election Title" value="{{ search_title }}">
+        <button type="submit" class="btn btn-outline-primary rounded-end-pill" aria-label="Search">
+          <i class="bi bi-search"></i>
         </button>
       </div>
     </form>
-    <div class="card shadow-sm rounded-4" data-aos="fade-left">
-      <div class="card-header bg-gradient-secondary text-white fw-semibold rounded-top-4">
+
+    <div class="card soft-card" data-aos="fade-left">
+      <div class="card-header bg-gradient-secondary text-white fw-semibold fs-5 rounded-top-4">
         Existing Elections
       </div>
       <div class="card-body">
         {% if elections %}
           <div class="table-responsive">
             <table class="table align-middle table-hover text-center">
-              <thead class="table-dark">
-                <tr>
+              <thead class="table-light text-dark">
+                <tr class="fw-semibold">
                   <th>ID</th>
                   <th>Title</th>
                   <th>Description</th>
@@ -139,62 +138,62 @@
               <tbody>
                 {% for election in elections %}
                   {% set status = election.status.value if election.status else 'unknown' %}
-                  {% set status_clr = {'inactive':'secondary','active':'success','paused':'warning','ended':'danger'}.get(status,'dark') %}
+                  {% set status_clr = {'inactive':'secondary','active':'success','paused':'info','ended':'danger'}.get(status,'dark') %}
                   <tr data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
-                    <td>{{ election.id }}</td>
-                    <td>{{ election.title }}</td>
-                    <td>{{ election.description or '—' }}</td>
-                    <td>{{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</td>
-                    <td>{{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td class="text-muted">{{ election.id }}</td>
+                    <td class="fw-semibold text-dark">{{ election.title }}</td>
+                    <td class="text-muted small">{{ election.description or '—' }}</td>
+                    <td class="text-muted">{{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td class="text-muted">{{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</td>
                     <td>
-                      <span class="badge bg-{{ status_clr }} text-light">{{ status.title() }}</span>
+                      <span class="badge bg-{{ status_clr }}">{{ status.title() }}</span>
                     </td>
                     <td>
                       <div class="btn-group" role="group">
-                        <a href="{{ url_for('admin_web.view_election', election_id=election.id) }}" class="btn btn-sm btn-info" title="View Details">
-                          <i class="bi bi-eye-fill">view</i>
+                        <a href="{{ url_for('admin_web.view_election', election_id=election.id) }}" class="btn btn-sm btn-outline-info" title="View Details">
+                          <i class="bi bi-eye-fill"></i>
                         </a>
-                        <a href="{{ url_for('admin_web.edit_election', election_id=election.id) }}" class="btn btn-sm btn-warning" title="Edit">
-                          <i class="bi bi-pencil-fill">edit</i>
+                        <a href="{{ url_for('admin_web.edit_election', election_id=election.id) }}" class="btn btn-sm btn-outline-warning" title="Edit">
+                          <i class="bi bi-pencil-fill"></i>
                         </a>
                         <form method="POST" action="{{ url_for('admin_web.delete_election', election_id=election.id) }}" onsubmit="return confirm('Are you sure?');" class="d-inline">
                           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                          <button type="submit" class="btn btn-sm btn-danger" title="Delete">
-                            <i class="bi bi-trash-fill">delete</i>
+                          <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                            <i class="bi bi-trash-fill"></i>
                           </button>
                         </form>
 
                         {% if status == 'active' %}
                           <form method="POST" action="{{ url_for('admin_web.pause_election', election_id=election.id) }}" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-secondary" title="Pause">
-                              <i class="bi bi-pause-fill">pause</i>
+                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Pause">
+                              <i class="bi bi-pause-fill"></i>
                             </button>
                           </form>
                           <form method="POST" action="{{ url_for('admin_web.end_election', election_id=election.id) }}" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-dark" title="End">
-                              <i class="bi bi-stop-fill">end</i>
+                            <button type="submit" class="btn btn-sm btn-outline-dark" title="End">
+                              <i class="bi bi-stop-fill"></i>
                             </button>
                           </form>
                         {% elif status == 'paused' %}
                           <form method="POST" action="{{ url_for('admin_web.activate_election', election_id=election.id) }}" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-success" title="Activate">
-                              <i class="bi bi-play-fill">activate</i>
+                            <button type="submit" class="btn btn-sm btn-outline-success" title="Activate">
+                              <i class="bi bi-play-fill"></i>
                             </button>
                           </form>
                           <form method="POST" action="{{ url_for('admin_web.end_election', election_id=election.id) }}" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-dark" title="End">
-                              <i class="bi bi-stop-fill">end</i>
+                            <button type="submit" class="btn btn-sm btn-outline-dark" title="End">
+                              <i class="bi bi-stop-fill"></i>
                             </button>
                           </form>
                         {% elif status == 'inactive' %}
                           <form method="POST" action="{{ url_for('admin_web.activate_election', election_id=election.id) }}" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-success" title="Activate">
-                              <i class="bi bi-play-fill">activate</i>
+                            <button type="submit" class="btn btn-sm btn-outline-success" title="Activate">
+                              <i class="bi bi-play-fill"></i>
                             </button>
                           </form>
                         {% endif %}
@@ -210,7 +209,8 @@
         {% endif %}
       </div>
     </div>
-    <a href="{{ request.referrer or url_for('dashboard.dashboard_home') }}" class="btn btn-outline-secondary mb-4">
+
+    <a href="{{ request.referrer or url_for('dashboard.dashboard_home') }}" class="btn btn-outline-secondary mt-4">
       ← Back
     </a>
   </div>
@@ -219,20 +219,59 @@
 
 {% block head_extra %}
 <style>
-  .manage-elections-background { background:#f8f9fb; min-height:100vh; }
-  .bg-gradient-primary { background:linear-gradient(135deg,#0d6efd,#0a58ca); }
-  .bg-gradient-secondary { background:linear-gradient(135deg,#6c757d,#495057); }
-  .card, .input-group, .btn, .alert { border-radius:.75rem; }
-  .btn:hover { transform:translateY(-2px); box-shadow:0 .5rem 1rem rgba(0,0,0,.15); }
-  .alert { font-size:.95rem; }
-  .table-hover tbody tr:hover { background:#eef3f7; }
-  .table td, .table th { vertical-align:middle; padding:.75rem; }
-  .badge { font-size:.85rem; padding:.45em .75em; }
+  .manage-elections-background {
+    background: #f4f6f9;
+    min-height: 100vh;
+  }
+
+  .soft-card {
+    background-color: #eaf1fb; /* Light blue */
+    border-radius: 1rem;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  .candidate-card {
+    background: #f0f2f8; /* Soft lavender gray */
+    border: 1px solid #dbe1ec;
+    border-radius: .75rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  }
+
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, #0d6efd, #2563eb);
+  }
+
+  .bg-gradient-secondary {
+    background: linear-gradient(135deg, #6c757d, #495057);
+  }
+
+  .table th {
+    font-size: 0.95rem;
+    text-transform: uppercase;
+  }
+
+  .btn:hover {
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+  }
+
+  .form-label {
+    font-weight: 600;
+  }
+
+  .table-hover tbody tr:hover {
+    background-color: #f1f5f9;
+  }
 </style>
 {% endblock %}
 
 {% block scripts %}
 <script>
-  AOS.init({ duration:600, once:true, easing:'ease-out-cubic' });
+  AOS.init({
+    duration: 600,
+    once: true,
+    easing: 'ease-out-cubic'
+  });
 </script>
 {% endblock %}

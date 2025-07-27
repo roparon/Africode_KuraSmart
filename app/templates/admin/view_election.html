@@ -3,38 +3,50 @@
 
 {% block content %}
 <div class="container py-5" data-aos="fade-up">
+
+  <!-- Header Section -->
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold mb-0">
-      <i class="bi bi-eye me-2 text-primary"></i>
-      {{ election.title }}
+    <h2 class="fw-bold mb-0 text-primary">
+      <i class="bi bi-eye me-2"></i>{{ election.title }}
     </h2>
-    <a href="{{ url_for('admin_web.manage_elections') }}" class="btn btn-outline-secondary">
-      <i class="bi bi-arrow-left"></i> Back
+    <a href="{{ url_for('admin_web.manage_elections') }}" class="btn btn-outline-secondary rounded-pill px-4">
+      <i class="bi bi-arrow-left me-1"></i> Back
     </a>
   </div>
 
-  <div class="card shadow-sm rounded-4 mb-4">
-    <div class="card-body">
-      <p><strong>Description:</strong> {{ election.description or '—' }}</p>
-      <p><strong>Start Date:</strong> {{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</p>
-      <p><strong>End Date:</strong> {{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</p>
+  <!-- Election Info Card -->
+  <div class="card shadow rounded-4 border-0 mb-4">
+    <div class="card-body bg-light rounded-4">
+      <p class="mb-3">
+        <span class="fw-semibold text-dark"><h5>Description:</h5></span>
+        <span class="text-muted fst-italic">{{ election.description or '—' }}</span>
+      </p>
       <p>
+        <span class="fw-semibold text-dark">Start Date:</span>
+        <span class="text-muted">{{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</span>
+      </p>
+      <p>
+        <span class="fw-semibold text-dark">🛑 End Date:</span>
+        <span class="text-muted">{{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</span>
+      </p>
+      <p class="mb-0">
         {% set status_clr = {'inactive':'secondary','active':'success','paused':'warning','ended':'danger'}.get(election.status.value,'dark') %}
-        <strong>Status:</strong>
-        <span class="badge bg-{{ status_clr }} text-light">{{ election.status.value.title() }}</span>
+        <span class="fw-semibold text-dark">Status:</span>
+        <span class="badge bg-{{ status_clr }} text-uppercase shadow-sm px-3 py-2">{{ election.status.value.title() }}</span>
       </p>
     </div>
   </div>
 
-  <div class="card shadow-sm rounded-4">
-    <div class="card-header bg-gradient-secondary text-white fw-semibold rounded-top-4">
-      Candidates
+  <!-- Candidates Card -->
+  <div class="card shadow rounded-4 border-0">
+    <div class="card-header bg-gradient bg-dark text-white fw-bold rounded-top-4">
+      <i class="bi bi-person-badge me-2"></i> Candidates
     </div>
-    <div class="card-body">
+    <div class="card-body bg-white rounded-bottom-4">
       {% if candidates %}
         <div class="table-responsive">
-          <table class="table table-striped align-middle">
-            <thead class="table-dark">
+          <table class="table table-hover align-middle">
+            <thead class="table-light text-uppercase small text-muted">
               <tr>
                 <th>Name</th>
                 <th>Party</th>
@@ -54,7 +66,7 @@
               {% for cand in sorted_candidates %}
                 {% set is_leader = cand.vote_count == top_vote and top_vote > 0 %}
                 {% set vote_percent = (cand.vote_count / total_votes * 100) if total_votes > 0 else 0 %}
-                <tr class="{% if is_leader %}table-success fw-bold{% endif %}">
+                <tr class="{% if is_leader %}table-success fw-semibold{% endif %}">
                   <td>
                     {{ cand.full_name }}
                     {% if is_leader %}
@@ -63,7 +75,7 @@
                   </td>
                   <td>{{ cand.party_name or '—' }}</td>
                   <td>{{ cand.position }}</td>
-                  <td style="white-space:pre-wrap;">{{ cand.manifesto }}</td>
+                  <td class="text-wrap" style="white-space: pre-wrap;">{{ cand.manifesto }}</td>
                   {% if election.status.value in ['active', 'ended'] %}
                     <td>{{ cand.vote_count }}</td>
                     {% if is_leader %}
@@ -73,8 +85,12 @@
                     {% endif %}
                     <td>{{ vote_percent|round(2) }}%</td>
                     <td>
-                      <div class="progress" style="height: 20px;">
-                        <div class="progress-bar bg-info" role="progressbar" style="width: {{ vote_percent }}%;" aria-valuenow="{{ vote_percent }}" aria-valuemin="0" aria-valuemax="100">
+                      <div class="progress" style="height: 18px;">
+                        <div class="progress-bar bg-info text-dark fw-bold"
+                             role="progressbar"
+                             style="width: {{ vote_percent }}%;"
+                             aria-valuenow="{{ vote_percent }}"
+                             aria-valuemin="0" aria-valuemax="100">
                           {{ vote_percent|round(1) }}%
                         </div>
                       </div>
@@ -90,8 +106,99 @@
       {% endif %}
     </div>
   </div>
-</div>
-<a href="{{ request.referrer or url_for('dashboard.dashboard_home') }}" class="btn btn-outline-secondary mb-4">
+
+  <!-- Back Link -->
+  <div class="mt-4">
+    <a href="{{ request.referrer or url_for('dashboard.dashboard_home') }}" class="btn btn-outline-secondary rounded-pill">
       ← Back
-</a>
+    </a>
+  </div>
+</div>
+
+<style>
+  body {
+    background-color: #fdfaf3;
+  }
+
+  .card {
+    border: none;
+    background-color: #fffbea;
+    box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease-in-out;
+    border-radius: 1rem;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12);
+  }
+
+  .card-header {
+    background: linear-gradient(135deg, #6f42c1, #8e44ad);
+    color: #fff !important;
+    font-weight: 600;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+  }
+
+  .card-body {
+    background-color: #fffbea;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    font-size: 1rem;
+    color: #333;
+  }
+
+  .badge {
+    font-size: 0.85rem;
+    padding: 0.5em 0.75em;
+    border-radius: 0.5rem;
+    letter-spacing: 0.5px;
+  }
+
+  .progress {
+    background-color: #eee8d5;
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    background-color: #20c997 !important;
+    color: #111;
+    transition: width 0.6s ease;
+  }
+
+  .table thead th {
+    background-color: #f3f0df;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    color: #5f5f5f;
+  }
+
+  .table-hover tbody tr:hover {
+    background-color: #fff5d9;
+  }
+
+  .btn-outline-secondary {
+    border-radius: 2rem;
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+  }
+
+  .btn-outline-secondary:hover {
+    background-color: #ffe59e;
+    color: #000;
+  }
+
+  .text-muted {
+    font-size: 0.95rem;
+    color: #6c757d !important;
+  }
+
+  td.text-wrap {
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+</style>
+
 {% endblock %}
