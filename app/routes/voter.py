@@ -157,12 +157,10 @@ def cast_vote(election_id):
             flash('Voting has not yet started for this election.', 'warning')
             return redirect(url_for('voter.view_election', election_id=election_id))
 
-        # ✅ Check if the election is active
         if election.current_status != 'active':
             flash('Voting is not currently open for this election.', 'warning')
             return redirect(url_for('voter.view_election', election_id=election_id))
 
-        # 🔐 Check if the user is verified
         if not current_user.is_verified:
             flash('Your account is not verified for voting.', 'warning')
             return redirect(url_for('voter.view_election', election_id=election_id))
