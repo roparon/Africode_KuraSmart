@@ -173,7 +173,6 @@ def cast_vote(election_id):
             flash('No candidate or position selected.', 'warning')
             return redirect(url_for('voter.view_election', election_id=election_id))
 
-        # 🧾 Check for duplicate vote
         existing_vote = Vote.query.filter_by(
             voter_id=current_user.id,
             election_id=election_id,
