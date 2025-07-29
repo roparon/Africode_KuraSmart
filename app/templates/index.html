@@ -90,7 +90,7 @@
     }
   }
   .kurasmart-large {
-    font-size: 1.6em;
+    font-size: 1.43em;
   }
 
 </style>
@@ -98,8 +98,27 @@
   <div class="row justify-content-center">
     <div class="col-md-10 col-lg-8">
       <h1 class="display-4 mb-3 fw-bold">
-        Welcome to <span class="text-shine kurasmart-large"><i>KuraSmart</i></span>
+        Welcome to <span class="text-shine kurasmart-large"><i>KuraSmart</i>
+          <svg viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg" stroke="#010103" style="vertical-align: middle; width: 50px; height: 50px; margin-left: 4px;">
+            <g fill="none" fill-rule="evenodd" stroke-width="2">
+              <circle cx="22" cy="22" r="1">
+                <animate attributeName="r" begin="0s" dur="1.8s" values="1; 20" calcMode="spline" keyTimes="0; 1"
+                        keySplines="0.165, 0.84, 0.44, 1" repeatCount="indefinite"/>
+                <animate attributeName="stroke-opacity" begin="0s" dur="1.8s" values="1; 0" calcMode="spline"
+                        keyTimes="0; 1" keySplines="0.3, 0.61, 0.355, 1" repeatCount="indefinite"/>
+              </circle>
+              <circle cx="22" cy="22" r="1">
+                <animate attributeName="r" begin="-0.9s" dur="1.8s" values="1; 20" calcMode="spline" keyTimes="0; 1"
+                        keySplines="0.165, 0.84, 0.44, 1" repeatCount="indefinite"/>
+                <animate attributeName="stroke-opacity" begin="-0.9s" dur="1.8s" values="1; 0" calcMode="spline"
+                        keyTimes="0; 1" keySplines="0.3, 0.61, 0.355, 1" repeatCount="indefinite"/>
+              </circle>
+            </g>
+          </svg>
+        </span>
       </h1>
+
+
       <p class="lead mb-4 text-muted">
         <span id="typed-text"></span><span id="cursor" style="color: #9e8005;">|</span>
       </p>
