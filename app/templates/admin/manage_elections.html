@@ -4,10 +4,16 @@
 {% block content %}
 <div class="manage-elections-background py-5">
   <div class="container" data-aos="fade-up">
-    <h2 class="mb-4 fw-bold display-6 text-dark">
-      <i class="bi bi-check2-square me-2 text-primary"></i>
-      Manage Elections
-    </h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="fw-bold display-6 text-dark">
+        <i class="bi bi-check2-square me-2 text-primary"></i>
+        Manage Elections
+      </h2>
+      <div class="text-muted small text-end">
+        <span class="fw-semibold">Current Time:</span>
+        <span id="local-time" class="text-primary"></span>
+      </div>
+    </div>
 
     <div class="card soft-card mb-5" data-aos="fade-right">
       <div class="card-header bg-gradient-primary text-white fw-semibold fs-5 rounded-top-4">
@@ -273,5 +279,18 @@
     once: true,
     easing: 'ease-out-cubic'
   });
+
+  function updateLocalTime() {
+    const timeElement = document.getElementById("local-time");
+    const now = new Date();
+    const options = {
+      weekday: 'short', year: 'numeric', month: 'short',
+      day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'
+    };
+    timeElement.textContent = now.toLocaleString(undefined, options);
+  }
+
+  setInterval(updateLocalTime, 1000);
+  updateLocalTime();
 </script>
 {% endblock %}

@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, flash, url_for, redirect, request, abort
 from flask_login import login_required, current_user
 from app.models import Notification, Election, Vote, Candidate, Position, Candidate
-from datetime import datetime
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from sqlalchemy import and_
 from werkzeug.utils import secure_filename
 from app.forms.profile_form import ProfileImageForm
@@ -43,11 +44,12 @@ def voter_dashboard():
 
         # Format elections with status
         def format_elections(elections, status):
+            nairobi = ZoneInfo("Africa/Nairobi")
             return [{
                 'id': e.id,
                 'title': e.title,
-                'start_date': e.start_date,
-                'end_date': e.end_date,
+                'start_date': e.start_date.astimezone(nairobi),
+                'end_date': e.end_date.astimezone(nairobi),
                 'current_status': status,
                 'candidates': Candidate.query.filter_by(election_id=e.id).all()
             } for e in elections]
@@ -57,15 +59,8 @@ def voter_dashboard():
             format_elections(upcoming_elections, 'pending') +
             format_elections(ended_elections, 'ended')
         )
-
-        # Get voted election IDs for this user
         voted_election_ids = [vote.election_id for vote in Vote.query.filter_by(voter_id=current_user.id).all()]
-
-
-        # Initialize profile image form
         form = ProfileImageForm()
-
-        # Handle form submission
         if request.method == 'POST' and form.validate_on_submit():
             image_file = form.image.data
             if image_file:
@@ -74,14 +69,10 @@ def voter_dashboard():
                 os.makedirs(upload_folder, exist_ok=True)
                 file_path = os.path.join(upload_folder, filename)
                 image_file.save(file_path)
-
                 current_user.profile_image = f'profile_images/{filename}'
                 db.session.commit()
-
-                flash("✅ Profile image updated successfully.", "success")
+                flash("Profile image updated successfully.", "success")
                 return redirect (url_for('voter.voter_dashboard'))
-
-        # ✅ Pass everything needed to template
         return render_template(
             'voter/dashboard.html',
             user=current_user,
@@ -89,23 +80,20 @@ def voter_dashboard():
             voted_election_ids=voted_election_ids,
             form=form
         )
-
     except Exception as e:
         flash(f"Error loading dashboard: {str(e)}", "danger")
         return redirect(url_for('main.index'))
+
 
 @voter_bp.route('/notifications')
 @login_required
 def user_notifications():
     try:
-        # Assuming each notification is linked to a user
         notifs = Notification.query \
             .filter_by(user_id=current_user.id) \
             .order_by(Notification.created_at.desc()) \
             .limit(50).all()
-
         return render_template('voter/notifications.html', notifications=notifs)
-
     except Exception as e:
         flash(f"Error loading notifications: {str(e)}", "danger")
         return redirect(url_for('voter.voter_dashboard'))  # or another safe fallback view
@@ -125,25 +113,17 @@ def mark_read(notif_id):
         flash(f"Error marking notification as read: {str(e)}", 'danger')
     return redirect(url_for('voter.user_notifications'))
 
-
-@voter_bp.route('/notifications/delete/<int:notif_id>', methods=['POST'])
+@voter_bp.route('/delete-notification/<int:notif_id>', methods=['POST'])
 @login_required
 def delete_notification(notif_id):
-    try:
-        notif = Notification.query.get_or_404(notif_id)
+    notification = Notification.query.get_or_404(notif_id)
+    if notification.user_id != current_user.id:
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('voter.user_notifications'))
 
-        # Ensure user owns the notification
-        if notif.user_id != current_user.id:
-            abort(403)
-
-        db.session.delete(notif)
-        db.session.commit()
-        flash('Notification deleted.', 'warning')
-
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Error deleting notification: {str(e)}", 'danger')
-
+    db.session.delete(notification)
+    db.session.commit()
+    flash("Notification deleted.", "success")
     return redirect(url_for('voter.user_notifications'))
 
 
@@ -152,38 +132,44 @@ def delete_notification(notif_id):
 def cast_vote(election_id):
     try:
         election = Election.query.get_or_404(election_id)
-
-        if datetime.utcnow() < election.start_date:
+        now_local = datetime.now(ZoneInfo("Africa/Nairobi"))
+        if election.start_date.tzinfo is None:
+            start_local = election.start_date.replace(tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("Africa/Nairobi"))
+        else:
+            start_local = election.start_date.astimezone(ZoneInfo("Africa/Nairobi"))
+        if election.end_date.tzinfo is None:
+            end_local = election.end_date.replace(tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("Africa/Nairobi"))
+        else:
+            end_local = election.end_date.astimezone(ZoneInfo("Africa/Nairobi"))
+        print(f"[DEBUG] now_local: {now_local.isoformat()}")
+        print(f"[DEBUG] start_local: {start_local.isoformat()}")
+        print(f"[DEBUG] end_local: {end_local.isoformat()}")
+        print(f"[DEBUG] Raw start_date: {election.start_date} | tzinfo: {election.start_date.tzinfo}")
+        if now_local < start_local:
             flash('Voting has not yet started for this election.', 'warning')
             return redirect(url_for('voter.view_election', election_id=election_id))
-
-        if election.current_status != 'active':
+        if now_local > end_local:
+            flash('Voting has ended for this election.', 'danger')
+            return redirect(url_for('voter.view_election', election_id=election_id))
+        if election.status != 'active':
             flash('Voting is not currently open for this election.', 'warning')
             return redirect(url_for('voter.view_election', election_id=election_id))
-
         if not current_user.is_verified:
             flash('Your account is not verified for voting.', 'warning')
             return redirect(url_for('voter.view_election', election_id=election_id))
-
-        # 🗳️ Get form inputs
         candidate_id = request.form.get('candidate_id')
         position_id = request.form.get('position_id')
-
         if not candidate_id or not position_id:
             flash('No candidate or position selected.', 'warning')
             return redirect(url_for('voter.view_election', election_id=election_id))
-
         existing_vote = Vote.query.filter_by(
             voter_id=current_user.id,
             election_id=election_id,
             position_id=position_id
         ).first()
-
         if existing_vote:
-            flash('You have already voted for this position in this election.', 'info')
+            flash('ℹ You have already voted for this position in this election.', 'info')
             return redirect(url_for('voter.view_election', election_id=election_id))
-
-        # ✅ Submit the vote
         vote = Vote(
             voter_id=current_user.id,
             election_id=election_id,
@@ -192,16 +178,11 @@ def cast_vote(election_id):
         )
         db.session.add(vote)
         db.session.commit()
-
         flash('Vote submitted successfully!', 'success')
-
     except Exception as e:
         db.session.rollback()
         flash(f'Error submitting vote: {str(e)}', 'danger')
-
     return redirect(url_for('voter.view_election', election_id=election_id))
-
-
 
 @voter_bp.route('/election/<int:election_id>', methods=['GET', 'POST'])
 @login_required

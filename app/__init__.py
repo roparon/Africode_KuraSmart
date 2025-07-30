@@ -7,7 +7,8 @@ from flask import Flask
 from flask_login import current_user
 from flask_apscheduler import APScheduler
 from apscheduler.jobstores.memory import MemoryJobStore
-
+from datetime import timezone
+from zoneinfo import ZoneInfo
 from app.extensions import db, migrate, login_manager, CSRFProtect, mail
 from app.models import User, Notification
 from config import Config
@@ -101,6 +102,15 @@ def create_app():
     app.register_blueprint(main_bp)
     app.register_blueprint(notifications_bp)
     app.register_blueprint(static_pages)
+
+
+    @app.template_filter('to_local')
+    def to_local(dt, tz_name='Africa/Nairobi'):
+        if dt is None:
+            return ""
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(ZoneInfo(tz_name))
 
 
     @app.context_processor

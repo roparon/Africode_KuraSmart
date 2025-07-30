@@ -2,7 +2,9 @@ from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models import Vote, User, Election, Candidate
+from app.enums import ElectionStatusEnum
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from sqlalchemy.orm import joinedload
 
 
@@ -10,7 +12,7 @@ vote_bp = Blueprint('vote_bp', __name__, url_prefix='/api/v1/votes')
 
 
 # Cast a vote
-@vote_bp.route('/cast_vote/<int:election_id>', methods=['POST', 'GET'])
+@vote_bp.route('/cast_vote/<int:election_id>', methods=['POST'])
 @login_required
 def cast_vote(election_id):
     try:
@@ -25,10 +27,32 @@ def cast_vote(election_id):
         if candidate.election_id != election.id:
             return jsonify({"error": "Candidate does not belong to this election"}), 400
 
-        existing_vote = Vote.query.filter_by(voter_id=current_user.id, election_id=election_id).first()
+        # Get current aware time in Africa/Nairobi
+        now = datetime.now(ZoneInfo("Africa/Nairobi"))
+
+        # Ensure election start/end are timezone-aware
+        start_time = election.start_date.astimezone(ZoneInfo("Africa/Nairobi"))
+        end_time = election.end_date.astimezone(ZoneInfo("Africa/Nairobi"))
+
+        # Time checks
+        if now < start_time:
+            return jsonify({"error": "Voting has not started yet"}), 403
+        if now > end_time:
+            return jsonify({"error": "Voting has ended"}), 403
+
+        # Status check
+        if election.status != ElectionStatusEnum.ACTIVE:
+            return jsonify({"error": "Election is not currently active"}), 403
+
+        # Duplicate vote check
+        existing_vote = Vote.query.filter_by(
+            voter_id=current_user.id,
+            election_id=election_id
+        ).first()
         if existing_vote:
             return jsonify({"error": "You have already voted in this election"}), 403
 
+        # Cast vote
         vote = Vote(
             voter_id=current_user.id,
             election_id=election_id,
@@ -37,11 +61,12 @@ def cast_vote(election_id):
         )
         db.session.add(vote)
         db.session.commit()
-        return jsonify({"message": "Vote cast successfully"}), 201
+
+        return jsonify({"message": "✅ Vote cast successfully"}), 201
+
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": f"Failed to cast vote: {str(e)}"}), 500
-
+        return jsonify({"error": f"❌ Failed to cast vote: {str(e)}"}), 500
 
 # Get election results
 @vote_bp.route('/results/<int:election_id>', methods=['GET'])

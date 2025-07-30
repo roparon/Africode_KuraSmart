@@ -101,25 +101,33 @@ class ElectionForm(FlaskForm):
 
     submit = SubmitField("Save Changes")
 
-    def validate_start_date(self, field):
-        # Convert field data to aware datetime in Africa/Nairobi timezone
-        user_start = field.data.replace(tzinfo=ZoneInfo("Africa/Nairobi"))
-        now_utc = datetime.now(ZoneInfo("UTC"))
+    LOCAL_TZ = ZoneInfo("Africa/Nairobi")
 
-        if user_start.astimezone(ZoneInfo("UTC")) < now_utc:
+    def validate_start_date(self, field):
+        # Convert naive datetime to local timezone
+        start = field.data.replace(tzinfo=self.LOCAL_TZ)
+        now_local = datetime.now(self.LOCAL_TZ)
+
+        if start < now_local:
             raise ValidationError("Start date cannot be in the past.")
 
     def validate_end_date(self, field):
-        user_start = self.start_date.data.replace(tzinfo=ZoneInfo("Africa/Nairobi"))
-        user_end = field.data.replace(tzinfo=ZoneInfo("Africa/Nairobi"))
+        start = self.start_date.data.replace(tzinfo=self.LOCAL_TZ)
+        end = field.data.replace(tzinfo=self.LOCAL_TZ)
 
-        if user_end <= user_start:
+        if end <= start:
             raise ValidationError("End time must be after the start time.")
 
-        if user_end > user_start + timedelta(hours=12, minutes=30):
+        if end > start + timedelta(hours=12, minutes=30):
             raise ValidationError("Election duration cannot exceed 12 h 30 min.")
-        
-        
+
+    def get_localized_dates(self):
+        """Utility to get timezone-aware datetimes for saving to DB."""
+        tz = self.LOCAL_TZ
+        return (
+            self.start_date.data.replace(tzinfo=tz),
+            self.end_date.data.replace(tzinfo=tz),
+        )
 class PositionForm(FlaskForm):
     name = StringField('Position Name', validators=[DataRequired(), Length(min=2, max=100)])
     description = TextAreaField('Description')

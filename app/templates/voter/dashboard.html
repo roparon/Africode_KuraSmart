@@ -173,7 +173,8 @@
                   <div class="input-group shadow-sm rounded-pill bg-white w-75">
                     <input 
                       type="text" 
-                      name="search_title" 
+                      name="search_title"
+                      id="electionSearch"
                       class="form-control border-0 rounded-pill ps-4" 
                       placeholder="Search Elections…" 
                       value="{{ request.args.get('search_title', '') }}"
@@ -202,9 +203,9 @@
                 <div class="col-md-6 col-lg-4" data-aos="fade-up">
                 <a href="{{ url_for('voter.view_election', election_id=election.id) }}" class="text-decoration-none">
                     
-                    <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden
+                    <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden election-card
                     {% if election.current_status == 'pending' %} neon-border-animated {% endif %}">
-                    
+
                     <div class="card-body">
                         <h5 class="card-title fw-semibold text-dark">
                         {{ election.title }}
@@ -283,108 +284,88 @@ function toggleSidebar() {
 </script>
 
 <style>
-/* 🔵 General Card Styling */
-.card {
-  background-color: #f9f9f9;
-  border-radius: 1.5rem;
-  font-family: 'Open Sans', sans-serif;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  height: 100%;
+/* ✨ Election Card Enhanced Look */
+.election-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(3px);
+  border-radius: 1.25rem;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.election-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* 🔄 Animated Border for Pending */
+.election-card.pending {
+  animation: glowBorder 3s linear infinite;
+}
+
+@keyframes glowBorder {
+  0% { border-color: #ff4ec4; box-shadow: 0 0 8px #ff4ec4; }
+  25% { border-color: #00e0ff; box-shadow: 0 0 8px #00e0ff; }
+  50% { border-color: #7eff6b; box-shadow: 0 0 8px #7eff6b; }
+  75% { border-color: #ffc107; box-shadow: 0 0 8px #ffc107; }
+  100% { border-color: #ff4ec4; box-shadow: 0 0 8px #ff4ec4; }
+}
+
+/* 🟢 Ongoing Election */
+.election-card.active {
+  border: 2px solid #198754;
+  box-shadow: 0 0 12px rgba(25, 135, 84, 0.3);
+}
+
+/* 🔴 Ended Election */
+.election-card.ended {
+  filter: grayscale(80%);
   position: relative;
+  border: 1px solid #aaa;
 }
 
-.card:hover {
-  transform: scale(1.015);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-}
-
-.active.neon-pulse {
-  background-color: #000;
-  color: #fff;
-  border: 2px solid #0ff;
-  box-shadow: 0 0 12px rgba(0, 255, 255, 0.3);
-}
-
-.active.neon-pulse::before,
-.active.neon-pulse::after {
-  content: "";
+.election-card.ended::before {
+  content: "Ended";
   position: absolute;
-  inset: -4px;
-  border: 2px solid #0ff;
-  border-radius: inherit;
-  animation: pulseOut 2s ease-out infinite;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.active.neon-pulse::after {
-  animation-delay: 1s;
-}
-
-@keyframes pulseOut {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1.5);
-    opacity: 0;
-  }
-}
-
-/* 🟡 PENDING — Color-shifting Neon Border */
-.pending.neon-border-animated {
-  border: 2px solid #fff;
-  border-radius: 1.5rem;
-  animation: neonPulse 4s infinite linear;
-}
-
-@keyframes neonPulse {
-  0% {
-    box-shadow: 0 0 6px #ff4ec4, 0 0 12px #ff4ec4;
-    border-color: #ff4ec4;
-  }
-  25% {
-    box-shadow: 0 0 6px #00e0ff, 0 0 12px #00e0ff;
-    border-color: #00e0ff;
-  }
-  50% {
-    box-shadow: 0 0 6px #7eff6b, 0 0 12px #7eff6b;
-    border-color: #7eff6b;
-  }
-  75% {
-    box-shadow: 0 0 6px #ffc107, 0 0 12px #ffc107;
-    border-color: #ffc107;
-  }
-  100% {
-    box-shadow: 0 0 6px #ff4ec4, 0 0 12px #ff4ec4;
-    border-color: #ff4ec4;
-  }
-}
-
-/* 🔴 ENDED — Grayscale & Ribbon */
-.ended {
-  background-color: #f0f0f0;
-  filter: grayscale(70%);
-  position: relative;
-  overflow: hidden;
-}
-
-.ended::after {
-  content: 'ENDED';
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background-color: #cc0000;
-  color: #fff;
-  padding: 4px 10px;
+  top: 10px;
+  right: -30px;
+  background: #dc3545;
+  color: white;
+  font-weight: bold;
+  padding: 4px 12px;
+  transform: rotate(45deg);
   font-size: 0.75rem;
-  font-weight: 600;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  z-index: 1;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  z-index: 10;
 }
 
+/* 🎉 Badge Styles */
+.election-card .badge {
+  font-size: 0.9rem;
+  border-radius: 1rem;
+  padding: 6px 14px;
+  font-weight: 600;
+}
+
+.election-card .badge.bg-success {
+  background: linear-gradient(135deg, #28a745, #218838);
+  color: white;
+}
+
+.election-card .badge.bg-primary {
+  background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+  color: white;
+}
+
+.election-card .badge.bg-danger {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: white;
+}
+
+.election-card .badge.bg-secondary {
+  background: linear-gradient(135deg, #6c757d, #5a6268);
+  color: white;
+}
 /* 📱 Responsive tweaks */
 @media (max-width: 768px) {
   .list-group-item {

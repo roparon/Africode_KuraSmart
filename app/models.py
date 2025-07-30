@@ -90,19 +90,29 @@ class User(db.Model, UserMixin):
         return self.full_name
 
 
+
+
 from zoneinfo import ZoneInfo
+
 class Election(db.Model):
     __tablename__ = 'election'
+
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text)
-    start_date = db.Column(db.DateTime, nullable=False)
-    end_date = db.Column(db.DateTime, nullable=False)
+
+    # Store UTC times in DB (timezone-aware)
+    start_date = db.Column(db.DateTime(timezone=True), nullable=False)
+    end_date = db.Column(db.DateTime(timezone=True), nullable=False)
+
     is_active = db.Column(db.Boolean, default=True)
     status = db.Column(db.Enum(ElectionStatusEnum), nullable=False, default=ElectionStatusEnum.INACTIVE)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, onupdate=func.now())
+
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(tz=ZoneInfo("UTC")))
+    updated_at = db.Column(db.DateTime(timezone=True), onupdate=func.now())
+
     deactivated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+
     candidates = db.relationship('Candidate', back_populates='election', lazy='select')
     positions = db.relationship('Position', back_populates='election', lazy='select', cascade="all, delete-orphan")
     votes = db.relationship('Vote', back_populates='election', lazy='select')
@@ -112,14 +122,14 @@ class Election(db.Model):
 
     def __str__(self):
         return self.title
-    
+
     @property
     def current_status(self):
-        """Dynamically calculates election status based on dates and activity."""
-        now = datetime.now(ZoneInfo("UTC"))  # Make 'now' timezone-aware
+        """Return real-time election status using UTC comparison."""
+        now = datetime.now(ZoneInfo("UTC"))
 
-        start = self.start_date.replace(tzinfo=ZoneInfo("UTC"))
-        end = self.end_date.replace(tzinfo=ZoneInfo("UTC"))
+        start = self.start_date
+        end = self.end_date
 
         if not self.is_active:
             return 'inactive'
@@ -129,6 +139,16 @@ class Election(db.Model):
             return 'active'
         else:
             return 'ended'
+
+    @property
+    def start_date_local(self):
+        """Return start_date converted to local time (e.g., Nairobi)."""
+        return self.start_date.astimezone(ZoneInfo("Africa/Nairobi"))
+
+    @property
+    def end_date_local(self):
+        """Return end_date converted to local time (e.g., Nairobi)."""
+        return self.end_date.astimezone(ZoneInfo("Africa/Nairobi"))
 class Candidate(db.Model):
     __tablename__ = 'candidate'
 
