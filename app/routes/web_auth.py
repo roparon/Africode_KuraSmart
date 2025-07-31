@@ -426,6 +426,8 @@ def save_candidate_photo(file):
             return None
         return filename
     return None
+
+
 @admin_web_bp.route('/manage-elections', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -1145,7 +1147,7 @@ def manage_candidates():
         elif request.method == 'POST':
             flash("Form validation failed. Please check your input.", "danger")
 
-        candidates = Candidate.query.all()
+        candidates = Candidate.query.filter_by(user_id=current_user.id).all()
         return render_template('admin/candidates.html', candidates=candidates, form=form)
 
     except Exception as e:
@@ -1164,7 +1166,40 @@ def get_position_id(position_name, election_id):
         db.session.commit()
     return position.id
 
-    
+@admin_web_bp.route('/candidates/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_candidate(id):
+    candidate = Candidate.query.get_or_404(id)
+
+    # Only allow the user who created the candidate (or superadmin) to edit
+    if candidate.user_id != current_user.id and not current_user.is_superadmin:
+        abort(403)
+
+    form = CandidateForm(obj=candidate)
+
+    if form.validate_on_submit():
+        try:
+            # Validate the position exists
+            position_obj = Position.query.filter_by(name=form.position.data).first()
+            if not position_obj:
+                flash("Selected position does not exist.", "danger")
+            else:
+                candidate.full_name = form.full_name.data
+                candidate.party_name = form.party_name.data
+                candidate.position = form.position.data
+                candidate.position_id = position_obj.id
+                candidate.manifesto = form.manifesto.data
+                db.session.commit()
+                flash("Candidate updated successfully.", "success")
+                return redirect(url_for('admin_web.manage_candidates'))
+        except Exception as e:
+            db.session.rollback()
+            import traceback
+            print("Exception in edit_candidate:", traceback.format_exc())
+            flash(f"Error editing candidate: {e}", "danger")
+
+    return render_template('admin/edit_candidate.html', form=form, candidate=candidate)
+
 
 @admin_web_bp.route('/audit-logs')
 @login_required
