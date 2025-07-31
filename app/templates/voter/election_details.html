@@ -5,9 +5,10 @@
 <div style="min-height: 100vh; background: radial-gradient(circle at 30% 30%, #9afc49 0%, transparent 40%),
             radial-gradient(circle at 70% 70%, #1e3a8a 0%, transparent 40%),
             radial-gradient(circle at 50% 50%, #000000 0%, transparent 30%);
-background-color: #e9c93c;">
-  
-  <div class="card border-0 shadow-lg rounded-4 p-4 text-white" style="background: linear-gradient(135deg, #1e3a8a, #000000);">
+            background-color: #e9c93c;">
+
+  <div class="card border-0 shadow-lg rounded-4 p-4 text-white"
+       style="background: linear-gradient(135deg, #1e3a8a, #000000);">
     <h2 class="text-center mb-4 display-6 fw-semibold text-warning">{{ election.title }}</h2>
 
     <div class="mb-3">
@@ -39,7 +40,7 @@ background-color: #e9c93c;">
 
   {% if has_voted %}
     <div class="alert alert-success text-center mt-3">
-      You have already voted in this election.
+      ✅ You have already voted in this election.
     </div>
   {% endif %}
 
@@ -62,12 +63,13 @@ background-color: #e9c93c;">
               <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card shadow-lg h-100 border-0 rounded-4" data-aos="zoom-in" data-aos-delay="100">
                   <div class="card-body d-flex flex-column align-items-center text-center">
-                    <img src="{{ url_for('static', filename='uploads/candidates/' ~ (candidate.profile_photo or 'default-avatar.png')) }}"
+
+                    {% set photo_filename = candidate.profile_photo or 'default-avatar.png' %}
+                    <img src="{{ url_for('static', filename='uploads/candidates/' ~ photo_filename) }}"
                          alt="{{ candidate.full_name }} Profile Photo"
                          class="rounded-circle border border-3 shadow-sm mb-3"
-                         style="width: 120px; height: 120px; object-fit: cover;"
-                         onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/candidates/default-avatar.png') }}';">
-                    
+                         style="width: 120px; height: 120px; object-fit: cover;">
+
                     <h5 class="card-title">{{ candidate.full_name }}</h5>
                     <p class="mb-1"><strong>Party:</strong> {{ candidate.party_name or 'Independent' }}</p>
                     <p class="mb-1"><strong>Votes:</strong> {{ candidate.vote_count }}</p>
@@ -78,7 +80,7 @@ background-color: #e9c93c;">
                       <div class="w-100 mb-2">
                         <div class="progress" style="height: 10px;">
                           <div class="progress-bar bg-success" role="progressbar"
-                               style="width: {{ percentage | round(2) }}%;"
+                               style="width: {{ percentage | round(4) }}%;"
                                aria-valuenow="{{ percentage | round(2) }}" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                         <small>{{ percentage | round(2) }}%</small>
@@ -141,16 +143,10 @@ background-color: #e9c93c;">
 <!-- Countdown Script -->
 <script>
   const endDateUTC = new Date("{{ election.end_date.isoformat() }}Z");
-  const endDateLocalStr = endDateUTC.toLocaleString([], {
-    year: 'numeric', month: 'short', day: 'numeric',
-    hour: '2-digit', minute: '2-digit', hour12: false
-  });
-
-  document.getElementById("end-date-local").innerText = endDateLocalStr;
 
   function updateCountdown() {
     const now = new Date().getTime();
-    const diff = endDateUTC.getTime() - now;
+    const diff = endDateUTC - now;
     if (diff <= 0) {
       document.getElementById("countdown").innerText = "⏳ Election Ended";
       clearInterval(timer);
@@ -160,7 +156,8 @@ background-color: #e9c93c;">
     const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
     const minutes = Math.floor((diff / (1000 * 60)) % 60);
     const seconds = Math.floor((diff / 1000) % 60);
-    document.getElementById("countdown").innerText = ${days}d ${hours}h ${minutes}m ${seconds}s;
+    document.getElementById("countdown").innerText =
+      `${days}d ${hours}h ${minutes}m ${seconds}s`;
   }
 
   const timer = setInterval(updateCountdown, 1000);
