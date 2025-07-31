@@ -715,14 +715,14 @@ def edit_election(election_id):
                         db.session.delete(candidate)
 
                 db.session.commit()
-                flash("✅ Election updated successfully!", "success")
+                flash("Election updated successfully!", "success")
                 return redirect(url_for("admin_web.manage_elections"))
 
         return render_template("admin/edit_election.html", form=form, election=election)
 
     except Exception as e:
         db.session.rollback()
-        flash(f"❌ Error editing election: {e}", "danger")
+        flash(f"Error editing election: {e}", "danger")
         return redirect(url_for("admin_web.manage_elections"))
 
 

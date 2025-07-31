@@ -15,6 +15,98 @@
 .profile-img {
     cursor: pointer;
 }
+.election-card.active-style {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2rem;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+/* Rotating background layer */
+.election-card.active-style::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg,
+    #f9fc6d,
+    #6fff2c,
+    #fd2111,
+    #4410d3
+  );
+  animation: rotBGimg 6s linear infinite;
+  z-index: 0;
+  filter: blur(40px);
+}
+
+/* Inner masked layer for depth */
+.election-card.active-style::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  background: rgba(250, 248, 248, 0.7);
+  border-radius: 15px;
+  z-index: 1;
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+/* Rotating animation */
+@keyframes rotBGimg {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Content styling */
+.election-card.active-style .card-body {
+  position: relative;
+  z-index: 2;
+  color: #ffffff;
+  text-align: center;
+  font-family: 'Segoe UI', sans-serif;
+  animation: fadeIn 1s ease-in-out;
+}
+
+.election-card.active-style .card-body h2 {
+  font-size: 2.2rem;
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.election-card.active-style .card-body p {
+  font-size: 1.05rem;
+  font-weight: 400;
+  opacity: 0.9;
+  line-height: 1.5;
+}
+
+/* Fade-in animation for content */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 </style>
 
 <div style="min-height: 100vh; background: conic-gradient(from 135deg, #fcbf49 0% 70%, #1e3a8a 70% 85%, #000000 85% 100%);">
@@ -110,7 +202,7 @@
 
 
 
-                <a href="{{ url_for('main.index') }}#support"
+                <a href="{{ url_for('voter.help_support') }}#support"
                 class="d-flex justify-content-between align-items-center rounded-4 shadow-sm px-4 py-3 mb-2 text-decoration-none"
                 data-aos="fade-up">
 
@@ -204,7 +296,10 @@
                 <a href="{{ url_for('voter.view_election', election_id=election.id) }}" class="text-decoration-none">
                     
                     <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden election-card
-                    {% if election.current_status == 'pending' %} neon-border-animated {% endif %}">
+                    {% if election.current_status == 'pending' %} neon-border-animated 
+                    {% elif election.current_status == 'active' %} active-style 
+                    {% endif %}">
+
 
                     <div class="card-body">
                         <h5 class="card-title fw-semibold text-dark">
@@ -282,98 +377,4 @@ function toggleSidebar() {
     sidebar.style.display = (sidebar.style.display === 'none' || getComputedStyle(sidebar).display === 'none') ? 'block' : 'none';
 }
 </script>
-
-<style>
-/* ✨ Election Card Enhanced Look */
-.election-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(3px);
-  border-radius: 1.25rem;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-}
-
-.election-card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
-}
-
-/* 🔄 Animated Border for Pending */
-.election-card.pending {
-  animation: glowBorder 3s linear infinite;
-}
-
-@keyframes glowBorder {
-  0% { border-color: #ff4ec4; box-shadow: 0 0 8px #ff4ec4; }
-  25% { border-color: #00e0ff; box-shadow: 0 0 8px #00e0ff; }
-  50% { border-color: #7eff6b; box-shadow: 0 0 8px #7eff6b; }
-  75% { border-color: #ffc107; box-shadow: 0 0 8px #ffc107; }
-  100% { border-color: #ff4ec4; box-shadow: 0 0 8px #ff4ec4; }
-}
-
-/* 🟢 Ongoing Election */
-.election-card.active {
-  border: 2px solid #198754;
-  box-shadow: 0 0 12px rgba(25, 135, 84, 0.3);
-}
-
-/* 🔴 Ended Election */
-.election-card.ended {
-  filter: grayscale(80%);
-  position: relative;
-  border: 1px solid #aaa;
-}
-
-.election-card.ended::before {
-  content: "Ended";
-  position: absolute;
-  top: 10px;
-  right: -30px;
-  background: #dc3545;
-  color: white;
-  font-weight: bold;
-  padding: 4px 12px;
-  transform: rotate(45deg);
-  font-size: 0.75rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  z-index: 10;
-}
-
-/* 🎉 Badge Styles */
-.election-card .badge {
-  font-size: 0.9rem;
-  border-radius: 1rem;
-  padding: 6px 14px;
-  font-weight: 600;
-}
-
-.election-card .badge.bg-success {
-  background: linear-gradient(135deg, #28a745, #218838);
-  color: white;
-}
-
-.election-card .badge.bg-primary {
-  background: linear-gradient(135deg, #0d6efd, #0b5ed7);
-  color: white;
-}
-
-.election-card .badge.bg-danger {
-  background: linear-gradient(135deg, #dc3545, #c82333);
-  color: white;
-}
-
-.election-card .badge.bg-secondary {
-  background: linear-gradient(135deg, #6c757d, #5a6268);
-  color: white;
-}
-/* 📱 Responsive tweaks */
-@media (max-width: 768px) {
-  .list-group-item {
-    font-size: 0.9rem;
-    padding: 0.6rem 1rem;
-  }
-}
-</style>
-
-
 {% endblock %}

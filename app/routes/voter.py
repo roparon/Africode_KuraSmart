@@ -233,3 +233,8 @@ def voting_history():
         'voter/voting_history.html',
         votes=user_votes
     )
+
+
+@voter_bp.route('/help')
+def help_support():
+    return render_template('voter/help_support.html', title="Help & Support - KuraSmart")

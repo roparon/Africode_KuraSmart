@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+{% block title %}Help & Support{% endblock %}
+
+
+{% block content %}
+<section class="help-support-section">
+  <div class="help-container">
+    <h1 class="help-title">Welcome to KuraSmart Help & Support 😊</h1>
+    <p class="help-intro">
+      Whether you're casting your first vote, managing an election, or facing a technical issue — we're here to guide you every step of the way. Explore the sections below to make the most of KuraSmart.
+    </p>
+
+    <div class="help-cards">
+      <div class="help-card">
+        <h2>👟 Getting Started with KuraSmart</h2>
+        <p>New here? Begin by creating an account or logging in. After logging in, your personal dashboard will appear, giving you access to available elections, notifications, and your profile settings.</p>
+        <ul>
+          <li>✅ Register with your email or student/employee ID.</li>
+          <li>🔐 Set up two-factor authentication for extra security.</li>
+          <li>🗂 Browse upcoming and ongoing elections directly from the dashboard.</li>
+        </ul>
+      </div>
+
+      <div class="help-card">
+        <h2>🗳️ How to Vote Securely</h2>
+        <p>Voting on KuraSmart is designed to be intuitive and secure.</p>
+        <ul>
+          <li>👤 First, ensure you're eligible for the election (your profile will indicate your status).</li>
+          <li>✅ Select your preferred candidate or option from the list provided.</li>
+          <li>📩 Click “Submit Vote” and confirm your choice in the pop-up window.</li>
+          <li>🔒 All votes are end-to-end encrypted and anonymous.</li>
+        </ul>
+      </div>
+
+      <div class="help-card">
+        <h2>📊 Accessing and Understanding Results</h2>
+        <p>Once voting closes, KuraSmart’s Results page provides clear, transparent data.</p>
+        <ul>
+          <li>📅 Results are available immediately after the election ends.</li>
+          <li>📈 Visual breakdowns include bar charts, percentage distributions, and voter turnout metrics.</li>
+          <li>🌍 Filter results by faculty, department, location, or role.</li>
+        </ul>
+      </div>
+
+      <div class="help-card">
+        <h2>⚠️ Common Issues & Troubleshooting</h2>
+        <p>Having trouble using the platform? Here's how to resolve most issues:</p>
+        <ul>
+          <li>🔄 Try refreshing the page or switching browsers.</li>
+          <li>📶 Ensure you have a stable internet connection.</li>
+          <li>🔐 Log out and log back in if your session has expired.</li>
+          <li>📨 Still stuck? Reach out via our support form.</li>
+        </ul>
+      </div>
+
+      <div class="help-card">
+        <h2>🎥 Video Tutorials & Guides</h2>
+        <p>Prefer a visual guide? Watch step-by-step tutorials on how to use KuraSmart.</p>
+        <ul>
+          <li>🎬 How to Register and Login</li>
+          <li>🗳 How to Cast a Vote</li>
+          <li>📊 Understanding Election Results</li>
+          <li>🔧 Troubleshooting Tips</li>
+        </ul>
+        <p>Find all videos on our <a href="/tutorials" target="_blank">Tutorials Page</a>.</p>
+      </div>
+
+      <div class="help-card">
+        <h2>👥 Managing an Election (For Organizers)</h2>
+        <p>Organizing an election? KuraSmart provides powerful admin tools:</p>
+        <ul>
+          <li>📝 Create new elections with customizable rules.</li>
+          <li>📤 Upload candidate lists and voter rolls securely.</li>
+          <li>🔍 Monitor live participation stats and send reminders.</li>
+          <li>🛡 Ensure fair practices with built-in audit trails.</li>
+        </ul>
+      </div>
+
+      <div class="help-card">
+        <h2>📞 Contacting Support</h2>
+        <p>If you still need help, our support team is ready to assist you.</p>
+        <ul>
+          <li>📬 Fill out our <a href="/support">Contact Form</a></li>
+          <li>💬 Use the live chat feature during working hours.</li>
+          <li>📧 Email us at support@kurasmart.com</li>
+        </ul>
+        <p>Response times are typically within 24 hours.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+{% block extra_css %}
+<style>
+/* Container Styling */
+.help-support-section {
+  padding: 4rem 2rem;
+  background: #f7f9fb;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.help-container {
+  max-width: 1200px;
+  margin: auto;
+  text-align: center;
+}
+
+.help-title {
+  font-size: 2.8rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.help-intro {
+  font-size: 1.2rem;
+  color: #4b5563;
+  margin-bottom: 3rem;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Cards Grid */
+.help-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+.help-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: left;
+}
+
+.help-card h2 {
+  font-size: 1.5rem;
+  color: #1e40af;
+  margin-bottom: 1rem;
+}
+
+.help-card p,
+.help-card ul {
+  color: #374151;
+  line-height: 1.6;
+}
+
+.help-card ul {
+  padding-left: 1.2rem;
+  margin-top: 0.8rem;
+}
+
+.help-card ul li {
+  margin-bottom: 0.5rem;
+}
+
+/* Hover Effects */
+.help-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Animation Classes */
+.animate-slide-in {
+  opacity: 0;
+  transform: translateY(-30px);
+  animation: slideIn 0.8s ease-out forwards;
+}
+
+.animate-fade-in {
+  opacity: 0;
+  animation: fadeIn 1s ease-in-out forwards;
+  animation-delay: 0.5s;
+}
+
+.animate-pop-up {
+  opacity: 0;
+  transform: scale(0.95);
+  animation: popUp 0.6s ease-out forwards;
+  animation-delay: 0.4s;
+}
+
+/* Keyframes */
+@keyframes slideIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes popUp {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Responsive Tweaks */
+@media (max-width: 600px) {
+  .help-title {
+    font-size: 2rem;
+  }
+
+  .help-intro {
+    font-size: 1rem;
+  }
+}
+</style>
+{% endblock %}
