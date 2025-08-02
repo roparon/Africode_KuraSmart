@@ -250,7 +250,6 @@
                 </li>
               </ul>
             </li>
-
           {% else %}
             <li class="nav-item">
               <a class="nav-link {% if request.endpoint == 'web_auth.login' %}active{% endif %}" href="{{ url_for('web_auth.login') }}">Login</a>
@@ -293,7 +292,6 @@
       {% endif %}
     {% endwith %}
   </div>
-
   <main class="container py-2 flex-grow-1">
     {% block content %}{% endblock %}
   </main>
