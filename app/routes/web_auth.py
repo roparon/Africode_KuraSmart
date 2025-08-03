@@ -506,16 +506,16 @@ def manage_elections():
                     )
                     db.session.add(candidate)
                 else:
-                    flash(f"⚠️ You are already registered as a candidate for '{position.name}' in this election.", "warning")
+                    flash(f"You are already registered as a candidate for '{position.name}' in this election.", "warning")
             try:
                 db.session.commit()
-                flash("✅ Election and candidates saved successfully.", "success")
+                flash("Election and candidates saved successfully.", "success")
             except IntegrityError:
                 db.session.rollback()
-                flash("⚠️ Integrity error: You may already be registered as a candidate for this position.", "warning")
+                flash("Integrity error: You may already be registered as a candidate for this position.", "warning")
             except Exception as db_error:
                 db.session.rollback()
-                flash(f"❌ Unexpected database error: {db_error}", "danger")
+                flash(f" Unexpected database error: {db_error}", "danger")
             return redirect(url_for("admin_web.manage_elections"))
         elif request.method == "GET" and request.args.get("edit"):
             election_id = request.args.get("edit")
