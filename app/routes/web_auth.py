@@ -1017,40 +1017,53 @@ def update_profile_image():
 @admin_web_bp.route('/notifications', methods=['GET', 'POST'])
 @login_required
 def manage_notifications():
-    if not current_user.is_superadmin:
+    if not getattr(current_user, 'is_superadmin', False):
         abort(403)
 
     form = NotificationForm()
     try:
         if form.validate_on_submit():
             users = User.query.all()
+
             for user in users:
                 notif = Notification(
                     subject=form.title.data,
                     message=form.message.data,
                     send_email=form.send_email.data,
-                    user_id=user.id,  # ✅ Ensure user_id is set
-                    read=False  # Optional: ensure default
+                    user_id=user.id,
+                    read=False
                 )
                 db.session.add(notif)
 
                 if form.send_email.data:
                     try:
                         send_email(user.email, notif.subject, notif.message)
-                    except Exception:
-                        current_app.logger.exception(f"Failed email to {user.email}")
+                    except Exception as email_err:
+                        current_app.logger.exception(f"[Email Error] Failed to send to {user.email}: {email_err}")
 
             db.session.commit()
             flash('Notification sent successfully!', 'success')
             return redirect(url_for('admin_web.manage_notifications'))
+        notifications = (
+                db.session.query(
+                    Notification.subject,
+                    Notification.message,
+                    Notification.send_email,
+                    db.func.count(Notification.id).label('recipient_count'),
+                    db.func.max(Notification.created_at).label('created_at')
+                )
+                .group_by(Notification.subject, Notification.message, Notification.send_email)
+                .order_by(db.desc('created_at'))
+                .all()
+            )
 
+        return render_template('admin/notifications.html', form=form, notifications=notifications)
+    except Exception as err:
+        db.session.rollback()
+        current_app.logger.exception(f"[Notification Error] {err}")
+        flash('An unexpected error occurred while managing notifications.', 'danger')
         notifications = Notification.query.order_by(Notification.created_at.desc()).all()
         return render_template('admin/notifications.html', form=form, notifications=notifications)
-
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Error in notifications: {e}", "danger")
-        return redirect(url_for('admin_web.manage_notifications'))
 
 @admin_web_bp.route('/notifications/edit/<int:notif_id>', methods=['GET', 'POST'])
 @login_required
@@ -1086,10 +1099,13 @@ def inject_notifications():
 @login_required
 def view_notification(notif_id):
     notif = Notification.query.filter_by(id=notif_id, user_id=current_user.id).first_or_404()
-    notif.read = True
-    db.session.commit()
-    flash(f"Notification: {notif.subject}", "info")
-    return redirect(url_for('dashboard'))
+
+    if not notif.read:
+        notif.read = True
+        db.session.commit()
+
+    flash(f"<strong>{notif.subject}</strong>: {notif.message}", "info")
+    return redirect(url_for('web_bp.voter_dashboard'))
 
 
 @voter_bp.route('/notifications/read/<int:notif_id>', methods=['POST'])

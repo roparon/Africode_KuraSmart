@@ -14,14 +14,14 @@
       <div class="card-body">
         <form method="POST">
           {{ form.hidden_tag() }}
+          {{ form.id }}
           <div class="mb-4">
-            {{ form.id }}
             {{ form.title.label(class="form-label") }}
-            {{ form.title(class="form-control") }}
+            {{ form.title(class="form-control", placeholder="Enter title") }}
           </div>
           <div class="mb-4">
             {{ form.message.label(class="form-label") }}
-            {{ form.message(class="form-control", rows=4) }}
+            {{ form.message(class="form-control", rows=4, placeholder="Enter your message here") }}
           </div>
           <div class="form-check mb-4">
             {{ form.send_email(class="form-check-input") }}
@@ -36,35 +36,32 @@
 
     <!-- Notification History -->
     <div class="card shadow-sm rounded-4" data-aos="fade-left">
-      <div class="card-header bg-gradient-secondary text-white rounded-top-4">Sent Notifications</div>
+      <div class="card-header bg-gradient-secondary text-success rounded-top-4">Sent Notifications</div>
       <div class="card-body">
         {% if notifications %}
           {% for n in notifications %}
-          <div class="border rounded-3 p-3 mb-3 bg-light d-flex justify-content-between align-items-start"
+          <div class="border rounded-3 p-3 mb-3 bg-light"
                data-aos="zoom-in" data-aos-delay="{{ loop.index * 50 }}">
-            <div>
-              <div class="d-flex justify-content-between">
-                <h6 class="mb-1">{{ n.subject }}</h6>
-                <small class="text-muted">{{ n.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="d-flex justify-content-between">
+                  <h6 class="mb-1">{{ n.subject }}</h6>
+                  <small class="text-muted">
+                    {{ n.created_at.strftime('%Y-%m-%d %H:%M') if n.created_at else "Unknown time" }}
+                  </small>
+                </div>
+                <p class="mb-2">{{ n.message }}</p>
+
+                {% if n.user_id %}
+                  <p class="mb-1 text-muted small">Sent to 1 user</p>
+                {% else %}
+                  <p class="mb-1 text-muted small">Broadcasted to all users</p>
+                {% endif %}
+
+                {% if n.send_email %}
+                  <span class="badge bg-success">✉️ Email Sent</span>
+                {% endif %}
               </div>
-              <p class="mb-2">{{ n.message }}</p>
-              {% if n.send_email %}
-                <span class="badge bg-success">✉️ Email Sent</span>
-              {% endif %}
-            </div>
-            <div class="action-buttons">
-              <a href="{{ url_for('admin_web.edit_notification', notif_id=n.id) }}"
-                 class="btn btn-sm btn-outline-primary me-1"> Edith
-                <i class="bi bi-pencil-fill"></i>
-              </a>
-              <form method="POST"
-                    action="{{ url_for('admin_web.delete_notification', notif_id=n.id) }}"
-                    onsubmit="return confirm('Delete this notification?');">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-sm btn-outline-danger"> Delete
-                  <i class="bi bi-trash-fill"></i>
-                </button>
-              </form>
             </div>
           </div>
           {% endfor %}
@@ -73,7 +70,8 @@
         {% endif %}
       </div>
     </div>
-    <a href="{{ request.referrer or url_for('dashboard.dashboard_home') }}" class="btn btn-outline-secondary mb-4">
+
+    <a href="{{ request.referrer or url_for('dashboard.dashboard_home') }}" class="btn btn-outline-secondary mt-4">
       ← Back
     </a>
   </div>
@@ -82,11 +80,20 @@
 
 {% block head_extra %}
 <style>
-.admin-dashboard-background { background: #f8f9fb; min-height: 100vh; }
-.card { border-radius: 0.75rem; }
-.btn { transition: transform 0.2s, box-shadow 0.2s; }
-.btn:hover { transform: translateY(-2px); box-shadow: 0 0.4rem 1rem rgba(0,0,0,0.15); }
-.action-buttons form, .action-buttons a { display: inline-block; }
+  .admin-dashboard-background {
+    background: #f8f9fb;
+    min-height: 100vh;
+  }
+  .card {
+    border-radius: 0.75rem;
+  }
+  .btn {
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.4rem 1rem rgba(0,0,0,0.15);
+  }
 </style>
 {% endblock %}
 
