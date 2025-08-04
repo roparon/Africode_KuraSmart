@@ -30,6 +30,7 @@
   backdrop-filter: blur(8px);
 }
 
+/* Rotating background layer */
 .election-card.active-style::before {
   content: '';
   position: absolute;
@@ -49,6 +50,7 @@
   filter: blur(40px);
 }
 
+/* Inner masked layer for depth */
 .election-card.active-style::after {
   content: '';
   position: absolute;
@@ -59,6 +61,7 @@
   box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.05);
 }
 
+/* Rotating animation */
 @keyframes rotBGimg {
   from {
     transform: rotate(0deg);
@@ -102,6 +105,7 @@
     transform: translateY(0);
   }
 }
+/* From Uiverse.io by RodolpheANDRIEUX */ 
 .cube-container {
   width: 200px;
   height: 200px;
