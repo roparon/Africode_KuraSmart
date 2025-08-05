@@ -21,12 +21,8 @@
               <span class="small mt-1 mt-sm-0 text-white-50">{{ vote.timestamp.strftime('%d %b %Y, %I:%M %p') }}</span>
             </div>
             <div class="card-body">
-              <p class="mb-1">
-                <strong>Position:</strong> {{ vote.position.name }}
-              </p>
-              <p class="mb-1">
-                <strong>Candidate:</strong> {{ vote.candidate.full_name }}
-              </p>
+              <p class="mb-1"><strong>Position:</strong> {{ vote.position.name }}</p>
+              <p class="mb-1"><strong>Candidate:</strong> {{ vote.candidate.full_name }}</p>
               <p class="text-muted small mb-0">
                 Voted on {{ vote.timestamp.strftime('%A, %d %B %Y at %I:%M %p') }}
               </p>
@@ -57,11 +53,11 @@
 
 <!-- Active Elections Modal -->
 <div class="modal fade" id="activeElectionsModal" tabindex="-1" aria-labelledby="activeElectionsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content rounded-4">
-      <div class="modal-header bg-primary text-white rounded-top-4 sticky-top z-3">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
+    <div class="modal-content rounded-4" style="max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header bg-primary text-white sticky-top">
         <h5 class="modal-title" id="activeElectionsModalLabel">Active Elections</h5>
-        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         {% if active_elections %}
@@ -76,6 +72,9 @@
         {% else %}
           <p class="text-muted">There are currently no active elections.</p>
         {% endif %}
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -100,6 +99,15 @@
 
   .card:hover {
     transform: translateY(-5px);
+  }
+
+  /* Sticky modal header for mobile */
+  .modal-header.sticky-top {
+    top: 0;
+    z-index: 1055;
+    background-color: #0d6efd; /* Matches bg-primary */
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
   }
 
   @media (max-width: 576px) {
@@ -135,10 +143,6 @@
     .list-group-item {
       font-size: 0.9rem;
       padding: 0.75rem 1rem;
-    }
-
-    .modal-header .btn-close {
-      margin-left: auto;
     }
   }
 </style>
