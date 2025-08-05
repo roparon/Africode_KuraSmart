@@ -1,67 +1,81 @@
 {% extends "base.html" %}
-{% block title %}Notifications | KuraSmart{% endblock %}
+
+{% block title %}My Voting History | KuraSmart{% endblock %}
 
 {% block content %}
-<div class="admin-dashboard-background py-5">
+<div class="bg-light py-5 min-vh-100">
   <div class="container" data-aos="fade-up">
-    <h2 class="mb-4 fw-bold">
-      <i class="bi bi-bell-fill me-2 text-warning"></i> My Notifications
+
+    <!-- Page Heading -->
+    <h2 class="mb-4 text-center fw-bold">
+      <i class="bi bi-clock-history text-primary me-2"></i> Voting History
     </h2>
 
-    <div class="card shadow-sm border-0 rounded-4">
-      <div class="card-header bg-warning text-dark fw-semibold rounded-top-4">
-        Recent Alerts
+    {% if votes %}
+      <div class="row">
+        {% for vote in votes %}
+        <div class="col-md-6 mb-4" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+          <div class="card shadow border-0 rounded-4 h-100">
+            <div class="card-header bg-primary text-white rounded-top-4 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center">
+              <strong>{{ vote.election.title }}</strong>
+              <span class="small mt-1 mt-sm-0 text-white-50">{{ vote.timestamp.strftime('%d %b %Y, %I:%M %p') }}</span>
+            </div>
+            <div class="card-body">
+              <p class="mb-1">
+                <strong>Position:</strong> {{ vote.position.name }}
+              </p>
+              <p class="mb-1">
+                <strong>Candidate:</strong> {{ vote.candidate.full_name }}
+              </p>
+              <p class="text-muted small mb-0">
+                Voted on {{ vote.timestamp.strftime('%A, %d %B %Y at %I:%M %p') }}
+              </p>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
       </div>
+    {% else %}
+      <div class="text-center mt-5" data-aos="zoom-in">
+        <i class="bi bi-emoji-frown text-secondary fs-1"></i>
+        <p class="mt-3 text-muted fs-5">You haven’t participated in any elections yet.</p>
+        <button class="btn btn-success rounded-pill px-4 mt-2" data-bs-toggle="modal" data-bs-target="#activeElectionsModal">
+          View Active Elections
+        </button>
+      </div>
+    {% endif %}
 
-      <div class="card-body p-0">
-        {% if notifications %}
-        <ul class="list-group list-group-flush">
-          {% for n in notifications %}
-            <li class="list-group-item px-4 py-3 border-bottom d-flex justify-content-between align-items-start {% if not n.read %}unread-notification{% endif %}"
-                data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
-              
-              <div class="flex-grow-1 pe-3">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                  <h6 class="mb-0 fw-bold text-dark">{{ n.subject }}</h6>
-                  {% if not n.read %}
-                    <span class="badge bg-danger ms-2">UNREAD</span>
-                  {% endif %}
-                </div>
-                <p class="mb-1 text-muted small">{{ n.message|safe }}</p>
+    <!-- Back Link -->
+    <div class="text-center mt-5">
+      <a href="{{ request.referrer or url_for('voter_web.voter_dashboard') }}" class="btn btn-outline-secondary rounded-pill px-4">
+        ← Back to Dashboard
+      </a>
+    </div>
 
-                {% if n.send_email %}
-                  <span class="badge bg-success small">📧 Email Sent</span>
-                {% endif %}
-              </div>
+  </div>
+</div>
 
-              <div class="text-end">
-                <small class="text-muted">{{ n.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
-                <div class="mt-2">
-                  {% if not n.read %}
-                    <form method="POST" class="d-inline" action="{{ url_for('voter.mark_read', notif_id=n.id) }}">
-                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                      <button type="submit" class="btn btn-sm btn-outline-dark mb-1">Mark Read</button>
-                    </form>
-                  {% endif %}
-
-                  <form method="POST" class="d-inline" action="{{ url_for('voter.delete_notification', notif_id=n.id) }}"
-                        onsubmit="return confirm('Delete this notification?');">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                  </form>
-                </div>
-              </div>
-
+<!-- Active Elections Modal -->
+<div class="modal fade" id="activeElectionsModal" tabindex="-1" aria-labelledby="activeElectionsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content rounded-4">
+      <div class="modal-header bg-primary text-white rounded-top-4 sticky-top z-3">
+        <h5 class="modal-title" id="activeElectionsModalLabel">Active Elections</h5>
+        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        {% if active_elections %}
+          <ul class="list-group">
+            {% for election in active_elections %}
+            <li class="list-group-item d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center">
+              <span class="mb-2 mb-sm-0">{{ election.title }}</span>
+              <a href="{{ url_for('voter.view_election', election_id=election.id) }}" class="btn btn-sm btn-outline-primary rounded-pill">Go Vote</a>
             </li>
-          {% endfor %}
-        </ul>
-        <a href="{{ request.referrer or url_for('dashboard.dashboard_home') }}" class="btn btn-outline-secondary mb-4">
-          ← Back
-        </a>
-      {% else %}
-        <p class="text-center text-muted py-4">No notifications available.</p>
-      {% endif %}
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted">There are currently no active elections.</p>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -70,32 +84,72 @@
 
 {% block head_extra %}
 <style>
-  .admin-dashboard-background {
-    background: linear-gradient(to bottom right, #fffbe6, #fef4d3);
-    min-height: 100vh;
+  body {
+    background-color: #f8f9fa;
   }
 
-  .list-group-item {
-    transition: background-color 0.3s ease;
+  .card-header {
+    font-size: 1rem;
+    font-weight: 600;
+    word-wrap: break-word;
   }
 
-  .list-group-item:hover {
-    background-color: #fff4cc;
+  .card {
+    transition: transform 0.2s ease-in-out;
   }
 
-  .unread-notification {
-    background-color: #fff8dc;
-    border-left: 5px solid #ffc107;
+  .card:hover {
+    transform: translateY(-5px);
   }
 
-  .badge {
-    font-size: 0.75rem;
+  @media (max-width: 576px) {
+    h2 {
+      font-size: 1.4rem;
+    }
+
+    .card-header {
+      font-size: 0.95rem;
+      text-align: left;
+      padding: 0.75rem 1rem;
+    }
+
+    .card-body {
+      font-size: 0.9rem;
+      padding: 1rem;
+    }
+
+    .btn {
+      font-size: 0.85rem;
+      padding: 0.4rem 0.8rem;
+    }
+
+    .modal-body,
+    .modal-header {
+      padding: 1rem;
+    }
+
+    .modal-title {
+      font-size: 1rem;
+    }
+
+    .list-group-item {
+      font-size: 0.9rem;
+      padding: 0.75rem 1rem;
+    }
+
+    .modal-header .btn-close {
+      margin-left: auto;
+    }
   }
 </style>
 {% endblock %}
 
 {% block scripts %}
 <script>
-  AOS.init({ duration: 700, easing: 'ease-out', once: true });
+  AOS.init({
+    duration: 700,
+    once: true,
+    easing: 'ease-in-out'
+  });
 </script>
 {% endblock %}
