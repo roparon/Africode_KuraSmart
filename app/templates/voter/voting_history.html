@@ -3,55 +3,50 @@
 {% block title %}My Voting History | KuraSmart{% endblock %}
 
 {% block content %}
+<p class="text-muted text-center">DEBUG: Found {{ votes|length }} votes</p>
 <div class="bg-light py-5 min-vh-100">
   <div class="container" data-aos="fade-up">
 
     <!-- Page Heading -->
-    <h2 class="mb-4 text-center fw-bold">
-      <i class="bi bi-clock-history text-primary me-2"></i> Voting History
+    <h2 class="text-center fw-bold mb-5">
+      <i class="bi bi-clock-history text-primary me-2"></i> My Voting History
     </h2>
+    <p class="text-center text-muted">DEBUG: Votes found = {{ votes|length }}</p>
 
     {% if votes %}
-      <div class="row">
-        {% for vote in votes %}
-        <div class="col-md-6 mb-4" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
-          <div class="card shadow border-0 rounded-4 h-100">
-            <div class="card-header bg-primary text-white rounded-top-4 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center">
-              <strong>{{ vote.election.title }}</strong>
-              <span class="small mt-1 mt-sm-0 text-white-50">{{ vote.timestamp.strftime('%d %b %Y, %I:%M %p') }}</span>
-            </div>
-            <div class="card-body">
-              <p class="mb-1">
-                <strong>Position:</strong> {{ vote.position.name }}
-              </p>
-              <p class="mb-1">
-                <strong>Candidate:</strong> {{ vote.candidate.full_name }}
-              </p>
-              <p class="text-muted small mb-0">
-                Voted on {{ vote.timestamp.strftime('%A, %d %B %Y at %I:%M %p') }}
-              </p>
-            </div>
+    <div class="row g-4">
+      {% for vote in votes %}
+      <div class="col-md-6" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+        <div class="card h-100 shadow-sm border-0 rounded-4">
+          <div class="card-header bg-primary text-white rounded-top-4 d-flex flex-column flex-sm-row justify-content-between">
+            <strong>{{ vote.election.title }}</strong>
+            <span class="small mt-1 mt-sm-0 text-white-50">{{ vote.timestamp.strftime('%d %b %Y, %I:%M %p') }}</span>
+          </div>
+          <div class="card-body">
+            <p class="mb-2"><strong>Position:</strong> {{ vote.position.name }}</p>
+            <p class="mb-2"><strong>Candidate:</strong> {{ vote.candidate.full_name }}</p>
+            <p class="text-muted small">Voted on {{ vote.timestamp.strftime('%A, %d %B %Y at %I:%M %p') }}</p>
           </div>
         </div>
-        {% endfor %}
       </div>
+      {% endfor %}
+    </div>
     {% else %}
-      <div class="text-center mt-5" data-aos="zoom-in">
-        <i class="bi bi-emoji-frown text-secondary fs-1"></i>
-        <p class="mt-3 text-muted fs-5">You haven’t participated in any elections yet.</p>
-        <button class="btn btn-success rounded-pill px-4 mt-2" data-bs-toggle="modal" data-bs-target="#activeElectionsModal">
-          View Active Elections
-        </button>
-      </div>
+    <div class="text-center mt-5" data-aos="zoom-in">
+      <i class="bi bi-emoji-frown text-secondary fs-1"></i>
+      <p class="mt-3 fs-5 text-muted">You haven’t participated in any elections yet.</p>
+      <button class="btn btn-success rounded-pill px-4 mt-2" data-bs-toggle="modal" data-bs-target="#activeElectionsModal">
+        View Active Elections
+      </button>
+    </div>
     {% endif %}
 
     <!-- Back Link -->
     <div class="text-center mt-5">
-      <a href="{{ request.referrer or url_for('voter_web.voter_dashboard') }}" class="btn btn-outline-secondary rounded-pill px-4">
+      <a href="{{ request.referrer or url_for('voter.voter_dashboard') }}" class="btn btn-outline-secondary rounded-pill px-4">
         ← Back to Dashboard
       </a>
     </div>
-
   </div>
 </div>
 
@@ -59,22 +54,24 @@
 <div class="modal fade" id="activeElectionsModal" tabindex="-1" aria-labelledby="activeElectionsModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content rounded-4">
-      <div class="modal-header bg-primary text-white rounded-top-4 d-flex flex-wrap justify-content-between align-items-center">
+      <div class="modal-header bg-primary text-white rounded-top-4">
         <h5 class="modal-title" id="activeElectionsModalLabel">Active Elections</h5>
-        <button type="button" class="btn-close btn-close-white ms-auto mt-2 mt-sm-0" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         {% if active_elections %}
-          <ul class="list-group">
-            {% for election in active_elections %}
-            <li class="list-group-item d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center">
-              <span class="mb-2 mb-sm-0">{{ election.title }}</span>
-              <a href="{{ url_for('voter.view_election', election_id=election.id) }}" class="btn btn-sm btn-outline-primary rounded-pill">Go Vote</a>
-            </li>
-            {% endfor %}
-          </ul>
+        <ul class="list-group">
+          {% for election in active_elections %}
+          <li class="list-group-item d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center">
+            <span class="fw-semibold">{{ election.title }}</span>
+            <a href="{{ url_for('voter.view_election', election_id=election.id) }}" class="btn btn-sm btn-outline-primary rounded-pill mt-2 mt-sm-0">
+              Go Vote
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
         {% else %}
-          <p class="text-muted">There are currently no active elections.</p>
+        <p class="text-muted">There are currently no active elections.</p>
         {% endif %}
       </div>
     </div>
@@ -84,16 +81,6 @@
 
 {% block head_extra %}
 <style>
-  body {
-    background-color: #f8f9fa;
-  }
-
-  .card-header {
-    font-size: 1rem;
-    font-weight: 600;
-    word-wrap: break-word;
-  }
-
   .card {
     transition: transform 0.2s ease-in-out;
   }
@@ -102,25 +89,21 @@
     transform: translateY(-5px);
   }
 
-  @media (max-width: 576px) {
-    h2 {
-      font-size: 1.4rem;
-    }
+  .card-header {
+    font-size: 1rem;
+    font-weight: 600;
+    word-wrap: break-word;
+  }
 
+  @media (max-width: 576px) {
     .card-header {
       font-size: 0.95rem;
-      text-align: left;
       padding: 0.75rem 1rem;
     }
 
     .card-body {
       font-size: 0.9rem;
       padding: 1rem;
-    }
-
-    .btn {
-      font-size: 0.85rem;
-      padding: 0.4rem 0.8rem;
     }
 
     .modal-body,
@@ -132,13 +115,18 @@
       font-size: 1rem;
     }
 
+    .btn {
+      font-size: 0.85rem;
+      padding: 0.4rem 0.8rem;
+    }
+
     .list-group-item {
       font-size: 0.9rem;
       padding: 0.75rem 1rem;
     }
 
-    .modal-header .btn-close {
-      margin-left: auto;
+    h2 {
+      font-size: 1.4rem;
     }
   }
 </style>

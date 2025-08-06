@@ -59,7 +59,14 @@ def voter_dashboard():
             format_elections(upcoming_elections, 'pending') +
             format_elections(ended_elections, 'ended')
         )
-        voted_election_ids = [vote.election_id for vote in Vote.query.filter_by(voter_id=current_user.id).all()]
+
+        # Fetch votes of the logged-in user
+        votes = Vote.query.filter_by(voter_id=current_user.id).order_by(Vote.timestamp.desc()).all()
+
+        # Get list of election_ids where user has voted
+        voted_election_ids = [vote.election_id for vote in votes]
+
+        # Handle profile image upload
         form = ProfileImageForm()
         if request.method == 'POST' and form.validate_on_submit():
             image_file = form.image.data
@@ -72,14 +79,17 @@ def voter_dashboard():
                 current_user.profile_image = f'profile_images/{filename}'
                 db.session.commit()
                 flash("Profile image updated successfully.", "success")
-                return redirect (url_for('voter.voter_dashboard'))
+                return redirect(url_for('voter.voter_dashboard'))
+
         return render_template(
             'voter/dashboard.html',
             user=current_user,
             all_elections=all_elections,
             voted_election_ids=voted_election_ids,
+            votes=votes,  # Pass votes to template
             form=form
         )
+
     except Exception as e:
         flash(f"Error loading dashboard: {str(e)}", "danger")
         return redirect(url_for('main.index'))
@@ -174,7 +184,8 @@ def cast_vote(election_id):
             voter_id=current_user.id,
             election_id=election_id,
             candidate_id=candidate_id,
-            position_id=position_id
+            position_id=position_id,
+            timestamp=datetime.utcnow() 
         )
         db.session.add(vote)
         db.session.commit()
@@ -227,12 +238,32 @@ def view_election(election_id):
 @voter_bp.route('/voting-history')
 @login_required
 def voting_history():
-    user_votes = Vote.query.filter_by(voter_id=current_user.id).order_by(Vote.timestamp.desc()).all()
+    print(f"[DEBUG] current_user.id = {current_user.id}")
+    print(f"[DEBUG] current_user.email = {current_user.email}")
+    print(f"[DEBUG] current_user.is_authenticated = {current_user.is_authenticated}")
+
+    user_votes = (
+        Vote.query
+        .filter(Vote.voter_id == current_user.id)
+        .options(
+            db.joinedload(Vote.election),
+            db.joinedload(Vote.position),
+            db.joinedload(Vote.candidate)
+        )
+        .order_by(Vote.timestamp.desc())
+        .all()
+    )
+
+    print(f"[DEBUG] user_votes count = {len(user_votes)}")
+
+    active_elections = Election.query.filter_by(status='active').all()
 
     return render_template(
         'voter/voting_history.html',
-        votes=user_votes
+        votes=user_votes,
+        active_elections=active_elections
     )
+
 
 
 @voter_bp.route('/help')

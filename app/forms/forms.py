@@ -21,7 +21,6 @@ class ProfileImageForm(FlaskForm):
     ])
     submit = SubmitField('Update Image')
 
-
 class RegistrationForm(FlaskForm):
     voting_type = SelectField(
         'Voting Type',
