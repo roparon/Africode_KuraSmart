@@ -238,10 +238,6 @@ def view_election(election_id):
 @voter_bp.route('/voting-history')
 @login_required
 def voting_history():
-    print(f"[DEBUG] current_user.id = {current_user.id}")
-    print(f"[DEBUG] current_user.email = {current_user.email}")
-    print(f"[DEBUG] current_user.is_authenticated = {current_user.is_authenticated}")
-
     user_votes = (
         Vote.query
         .filter(Vote.voter_id == current_user.id)
@@ -253,9 +249,6 @@ def voting_history():
         .order_by(Vote.timestamp.desc())
         .all()
     )
-
-    print(f"[DEBUG] user_votes count = {len(user_votes)}")
-
     active_elections = Election.query.filter_by(status='active').all()
 
     return render_template(
@@ -264,7 +257,37 @@ def voting_history():
         active_elections=active_elections
     )
 
+from sqlalchemy.orm import joinedload
 
+@voter_bp.route('/results')
+@login_required
+def election_results():
+    voted_election_ids = (
+        Vote.query.filter_by(user_id=current_user.id)
+        .with_entities(Vote.election_id)
+        .distinct()
+        .all()
+    )
+    election_ids = [eid[0] for eid in voted_election_ids]
+
+    elections = (
+        Election.query
+        .filter(Election.id.in_(election_ids))
+        .options(joinedload(Election.candidates))
+        .all()
+    )
+
+    results = []
+    for election in elections:
+        # Sort candidates by vote count
+        candidates_sorted = sorted(election.candidates, key=lambda c: c.votes, reverse=True)
+        results.append({
+            'election': election,
+            'candidates': candidates_sorted,
+            'winner': candidates_sorted[0] if candidates_sorted else None
+        })
+
+    return render_template('voter/election_results.html', results=results)
 
 @voter_bp.route('/help')
 def help_support():
