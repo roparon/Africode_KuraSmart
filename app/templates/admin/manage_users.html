@@ -22,6 +22,22 @@
   z-index: 1;
   box-shadow: 0 0 15px rgba(13, 110, 253, 0.4);
   animation: bg-slide 8s linear infinite;
+  cursor: pointer;
+
+  /* Responsive width */
+  width: auto;
+  min-width: 120px;
+  max-width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  user-select: none;
+  transition: filter 0.3s ease;
+}
+
+.shimmer-button:hover,
+.shimmer-button:focus {
+  filter: brightness(1.1);
+  outline: none;
 }
 
 .shimmer-button::before {
@@ -39,6 +55,7 @@
   );
   animation: shimmer-slide 2.5s infinite;
   z-index: 2;
+  pointer-events: none;
 }
 
 @keyframes shimmer-slide {
@@ -62,6 +79,18 @@
 .shimmer-button span {
   position: relative;
   z-index: 3;
+  display: inline-block;
+  padding: 0 0.5rem;
+}
+
+/* Mobile adjustments */
+@media (max-width: 575.98px) {
+  .shimmer-button {
+    display: block;
+    width: 100%;
+    padding: 1rem 0;
+    font-size: 1rem;
+  }
 }
 </style>
 

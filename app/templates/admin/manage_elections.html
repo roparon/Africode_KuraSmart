@@ -4,12 +4,12 @@
 {% block content %}
 <div class="manage-elections-background py-5">
   <div class="container" data-aos="fade-up">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h2 class="fw-bold display-6 text-dark">
-        <i class="bi bi-check2-square me-2 text-primary"></i>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-3">
+      <h2 class="fw-bold display-6 text-dark mb-0 d-flex align-items-center flex-wrap">
+        <i class="bi bi-check2-square me-2 text-primary fs-2"></i>
         Manage Elections
       </h2>
-      <div class="text-muted small text-end">
+      <div class="text-muted small text-md-end">
         <span class="fw-semibold">Current Time:</span>
         <span id="local-time" class="text-primary"></span>
       </div>
@@ -20,7 +20,7 @@
         Create New Election
       </div>
       <div class="card-body">
-        <form method="POST" enctype="multipart/form-data" id="election-form">
+        <form method="POST" enctype="multipart/form-data" id="election-form" novalidate>
           {{ form.hidden_tag() }}
 
           <div class="mb-3">
@@ -36,12 +36,12 @@
           </div>
 
           <div class="row">
-            <div class="col-md-6 mb-3">
+            <div class="col-12 col-md-6 mb-3">
               {{ form.start_date.label(class="form-label fw-semibold text-dark") }}
               {{ form.start_date(class="form-control", type="datetime-local", min=current_datetime) }}
               {% for e in form.start_date.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
             </div>
-            <div class="col-md-6 mb-3">
+            <div class="col-12 col-md-6 mb-3">
               {{ form.end_date.label(class="form-label fw-semibold text-dark") }}
               {{ form.end_date(class="form-control", type="datetime-local", min=current_datetime) }}
               {% for e in form.end_date.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
@@ -54,16 +54,16 @@
             <div id="candidates-list">
               {% for cand_form in form.candidates %}
               <div class="card candidate-card mb-3 p-3">
-                <div class="row">
-                  <div class="col-md-6 mb-2">
+                <div class="row g-3">
+                  <div class="col-12 col-md-6">
                     {{ cand_form.full_name.label(class="form-label") }}
                     {{ cand_form.full_name(class="form-control") }}
                   </div>
-                  <div class="col-md-6 mb-2">
+                  <div class="col-12 col-md-6">
                     {{ cand_form.party_name.label(class="form-label") }}
                     {{ cand_form.party_name(class="form-control") }}
                   </div>
-                  <div class="col-md-6 mb-2">
+                  <div class="col-12 col-md-6">
                     {% set loop_id = 'positionOptions' ~ loop.index %}
                     <input 
                       type="text" 
@@ -75,19 +75,19 @@
                       placeholder="Enter or select a position"
                     >
                     <datalist id="{{ loop_id }}">
-                      <option value="President">
-                      <option value="Governor">
-                      <option value="Senator">
-                      <option value="Women Representative">
-                      <option value="Member Of Parliament">
-                      <option value="Member Of County Assembly">
+                      <option value="President"></option>
+                      <option value="Governor"></option>
+                      <option value="Senator"></option>
+                      <option value="Women Representative"></option>
+                      <option value="Member Of Parliament"></option>
+                      <option value="Member Of County Assembly"></option>
                     </datalist>
                   </div>
-                  <div class="col-md-6 mb-2">
+                  <div class="col-12 col-md-6">
                     {{ cand_form.manifesto.label(class="form-label") }}
                     {{ cand_form.manifesto(class="form-control", rows=2) }}
                   </div>
-                  <div class="col-md-6 mb-2">
+                  <div class="col-12 col-md-6">
                     {{ cand_form.profile_photo.label(class="form-label") }}
                     {{ cand_form.profile_photo(class="form-control", type="file") }}
                     {% if cand_form.profile_photo.errors %}
@@ -107,14 +107,14 @@
           </div>
 
           <div class="text-center mt-4">
-            {{ form.submit(class="btn btn-primary px-4 py-2 rounded-pill") }}
+            {{ form.submit(class="btn btn-primary px-4 py-2 rounded-pill w-100 w-md-auto") }}
           </div>
         </form>
       </div>
     </div>
 
     <form method="GET" class="mb-4">
-      <div class="input-group shadow-sm rounded-pill bg-white w-75 mx-auto">
+      <div class="input-group shadow-sm rounded-pill bg-white w-100 w-md-75 mx-auto">
         <input type="text" name="search_title" class="form-control border-0 rounded-start-pill ps-4" placeholder="Search by Election Title" value="{{ search_title }}">
         <button type="submit" class="btn btn-outline-primary rounded-end-pill" aria-label="Search">
           <i class="bi bi-search"></i>
@@ -126,15 +126,15 @@
       <div class="card-header bg-gradient-secondary text-white fw-semibold fs-5 rounded-top-4">
         Existing Elections
       </div>
-      <div class="card-body">
+      <div class="card-body p-0">
         {% if elections %}
           <div class="table-responsive">
-            <table class="table align-middle table-hover text-center">
+            <table class="table align-middle table-hover text-center mb-0">
               <thead class="table-light text-dark">
                 <tr class="fw-semibold">
                   <th>ID</th>
                   <th>Title</th>
-                  <th>Description</th>
+                  <th class="d-none d-sm-table-cell">Description</th>
                   <th>Start</th>
                   <th>End</th>
                   <th>Status</th>
@@ -146,11 +146,11 @@
                   {% set status = election.status.value if election.status else 'unknown' %}
                   {% set status_clr = {'inactive':'secondary','active':'success','paused':'info','ended':'danger'}.get(status,'dark') %}
                   <tr data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
-                    <td class="text-muted">{{ election.id }}</td>
-                    <td class="fw-semibold text-dark">{{ election.title }}</td>
-                    <td class="text-muted small">{{ election.description or '—' }}</td>
-                    <td class="text-muted">{{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</td>
-                    <td class="text-muted">{{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td class="text-muted small">{{ election.id }}</td>
+                    <td class="fw-semibold text-dark small">{{ election.title }}</td>
+                    <td class="text-muted small d-none d-sm-table-cell text-truncate" style="max-width: 150px;">{{ election.description or '—' }}</td>
+                    <td class="text-muted small">{{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td class="text-muted small">{{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</td>
                     <td>
                       <span class="badge bg-{{ status_clr }}">{{ status.title() }}</span>
                     </td>
@@ -268,6 +268,40 @@
 
   .table-hover tbody tr:hover {
     background-color: #f1f5f9;
+  }
+
+  /* Responsive adjustments */
+
+  /* Allow table container to scroll horizontally on small screens */
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+  /* Reduce padding and font size in table on smaller screens */
+  @media (max-width: 767.98px) {
+    .table th, .table td {
+      padding: 0.35rem 0.5rem;
+      font-size: 0.85rem;
+    }
+    .display-6 {
+      font-size: 1.75rem;
+    }
+  }
+
+  /* Stack header flex on xs */
+  @media (max-width: 575.98px) {
+    .d-flex.justify-content-between.align-items-center.mb-3 {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 0.5rem;
+    }
+  }
+
+  /* Adjust candidate card form fields stacking */
+  @media (max-width: 575.98px) {
+    .candidate-card .row > div {
+      margin-bottom: 0.75rem;
+    }
   }
 </style>
 {% endblock %}
