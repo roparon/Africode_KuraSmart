@@ -3,43 +3,91 @@
 {% block title %}My Election Results | KuraSmart{% endblock %}
 
 {% block content %}
-<p class="text-muted text-center">DEBUG: Found {{ results|length }} results</p>
-<div class="bg-light py-5 min-vh-100">
-  <div class="container" data-aos="fade-up">
+<div class="py-5 min-vh-100" style="background: linear-gradient(170deg, rgba(58, 56, 56, 0.623) 0%, rgb(235, 207, 53) 100%);">
+  <div class="container-fluid px-3 px-sm-4 px-md-5" data-aos="fade-up">
 
-    <!-- Page Heading -->
     <h2 class="text-center fw-bold mb-5">
       <i class="bi bi-bar-chart-line text-success me-2"></i> My Election Results
     </h2>
-    <p class="text-center text-muted">DEBUG: Results found = {{ results|length }}</p>
 
     {% if results %}
-    <div class="row g-4">
-      {% for result in results %}
-      <div class="col-md-6" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
-        <div class="card h-100 shadow-sm border-0 rounded-4">
-          <div class="card-header bg-success text-white rounded-top-4 d-flex flex-column flex-sm-row justify-content-between">
-            <strong>{{ result.election.title }}</strong>
-            <span class="small mt-1 mt-sm-0 text-white-50">{{ result.timestamp.strftime('%d %b %Y') }}</span>
-          </div>
-          <div class="card-body">
-            <p class="mb-2"><strong>Position:</strong> {{ result.position.name }}</p>
-            <p class="mb-2"><strong>Winning Candidate:</strong> {{ result.winner.full_name }}</p>
-            <p class="mb-2"><strong>Total Votes:</strong> {{ result.winner.total_votes }}</p>
-            <p class="text-muted small">Finalized on {{ result.timestamp.strftime('%A, %d %B %Y') }}</p>
-          </div>
+      {% for position, pos_results in results.items() %}
+        <!-- Use flex container for cards -->
+        <div class="d-flex flex-wrap justify-content-center gap-4">
+          {% for result in pos_results %}
+            <div data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+              <div class="card_box">
+                <span></span>
+                <div class="p-3 text-white d-flex flex-column justify-content-between h-100" style="height: 250px; width: 200px;">
+                  <div>
+                    <h5 class="mb-2 text-truncate" title="{{ result.election.title }}">
+                      {{ result.election.title }}
+                    </h5>
+                    <small class="d-block mb-3 text-white-50">
+                      {{ result.timestamp.strftime('%d %b %Y') if result.timestamp else '' }}
+                    </small>
+                    <p><strong>Winner:</strong> 
+                      {{ result.winner.candidate.full_name if result.winner and result.winner.candidate else 'N/A' }}
+                    </p>
+                  </div>
+                  <button class="btn btn-outline-light btn-sm rounded-pill align-self-start"
+                          data-bs-toggle="offcanvas"
+                          data-bs-target="#offcanvas{{ position|replace(' ', '_') }}{{ loop.index }}">
+                    View Details
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Offcanvas -->
+            <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvas{{ position|replace(' ', '_') }}{{ loop.index }}" aria-labelledby="offcanvasLabel{{ position|replace(' ', '_') }}{{ loop.index }}">
+              <div class="offcanvas-header">
+                <h5 class="offcanvas-title text-truncate" id="offcanvasLabel{{ position|replace(' ', '_') }}{{ loop.index }}">
+                  {{ result.election.title }} - Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+              </div>
+              <div class="offcanvas-body">
+                <p><strong>Election:</strong> {{ result.election.title }}</p>
+                <p><strong>Date:</strong> {{ result.timestamp.strftime('%A, %d %B %Y') if result.timestamp else 'N/A' }}</p>
+                <hr>
+
+                <h6>Candidates grouped by Position</h6>
+
+                {% set candidates_by_position = {} %}
+                {% for cand in result.candidates %}
+                  {% set pos_name = cand.candidate.position.name if cand.candidate.position else 'Other' %}
+                  {% if pos_name not in candidates_by_position %}
+                    {% set _ = candidates_by_position.update({pos_name: []}) %}
+                  {% endif %}
+                  {% set _ = candidates_by_position[pos_name].append(cand) %}
+                {% endfor %}
+
+                {% for pos_name, candidates_list in candidates_by_position.items() %}
+                  <h6 class="mt-3">{{ pos_name }}</h6>
+                  <ul class="list-group mb-3">
+                    {% for cand in candidates_list|sort(attribute='votes', reverse=True) %}
+                      <li class="list-group-item d-flex justify-content-between align-items-center
+                        {% if loop.index == 1 %}list-group-item-success fw-bold
+                        {% elif loop.index == 2 %}list-group-item-info
+                        {% elif loop.index == 3 %}list-group-item-warning
+                        {% endif %}">
+                        {{ loop.index }}. {{ cand.candidate.full_name }}
+                        <span class="badge bg-primary rounded-pill">{{ cand.votes }}</span>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                {% endfor %}
+              </div>
+            </div>
+
+          {% endfor %}
         </div>
-      </div>
       {% endfor %}
-    </div>
     {% else %}
-    <div class="text-center mt-5" data-aos="zoom-in">
-      <i class="bi bi-emoji-frown text-secondary fs-1"></i>
-      <p class="mt-3 fs-5 text-muted">No election results available for your participation.</p>
-    </div>
+      <p class="text-center text-muted">No results found.</p>
     {% endif %}
 
-    <!-- Back Link -->
     <div class="text-center mt-5">
       <a href="{{ request.referrer or url_for('voter.voter_dashboard') }}" class="btn btn-outline-secondary rounded-pill px-4">
         ← Back to Dashboard
@@ -51,33 +99,65 @@
 
 {% block head_extra %}
 <style>
-  .card {
-    transition: transform 0.2s ease-in-out;
+  /* From Uiverse.io by mrhyddenn */
+  .container-fluid {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
   }
 
-  .card:hover {
-    transform: translateY(-5px);
+  .d-flex.flex-wrap.justify-content-center.gap-4 {
+    gap: 1.5rem !important;
   }
 
-  .card-header {
-    font-size: 1rem;
-    font-weight: 600;
-    word-wrap: break-word;
+  .card_box {
+    width: 200px;
+    height: 250px;
+    border-radius: 20px;
+    background: linear-gradient(170deg, rgb(2, 2, 2) 0%, rgb(248, 218, 49) 100%);
+    position: relative;
+    box-shadow: 0 25px 50px rgb(250, 21, 5);
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
   }
 
-  @media (max-width: 576px) {
-    .card-header {
-      font-size: 0.95rem;
-      padding: 0.75rem 1rem;
-    }
+  .card_box:hover {
+    transform: scale(0.9);
+  }
 
-    .card-body {
-      font-size: 0.9rem;
-      padding: 1rem;
-    }
 
-    h2 {
-      font-size: 1.4rem;
+  /* Text truncate */
+  .text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Offcanvas scroll */
+  .offcanvas-body {
+    overflow-y: auto;
+    padding-bottom: 1rem;
+  }
+
+  /* Ranking highlight colors */
+  .list-group-item-success {
+    background-color: #fcbf49 !important;
+  }
+
+  .list-group-item-info {
+    background-color: #8cdbec !important;
+  }
+
+  .list-group-item-warning {
+    background-color: #fff8d6 !important;
+  }
+
+  /* Responsive for small devices */
+  @media (max-width: 575.98px) {
+    .card_box {
+      width: 100%;
+      height: auto;
     }
   }
 </style>

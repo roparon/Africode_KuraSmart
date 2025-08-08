@@ -130,7 +130,6 @@ def delete_notification(notif_id):
     if notification.user_id != current_user.id:
         flash("Unauthorized access.", "danger")
         return redirect(url_for('voter.user_notifications'))
-
     db.session.delete(notification)
     db.session.commit()
     flash("Notification deleted.", "success")
@@ -151,10 +150,6 @@ def cast_vote(election_id):
             end_local = election.end_date.replace(tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("Africa/Nairobi"))
         else:
             end_local = election.end_date.astimezone(ZoneInfo("Africa/Nairobi"))
-        print(f"[DEBUG] now_local: {now_local.isoformat()}")
-        print(f"[DEBUG] start_local: {start_local.isoformat()}")
-        print(f"[DEBUG] end_local: {end_local.isoformat()}")
-        print(f"[DEBUG] Raw start_date: {election.start_date} | tzinfo: {election.start_date.tzinfo}")
         if now_local < start_local:
             flash('Voting has not yet started for this election.', 'warning')
             return redirect(url_for('voter.view_election', election_id=election_id))
@@ -235,59 +230,72 @@ def view_election(election_id):
     )
 
 
-@voter_bp.route('/voting-history')
-@login_required
-def voting_history():
-    user_votes = (
-        Vote.query
-        .filter(Vote.voter_id == current_user.id)
-        .options(
-            db.joinedload(Vote.election),
-            db.joinedload(Vote.position),
-            db.joinedload(Vote.candidate)
-        )
-        .order_by(Vote.timestamp.desc())
-        .all()
-    )
-    active_elections = Election.query.filter_by(status='active').all()
 
-    return render_template(
-        'voter/voting_history.html',
-        votes=user_votes,
-        active_elections=active_elections
-    )
 
 from sqlalchemy.orm import joinedload
+from sqlalchemy import func
 
 @voter_bp.route('/results')
 @login_required
 def election_results():
+    # 1. Get IDs of elections the voter participated in
     voted_election_ids = (
-        Vote.query.filter_by(user_id=current_user.id)
-        .with_entities(Vote.election_id)
+        db.session.query(Vote.election_id)
+        .filter(Vote.voter_id == current_user.id)
         .distinct()
         .all()
     )
     election_ids = [eid[0] for eid in voted_election_ids]
 
+    if not election_ids:
+        return render_template('voter/election_results.html', results={})
+
+    # 2. Preload elections with positions & candidates
     elections = (
         Election.query
         .filter(Election.id.in_(election_ids))
-        .options(joinedload(Election.candidates))
+        .options(
+            joinedload(Election.positions),       # relationship
+            joinedload(Election.candidates)       # relationship
+        )
         .all()
     )
 
-    results = []
+    # 3. Precompute vote counts
+    vote_counts = dict(
+        db.session.query(Vote.candidate_id, func.count(Vote.id))
+        .group_by(Vote.candidate_id)
+        .all()
+    )
+
+    # 4. Group results by election position
+    grouped_results = {}
     for election in elections:
-        # Sort candidates by vote count
-        candidates_sorted = sorted(election.candidates, key=lambda c: c.votes, reverse=True)
-        results.append({
+        position_name = getattr(election.positions, "name", "N/A")
+
+        candidate_data = [
+            {
+                'candidate': candidate,
+                'votes': vote_counts.get(candidate.id, 0),
+                'position_name': getattr(candidate, 'position', "N/A")  # column, no joinedload needed
+            }
+            for candidate in election.candidates
+        ]
+
+        candidates_sorted = sorted(candidate_data, key=lambda c: c['votes'], reverse=True)
+
+        election_result = {
             'election': election,
             'candidates': candidates_sorted,
-            'winner': candidates_sorted[0] if candidates_sorted else None
-        })
+            'winner': candidates_sorted[0] if candidates_sorted else None,
+            'timestamp': getattr(election, 'start_date', None)
+        }
 
-    return render_template('voter/election_results.html', results=results)
+        grouped_results.setdefault(position_name, []).append(election_result)
+
+    return render_template('voter/election_results.html', results=grouped_results)
+
+
 
 @voter_bp.route('/help')
 def help_support():
