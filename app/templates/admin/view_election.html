@@ -2,46 +2,56 @@
 {% block title %}Election Details{% endblock %}
 
 {% block content %}
-<div class="container py-5" data-aos="fade-up">
+<div class="container py-4" data-aos="fade-up">
 
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold mb-0 text-primary">
+  <!-- Header & Back button -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-3">
+    <h2 class="fw-bold text-primary d-flex align-items-center flex-wrap mb-0 fs-4 fs-md-2">
       <i class="bi bi-eye me-2"></i>{{ election.title }}
     </h2>
-    <a href="{{ url_for('admin_web.manage_elections') }}" class="btn btn-outline-secondary rounded-pill px-4">
+    <a href="{{ url_for('admin_web.manage_elections') }}" class="btn btn-outline-secondary rounded-pill px-4 py-2 w-100 w-md-auto text-center">
       <i class="bi bi-arrow-left me-1"></i> Back
     </a>
   </div>
+
+  <!-- Election Info Card -->
   <div class="card shadow rounded-4 border-0 mb-4">
-    <div class="card-body bg-light rounded-4">
-      <p class="mb-3">
-        <span class="fw-semibold text-dark"><h5>Description:</h5></span>
-        <span class="text-muted fst-italic">{{ election.description or '—' }}</span>
-      </p>
-      <p>
-        <span class="fw-semibold text-dark">Start Date:</span>
-        <span class="text-muted">{{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</span>
-      </p>
-      <p>
-        <span class="fw-semibold text-dark">🛑 End Date:</span>
-        <span class="text-muted">{{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</span>
-      </p>
-      <p class="mb-0">
-        {% set status_clr = {'inactive':'secondary','active':'success','paused':'warning','ended':'danger'}.get(election.status.value,'dark') %}
-        <span class="fw-semibold text-dark">Status:</span>
-        <span class="badge bg-{{ status_clr }} text-uppercase shadow-sm px-3 py-2">{{ election.status.value.title() }}</span>
-      </p>
+    <div class="card-body bg-light rounded-4 p-3 p-md-4">
+      <div class="mb-3">
+        <h5 class="fw-semibold text-dark mb-1">Description:</h5>
+        <p class="text-muted fst-italic mb-0">{{ election.description or '—' }}</p>
+      </div>
+      <div class="row row-cols-1 row-cols-md-3 g-3">
+        <div>
+          <span class="fw-semibold text-dark">Start Date:</span>
+          <div class="text-muted">{{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</div>
+        </div>
+        <div>
+          <span class="fw-semibold text-dark">🛑 End Date:</span>
+          <div class="text-muted">{{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</div>
+        </div>
+        <div>
+          {% set status_clr = {'inactive':'secondary','active':'success','paused':'warning','ended':'danger'}.get(election.status.value,'dark') %}
+          <span class="fw-semibold text-dark">Status:</span>
+          <div>
+            <span class="badge bg-{{ status_clr }} text-uppercase shadow-sm px-3 py-2 fs-6">
+              {{ election.status.value.title() }}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
+  <!-- Candidates Card -->
   <div class="card shadow rounded-4 border-0">
-    <div class="card-header bg-gradient bg-dark text-white fw-bold rounded-top-4">
+    <div class="card-header bg-gradient bg-dark text-white fw-bold rounded-top-4 d-flex align-items-center fs-5">
       <i class="bi bi-person-badge me-2"></i> Candidates
     </div>
-    <div class="card-body bg-white rounded-bottom-4">
+    <div class="card-body bg-white rounded-bottom-4 p-0">
       {% if candidates %}
         <div class="table-responsive">
-          <table class="table table-hover align-middle">
+          <table class="table table-hover align-middle mb-0">
             <thead class="table-light text-uppercase small text-muted">
               <tr>
                 <th>Name</th>
@@ -63,25 +73,27 @@
                 {% set is_leader = cand.vote_count == top_vote and top_vote > 0 %}
                 {% set vote_percent = (cand.vote_count / total_votes * 100) if total_votes > 0 else 0 %}
                 <tr class="{% if is_leader %}table-success fw-semibold{% endif %}">
-                  <td>
+                  <td class="text-break">
                     {{ cand.full_name }}
                     {% if is_leader %}
                       <span class="badge bg-success ms-2">Leader</span>
                     {% endif %}
                   </td>
-                  <td>{{ cand.party_name or '—' }}</td>
-                  <td>{{ cand.position }}</td>
-                  <td class="text-wrap" style="white-space: pre-wrap;">{{ cand.manifesto }}</td>
+                  <td class="text-break">{{ cand.party_name or '—' }}</td>
+                  <td class="text-break">{{ cand.position }}</td>
+                  <td class="text-wrap text-break" style="white-space: pre-wrap;">{{ cand.manifesto }}</td>
                   {% if election.status.value in ['active', 'ended'] %}
                     <td>{{ cand.vote_count }}</td>
-                    {% if is_leader %}
-                      <td>—</td>
-                    {% else %}
-                      <td>{{ top_vote - cand.vote_count }} behind</td>
-                    {% endif %}
-                    <td>{{ vote_percent|round(2) }}%</td>
                     <td>
-                      <div class="progress" style="height: 18px;">
+                      {% if is_leader %}
+                        —
+                      {% else %}
+                        {{ top_vote - cand.vote_count }} behind
+                      {% endif %}
+                    </td>
+                    <td>{{ vote_percent|round(2) }}%</td>
+                    <td style="min-width: 140px; max-width: 140px;">
+                      <div class="progress" style="height: 18px; border-radius: .75rem;">
                         <div class="progress-bar bg-info text-dark fw-bold"
                              role="progressbar"
                              style="width: {{ vote_percent }}%;"
@@ -98,37 +110,39 @@
           </table>
         </div>
       {% else %}
-        <p class="text-center text-muted">No candidates found for this election.</p>
+        <p class="text-center text-muted my-4">No candidates found for this election.</p>
       {% endif %}
     </div>
   </div>
 
   <!-- Back Link -->
-  <div class="mt-4">
-    <a href="{{ request.referrer or url_for('dashboard.dashboard_home') }}" class="btn btn-outline-secondary rounded-pill">
+  <div class="mt-4 text-center">
+    <a href="{{ request.referrer or url_for('dashboard.dashboard_home') }}" class="btn btn-outline-secondary rounded-pill px-4 py-2 w-100 w-sm-auto">
       ← Back
     </a>
   </div>
 </div>
 
+{% endblock %}
+
+{% block head_extra %}
 <style>
   body {
     background-color: #fdfaf3;
   }
 
+  /* Card styles */
   .card {
     border: none;
     background-color: #fffbea;
     box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.08);
-    transition: transform 0.2s ease-in-out;
     border-radius: 1rem;
+    transition: transform 0.2s ease-in-out;
   }
-
   .card:hover {
     transform: translateY(-2px);
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12);
   }
-
   .card-header {
     background: linear-gradient(135deg, #6f42c1, #8e44ad);
     color: #fff !important;
@@ -136,15 +150,15 @@
     border-top-left-radius: 1rem;
     border-top-right-radius: 1rem;
   }
-
   .card-body {
     background-color: #fffbea;
-    border-radius: 1rem;
+    border-radius: 0 0 1rem 1rem;
     padding: 1.5rem;
     font-size: 1rem;
     color: #333;
   }
 
+  /* Badges */
   .badge {
     font-size: 0.85rem;
     padding: 0.5em 0.75em;
@@ -152,49 +166,116 @@
     letter-spacing: 0.5px;
   }
 
+  /* Progress bar */
   .progress {
     background-color: #eee8d5;
     border-radius: 0.75rem;
     overflow: hidden;
   }
-
   .progress-bar {
     background-color: #20c997 !important;
     color: #111;
     transition: width 0.6s ease;
   }
 
+  /* Table header */
   .table thead th {
     background-color: #f3f0df;
     text-transform: uppercase;
     font-size: 0.85rem;
     color: #5f5f5f;
+    white-space: nowrap;
   }
 
+  /* Table body hover */
   .table-hover tbody tr:hover {
     background-color: #fff5d9;
   }
 
+  /* Buttons */
   .btn-outline-secondary {
     border-radius: 2rem;
     padding: 0.5rem 1.25rem;
     font-weight: 500;
+    transition: background-color 0.3s, color 0.3s;
   }
-
   .btn-outline-secondary:hover {
     background-color: #ffe59e;
     color: #000;
   }
 
+  /* Responsive text and spacing */
   .text-muted {
     font-size: 0.95rem;
     color: #6c757d !important;
   }
-
   td.text-wrap {
     white-space: pre-wrap;
     word-break: break-word;
   }
-</style>
 
+  /* Table container scroll on xs */
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+  /* Responsive tweaks */
+
+  /* Smaller font & padding on small devices */
+  @media (max-width: 575.98px) {
+    .table thead th, .table tbody td {
+      font-size: 0.75rem;
+      padding: 0.35rem 0.5rem;
+      white-space: normal !important;
+    }
+    .card-body p, .card-body div {
+      font-size: 0.9rem;
+    }
+    h2.fs-4 {
+      font-size: 1.5rem !important;
+    }
+    .btn-outline-secondary {
+      padding: 0.4rem 1rem;
+      font-size: 0.9rem;
+      width: 100% !important;
+    }
+  }
+
+  /* Make the table more readable on very small screens by converting rows to blocks */
+  @media (max-width: 480px) {
+    table.table thead {
+      display: none; /* Hide the table header */
+    }
+    table.table tbody tr {
+      display: block;
+      margin-bottom: 1.5rem;
+      border: 1px solid #ddd;
+      border-radius: 1rem;
+      padding: 1rem;
+      background: #fffbea;
+    }
+    table.table tbody tr td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #eee;
+    }
+    table.table tbody tr td:last-child {
+      border-bottom: none;
+    }
+    /* Add labels before each td content for clarity */
+    table.table tbody tr td:nth-child(1)::before { content: "Name"; font-weight: 600; }
+    table.table tbody tr td:nth-child(2)::before { content: "Party"; font-weight: 600; }
+    table.table tbody tr td:nth-child(3)::before { content: "Position"; font-weight: 600; }
+    table.table tbody tr td:nth-child(4)::before { content: "Manifesto"; font-weight: 600; }
+    {% if election.status.value in ['active', 'ended'] %}
+    table.table tbody tr td:nth-child(5)::before { content: "Votes"; font-weight: 600; }
+    table.table tbody tr td:nth-child(6)::before { content: "Difference"; font-weight: 600; }
+    table.table tbody tr td:nth-child(7)::before { content: "%"; font-weight: 600; }
+    table.table tbody tr td:nth-child(8)::before { content: "Chart"; font-weight: 600; }
+    {% endif %}
+  }
+</style>
 {% endblock %}
