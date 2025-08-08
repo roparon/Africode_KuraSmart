@@ -5,14 +5,18 @@
 {% block content %}
 <div class="manage-elections-background py-5">
   <div class="container" data-aos="fade-up">
-    <h2 class="mb-4 fw-bold"><i class="bi bi-clipboard-data me-2 text-secondary"></i>Audit Logs</h2>
+    <h2 class="mb-4 fw-bold">
+      <i class="bi bi-clipboard-data me-2 text-secondary"></i>Audit Logs
+    </h2>
 
     <div class="card shadow-sm rounded-4" data-aos="fade-left">
-      <div class="card-header bg-gradient-secondary text-white fw-semibold rounded-top-4">Recent User & System Activities</div>
+      <div class="card-header bg-gradient-secondary text-white fw-semibold rounded-top-4">
+        Recent User & System Activities
+      </div>
       <div class="card-body">
         {% if logs %}
         <div class="table-responsive">
-          <table class="table align-middle table-hover text-center">
+          <table class="table align-middle table-hover text-center table-striped">
             <thead class="table-dark">
               <tr>
                 <th>Timestamp</th>
@@ -25,17 +29,17 @@
             <tbody>
               {% for log in logs %}
               <tr data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
-                <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                <td>{{ log.user.full_name }}</td>
-                <td>{{ log.action }}</td>
-                <td>
+                <td class="text-wrap text-break">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                <td class="text-wrap text-break">{{ log.user.full_name }}</td>
+                <td class="text-wrap text-break">{{ log.action }}</td>
+                <td class="text-wrap text-break">
                   {% if log.target_type %}
                     {{ log.target_type }} #{{ log.target_id }}
                   {% else %}
-                    —
+                    &mdash;
                   {% endif %}
                 </td>
-                <td>{{ log.details or '—' }}</td>
+                <td class="text-wrap text-break">{{ log.details or '&mdash;' }}</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -45,8 +49,9 @@
         <p class="text-center text-muted">No audit logs available.</p>
         {% endif %}
       </div>
-      <a href="{{ request.referrer or url_for('dashboard.dashboard_home') }}" class="btn btn-outline-secondary mb-4 w-30">
-      ← Back
+      <a href="{{ request.referrer or url_for('dashboard.dashboard_home') }}" 
+         class="btn btn-outline-secondary mb-4 w-100 w-md-auto px-4">
+        ← Back
       </a>
     </div>
   </div>
@@ -55,29 +60,54 @@
 
 {% block head_extra %}
 <style>
-.manage-elections-background {
-  background: #f8f9fb;
-  min-height: 100vh;
-}
-.bg-gradient-secondary {
-  background: linear-gradient(135deg, #6c757d, #495057);
-}
-.card {
-  border-radius: 0.75rem;
-}
-.table-hover tbody tr:hover {
-  background: #eef3f7;
-}
-.table td, .table th {
-  vertical-align: middle;
-  padding: 0.75rem;
-}
-.alert {
-  border-radius: 0.6rem;
-  font-size: 0.95rem;
-}
+  .manage-elections-background {
+    background: #f8f9fb;
+    min-height: 100vh;
+  }
+  .bg-gradient-secondary {
+    background: linear-gradient(135deg, #6c757d, #495057);
+  }
+  .card {
+    border-radius: 0.75rem;
+  }
+  .table-hover tbody tr:hover {
+    background: #eef3f7;
+  }
+  .table td, .table th {
+    vertical-align: middle;
+    padding: 0.75rem;
+    word-wrap: break-word;
+    white-space: normal;
+  }
+  .alert {
+    border-radius: 0.6rem;
+    font-size: 0.95rem;
+  }
+  /* Make table cells responsive */
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+  /* Smaller font and padding on small screens */
+  @media (max-width: 575.98px) {
+    .table td, .table th {
+      font-size: 0.85rem;
+      padding: 0.4rem 0.5rem;
+    }
+  }
+
+  /* Back button full width on xs, auto width on md+ */
+  .btn.w-100 {
+    width: 100% !important;
+  }
+  @media (min-width: 768px) {
+    .btn.w-md-auto {
+      width: auto !important;
+    }
+  }
 </style>
 {% endblock %}
+
 {% block scripts %}
 <script>
   AOS.init({ duration: 600, once: true, easing: 'ease-out-cubic' });
