@@ -7,3 +7,32 @@ def inject_unread_notifs():
     else:
         count = 0
     return {'unread_count': count}
+
+
+from datetime import datetime
+from zoneinfo import ZoneInfo
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.context_processor
+def inject_now():
+    """Make Nairobi time available in all templates as 'now'."""
+    return {
+        'now': datetime.now(ZoneInfo("Africa/Nairobi"))
+    }
+
+
+from datetime import datetime
+from zoneinfo import ZoneInfo
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.context_processor
+def utility_processor():
+    def to_nairobi(dt):
+        if dt is None:
+            return None
+        return dt.astimezone(ZoneInfo("Africa/Nairobi"))
+    return dict(to_nairobi=to_nairobi)

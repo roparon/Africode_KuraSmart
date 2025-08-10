@@ -19,6 +19,6 @@ def create_superadmin():
         )
         db.session.add(admin)
         db.session.commit()
-        click.echo('✅ Superadmin created.')
+        click.echo('Superadmin created.')
     else:
         click.echo('⚠️ Superadmin already exists.')
