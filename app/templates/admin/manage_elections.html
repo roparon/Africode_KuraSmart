@@ -38,12 +38,12 @@
           <div class="row">
             <div class="col-12 col-md-6 mb-3">
               {{ form.start_date.label(class="form-label fw-semibold text-dark") }}
-              {{ form.start_date(class="form-control", type="datetime-local", min=current_datetime) }}
+              {{ form.start_date(class="form-control", type="datetime-local", id="start_date") }}
               {% for e in form.start_date.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
             </div>
             <div class="col-12 col-md-6 mb-3">
               {{ form.end_date.label(class="form-label fw-semibold text-dark") }}
-              {{ form.end_date(class="form-control", type="datetime-local", min=current_datetime) }}
+              {{ form.end_date(class="form-control", type="datetime-local", id="end_date") }}
               {% for e in form.end_date.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
             </div>
           </div>
@@ -149,8 +149,9 @@
                     <td class="text-muted small">{{ election.id }}</td>
                     <td class="fw-semibold text-dark small">{{ election.title }}</td>
                     <td class="text-muted small d-none d-sm-table-cell text-truncate" style="max-width: 150px;">{{ election.description or '—' }}</td>
-                    <td class="text-muted small">{{ election.start_date.strftime('%Y-%m-%d %H:%M') }}</td>
-                    <td class="text-muted small">{{ election.end_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td class="text-muted small">{{ election.start_date_local.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td class="text-muted small">{{ election.end_date_local.strftime('%Y-%m-%d %H:%M') }}</td>
+
                     <td>
                       <span class="badge bg-{{ status_clr }}">{{ status.title() }}</span>
                     </td>
@@ -230,55 +231,41 @@
     min-height: 100vh;
     border-radius: 2rem;
   }
-
   .soft-card {
     background-color: #eaf1fb; 
     border-radius: 1rem;
     border: none;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
-
   .candidate-card {
     background: #f0f2f8;
     border: 1px solid #dbe1ec;
     border-radius: .75rem;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
   }
-
   .bg-gradient-primary {
     background: linear-gradient(135deg, #0d6efd, #2563eb);
   }
-
   .bg-gradient-secondary {
     background: linear-gradient(135deg, #6c757d, #495057);
   }
-
   .table th {
     font-size: 0.95rem;
     text-transform: uppercase;
   }
-
   .btn:hover {
     transform: translateY(-1px);
     transition: all 0.2s ease;
   }
-
   .form-label {
     font-weight: 600;
   }
-
   .table-hover tbody tr:hover {
     background-color: #f1f5f9;
   }
-
-  /* Responsive adjustments */
-
-  /* Allow table container to scroll horizontally on small screens */
   .table-responsive {
     overflow-x: auto;
   }
-
-  /* Reduce padding and font size in table on smaller screens */
   @media (max-width: 767.98px) {
     .table th, .table td {
       padding: 0.35rem 0.5rem;
@@ -288,18 +275,12 @@
       font-size: 1.75rem;
     }
   }
-
-  /* Stack header flex on xs */
   @media (max-width: 575.98px) {
     .d-flex.justify-content-between.align-items-center.mb-3 {
       flex-direction: column !important;
       align-items: flex-start !important;
       gap: 0.5rem;
     }
-  }
-
-  /* Adjust candidate card form fields stacking */
-  @media (max-width: 575.98px) {
     .candidate-card .row > div {
       margin-bottom: 0.75rem;
     }
@@ -315,6 +296,7 @@
     easing: 'ease-out-cubic'
   });
 
+  // Update local time display
   function updateLocalTime() {
     const timeElement = document.getElementById("local-time");
     const now = new Date();
@@ -324,8 +306,17 @@
     };
     timeElement.textContent = now.toLocaleString(undefined, options);
   }
-
   setInterval(updateLocalTime, 1000);
   updateLocalTime();
+
+  // Set min datetime-local to current local time
+  function setMinDateTime() {
+    const now = new Date();
+    const localISOTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+      .toISOString().slice(0, 16);
+    document.getElementById('start_date').min = localISOTime;
+    document.getElementById('end_date').min = localISOTime;
+  }
+  setMinDateTime();
 </script>
 {% endblock %}

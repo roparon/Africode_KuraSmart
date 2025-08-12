@@ -427,7 +427,6 @@ def save_candidate_photo(file):
         return filename
     return None
 
-
 @admin_web_bp.route('/manage-elections', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -440,16 +439,16 @@ def manage_elections():
     utc_tz = ZoneInfo("UTC")
     now_utc = datetime.now(tz=utc_tz)
     now_local = now_utc.astimezone(local_tz)
-    current_datetime = now_local.strftime('%Y-%m-%dT%H:%M')
+    current_datetime = now_local.strftime('%Y-%m-%dT%H:%M')  # fallback
 
     try:
         if request.method == "POST" and form.validate_on_submit():
-            election = Election.query.filter_by(title=form.title.data).first()
             start_dt_local = form.start_date.data.replace(tzinfo=local_tz)
             end_dt_local = form.end_date.data.replace(tzinfo=local_tz)
             start_dt_utc = start_dt_local.astimezone(utc_tz)
             end_dt_utc = end_dt_local.astimezone(utc_tz)
 
+            election = Election.query.filter_by(title=form.title.data).first()
             if not election:
                 election = Election(
                     title=form.title.data,
@@ -459,13 +458,13 @@ def manage_elections():
                     status=form.status.data
                 )
                 db.session.add(election)
-                db.session.commit()
             else:
                 election.description = form.description.data
                 election.start_date = start_dt_utc
                 election.end_date = end_dt_utc
                 election.status = form.status.data
 
+            # Candidate handling (unchanged)
             for cand_form in form.candidates.entries:
                 full_name = cand_form.form.full_name.data.strip()
                 position_name = cand_form.form.position.data.strip()
@@ -484,6 +483,7 @@ def manage_elections():
                 photo_filename = None
                 if photo_file and hasattr(photo_file, 'filename') and photo_file.filename:
                     photo_filename = save_candidate_photo(photo_file)
+
                 if cand_form.form.original_candidate:
                     candidate = cand_form.form.original_candidate
                     candidate.full_name = full_name
@@ -507,16 +507,11 @@ def manage_elections():
                     db.session.add(candidate)
                 else:
                     flash(f"You are already registered as a candidate for '{position.name}' in this election.", "warning")
-            try:
-                db.session.commit()
-                flash("Election and candidates saved successfully.", "success")
-            except IntegrityError:
-                db.session.rollback()
-                flash("Integrity error: You may already be registered as a candidate for this position.", "warning")
-            except Exception as db_error:
-                db.session.rollback()
-                flash(f" Unexpected database error: {db_error}", "danger")
+
+            db.session.commit()
+            flash("Election and candidates saved successfully.", "success")
             return redirect(url_for("admin_web.manage_elections"))
+
         elif request.method == "GET" and request.args.get("edit"):
             election_id = request.args.get("edit")
             election = Election.query.get_or_404(election_id)
@@ -536,7 +531,6 @@ def manage_elections():
                 election.start_date = election.start_date.replace(tzinfo=utc_tz)
             if election.end_date.tzinfo is None:
                 election.end_date = election.end_date.replace(tzinfo=utc_tz)
-
             if election.status not in [ElectionStatusEnum.ENDED, ElectionStatusEnum.PAUSED]:
                 if election.start_date <= now_utc < election.end_date:
                     election.status = ElectionStatusEnum.ACTIVE
@@ -595,17 +589,19 @@ def edit_election(election_id):
     local_tz = ZoneInfo("Africa/Nairobi")
     utc_tz = ZoneInfo("UTC")
     now_utc = datetime.now(tz=utc_tz)
+    now_local = now_utc.astimezone(local_tz)
+    current_datetime = now_local.strftime('%Y-%m-%dT%H:%M')
 
     try:
         election = Election.query.get_or_404(election_id)
 
-        # Make sure start_date and end_date are timezone-aware
+        # Ensure start/end dates are timezone-aware
         if election.start_date.tzinfo is None:
             election.start_date = election.start_date.replace(tzinfo=utc_tz)
         if election.end_date.tzinfo is None:
             election.end_date = election.end_date.replace(tzinfo=utc_tz)
 
-        # Automatically end election if past end date
+        # Auto-end election if past end date
         if election.status != ElectionStatusEnum.ENDED and now_utc >= election.end_date:
             election.status = ElectionStatusEnum.ENDED
             db.session.commit()
@@ -617,7 +613,7 @@ def edit_election(election_id):
             form = ElectionForm(obj=election)
             form.candidates.entries = []
 
-            # Convert UTC to local for user-friendly display
+            # Convert stored UTC to local for display
             form.start_date.data = election.start_date.astimezone(local_tz).replace(tzinfo=None)
             form.end_date.data = election.end_date.astimezone(local_tz).replace(tzinfo=None)
 
@@ -638,7 +634,13 @@ def edit_election(election_id):
                 if 0 <= index < len(form.candidates.entries):
                     form.candidates.entries.pop(index)
 
-            return render_template("admin/edit_election.html", form=form, election=election)
+            return render_template(
+                "admin/edit_election.html",
+                form=form,
+                election=election,
+                current_datetime=current_datetime,
+                now=now_local
+            )
 
         # ---------- POST: Handle updates, convert local to UTC ----------
         if request.method == "POST":
@@ -656,7 +658,7 @@ def edit_election(election_id):
                     entry.form.election_id.data = str(election.id)
 
             if form.validate_on_submit():
-                # Convert local datetime to UTC
+                # Convert local datetime to UTC before saving
                 local_start = form.start_date.data.replace(tzinfo=local_tz)
                 local_end = form.end_date.data.replace(tzinfo=local_tz)
 
@@ -711,7 +713,7 @@ def edit_election(election_id):
                         )
                         db.session.add(new_candidate)
 
-                # Remove candidates no longer present
+                # Remove candidates no longer in form
                 for key, candidate in existing_candidates.items():
                     if key not in seen_keys:
                         db.session.delete(candidate)
@@ -720,13 +722,18 @@ def edit_election(election_id):
                 flash("Election updated successfully!", "success")
                 return redirect(url_for("admin_web.manage_elections"))
 
-        return render_template("admin/edit_election.html", form=form, election=election)
+        return render_template(
+            "admin/edit_election.html",
+            form=form,
+            election=election,
+            current_datetime=current_datetime,
+            now=now_local
+        )
 
     except Exception as e:
         db.session.rollback()
         flash(f"Error editing election: {e}", "danger")
         return redirect(url_for("admin_web.manage_elections"))
-
 
 @admin_web_bp.route('/elections/<int:election_id>/activate', methods=['POST'])
 @login_required

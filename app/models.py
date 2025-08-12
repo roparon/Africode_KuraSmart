@@ -89,10 +89,8 @@ class User(db.Model, UserMixin):
     def __str__(self):
         return self.full_name
 
-
-
-
 from zoneinfo import ZoneInfo
+
 
 class Election(db.Model):
     __tablename__ = 'election'
@@ -108,8 +106,8 @@ class Election(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     status = db.Column(db.Enum(ElectionStatusEnum), nullable=False, default=ElectionStatusEnum.INACTIVE)
 
-    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(tz=ZoneInfo("UTC")))
-    updated_at = db.Column(db.DateTime(timezone=True), onupdate=func.now())
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(ZoneInfo("UTC")))
+    updated_at = db.Column(db.DateTime(timezone=True), onupdate=lambda: datetime.now(ZoneInfo("UTC")))
 
     deactivated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
 
@@ -125,30 +123,36 @@ class Election(db.Model):
 
     @property
     def current_status(self):
-        """Return real-time election status using UTC comparison."""
-        now = datetime.now(ZoneInfo("UTC"))
-
-        start = self.start_date
-        end = self.end_date
-
+        """Return real-time election status based on UTC now."""
+        now_utc = datetime.now(ZoneInfo("UTC"))
         if not self.is_active:
             return 'inactive'
-        if now < start:
+        if now_utc < self.start_date:
             return 'pending'
-        elif start <= now <= end:
+        elif self.start_date <= now_utc <= self.end_date:
             return 'active'
         else:
             return 'ended'
 
     @property
     def start_date_local(self):
-        """Return start_date converted to local time (e.g., Nairobi)."""
+        """Start date in Nairobi time."""
         return self.start_date.astimezone(ZoneInfo("Africa/Nairobi"))
 
     @property
     def end_date_local(self):
-        """Return end_date converted to local time (e.g., Nairobi)."""
+        """End date in Nairobi time."""
         return self.end_date.astimezone(ZoneInfo("Africa/Nairobi"))
+
+    @property
+    def created_at_local(self):
+        """Created at in Nairobi time."""
+        return self.created_at.astimezone(ZoneInfo("Africa/Nairobi"))
+
+    @property
+    def updated_at_local(self):
+        """Updated at in Nairobi time (if available)."""
+        return self.updated_at.astimezone(ZoneInfo("Africa/Nairobi")) if self.updated_at else None
 class Candidate(db.Model):
     __tablename__ = 'candidate'
 
