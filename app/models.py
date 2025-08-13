@@ -145,14 +145,12 @@ class Election(db.Model):
         return self.end_date.astimezone(ZoneInfo("Africa/Nairobi"))
 
     @property
-    def created_at_local(self):
-        """Created at in Nairobi time."""
-        return self.created_at.astimezone(ZoneInfo("Africa/Nairobi"))
+    def start_date_local(self):
+        return self.start_date.astimezone(ZoneInfo("Africa/Nairobi")) if self.start_date else None
 
     @property
-    def updated_at_local(self):
-        """Updated at in Nairobi time (if available)."""
-        return self.updated_at.astimezone(ZoneInfo("Africa/Nairobi")) if self.updated_at else None
+    def end_date_local(self):
+        return self.end_date.astimezone(ZoneInfo("Africa/Nairobi")) if self.end_date else None
 class Candidate(db.Model):
     __tablename__ = 'candidate'
 

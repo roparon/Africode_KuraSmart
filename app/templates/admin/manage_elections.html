@@ -50,7 +50,7 @@
 
           <div class="mb-3">
             <h5 class="fw-semibold text-dark">Registered Candidates</h5>
-            <div class="text-muted small mb-2">Candidates can only be modified from the Edit Election page.</div>
+            <div class="text-muted small mb-2">⚠️ Candidates can only be modified from the Edit Election page.</div>
             <div id="candidates-list">
               {% for cand_form in form.candidates %}
               <div class="card candidate-card mb-3 p-3">
@@ -100,14 +100,14 @@
             </div>
           </div>
 
-          <div class="mb-3">
+          <div class="mb-3 w-50">
             {{ form.status.label(class="form-label fw-semibold text-dark") }}
             {{ form.status(class="form-select") }}
             {% for e in form.status.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
           </div>
 
           <div class="text-center mt-4">
-            {{ form.submit(class="btn btn-primary px-4 py-2 rounded-pill w-100 w-md-auto") }}
+            {{ form.submit(class="btn btn-outline-primary px-4 py-2 rounded-pill w-30 w-md-auto") }}
           </div>
         </form>
       </div>

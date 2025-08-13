@@ -439,12 +439,14 @@ def manage_elections():
     utc_tz = ZoneInfo("UTC")
     now_utc = datetime.now(tz=utc_tz)
     now_local = now_utc.astimezone(local_tz)
-    current_datetime = now_local.strftime('%Y-%m-%dT%H:%M')  # fallback
+    current_datetime = now_local.strftime('%Y-%m-%dT%H:%M')  # for min values in datetime-local inputs
 
     try:
+        # ------------------- POST: Create or update election -------------------
         if request.method == "POST" and form.validate_on_submit():
             start_dt_local = form.start_date.data.replace(tzinfo=local_tz)
             end_dt_local = form.end_date.data.replace(tzinfo=local_tz)
+
             start_dt_utc = start_dt_local.astimezone(utc_tz)
             end_dt_utc = end_dt_local.astimezone(utc_tz)
 
@@ -512,37 +514,27 @@ def manage_elections():
             flash("Election and candidates saved successfully.", "success")
             return redirect(url_for("admin_web.manage_elections"))
 
-        elif request.method == "GET" and request.args.get("edit"):
-            election_id = request.args.get("edit")
-            election = Election.query.get_or_404(election_id)
-            form = ElectionForm(obj=election)
-            form.status.data = election.status.value
-            form.candidates.entries.clear()
-            for candidate in election.candidates:
-                cand_form = CandidateForm(
-                    obj=candidate,
-                    original_candidate=candidate
-                )
-                form.candidates.append_entry(cand_form)
-
-        elections = Election.query.all()
-        for election in elections:
-            if election.start_date.tzinfo is None:
-                election.start_date = election.start_date.replace(tzinfo=utc_tz)
-            if election.end_date.tzinfo is None:
-                election.end_date = election.end_date.replace(tzinfo=utc_tz)
-            if election.status not in [ElectionStatusEnum.ENDED, ElectionStatusEnum.PAUSED]:
-                if election.start_date <= now_utc < election.end_date:
-                    election.status = ElectionStatusEnum.ACTIVE
-                elif now_utc >= election.end_date:
-                    election.status = ElectionStatusEnum.ENDED
-        db.session.commit()
-
+        # ------------------- GET: Prepare elections for display -------------------
         search_title = request.args.get("search_title", "").strip()
         elections_query = Election.query
         if search_title:
             elections_query = elections_query.filter(Election.title.ilike(f"{search_title}%"))
         elections = elections_query.order_by(Election.start_date.desc()).all()
+
+        for election in elections:
+            # Ensure UTC timezone awareness
+            if election.start_date.tzinfo is None:
+                election.start_date = election.start_date.replace(tzinfo=utc_tz)
+            if election.end_date.tzinfo is None:
+                election.end_date = election.end_date.replace(tzinfo=utc_tz)
+            # Auto-update status if ongoing or ended
+            if election.status not in [ElectionStatusEnum.ENDED, ElectionStatusEnum.PAUSED]:
+                if election.start_date <= now_utc < election.end_date:
+                    election.status = ElectionStatusEnum.ACTIVE
+                elif now_utc >= election.end_date:
+                    election.status = ElectionStatusEnum.ENDED
+
+        db.session.commit()
 
         return render_template(
             "admin/manage_elections.html",
@@ -552,12 +544,11 @@ def manage_elections():
             search_title=search_title,
             now=now_local
         )
+
     except Exception as e:
         db.session.rollback()
         flash(f"❌ Error managing elections: {e}", "danger")
         return redirect(url_for("admin_web.dashboard"))
-
-
 
 @admin_web_bp.route('/debug/election-time/<int:election_id>')
 @login_required
