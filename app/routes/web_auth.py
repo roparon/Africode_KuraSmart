@@ -426,7 +426,6 @@ def save_candidate_photo(file):
             return None
         return filename
     return None
-
 @admin_web_bp.route('/manage-elections', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -434,21 +433,26 @@ def manage_elections():
     if not (current_user.is_superadmin or current_user.role == UserRole.admin.value):
         abort(403)
 
-    form = ElectionForm()
+    # --- Timezone Setup ---
     local_tz = ZoneInfo("Africa/Nairobi")
     utc_tz = ZoneInfo("UTC")
     now_utc = datetime.now(tz=utc_tz)
     now_local = now_utc.astimezone(local_tz)
-    current_datetime = now_local.strftime('%Y-%m-%dT%H:%M')  # fallback
+    current_datetime = now_local.strftime('%Y-%m-%dT%H:%M')
+
+    form = ElectionForm()
 
     try:
+        # ---------- POST: Create/Update Election ----------
         if request.method == "POST" and form.validate_on_submit():
+            # Convert local datetime from form to UTC before saving
             start_dt_local = form.start_date.data.replace(tzinfo=local_tz)
             end_dt_local = form.end_date.data.replace(tzinfo=local_tz)
             start_dt_utc = start_dt_local.astimezone(utc_tz)
             end_dt_utc = end_dt_local.astimezone(utc_tz)
 
             election = Election.query.filter_by(title=form.title.data).first()
+
             if not election:
                 election = Election(
                     title=form.title.data,
@@ -464,10 +468,11 @@ def manage_elections():
                 election.end_date = end_dt_utc
                 election.status = form.status.data
 
-            # Candidate handling (unchanged)
+            # Candidate handling
             for cand_form in form.candidates.entries:
                 full_name = cand_form.form.full_name.data.strip()
                 position_name = cand_form.form.position.data.strip()
+
                 position = Position.query.filter_by(name=position_name, election_id=election.id).first()
                 if not position:
                     position = Position(name=position_name, election_id=election.id)
@@ -479,6 +484,7 @@ def manage_elections():
                     election_id=election.id,
                     position_id=position.id
                 ).first()
+
                 photo_file = cand_form.form.profile_photo.data
                 photo_filename = None
                 if photo_file and hasattr(photo_file, 'filename') and photo_file.filename:
@@ -512,6 +518,7 @@ def manage_elections():
             flash("Election and candidates saved successfully.", "success")
             return redirect(url_for("admin_web.manage_elections"))
 
+        # ---------- GET: Editing ----------
         elif request.method == "GET" and request.args.get("edit"):
             election_id = request.args.get("edit")
             election = Election.query.get_or_404(election_id)
@@ -525,24 +532,27 @@ def manage_elections():
                 )
                 form.candidates.append_entry(cand_form)
 
-        elections = Election.query.all()
+        # ---------- Retrieve and Update Elections ----------
+        elections_query = Election.query
+        search_title = request.args.get("search_title", "").strip()
+        if search_title:
+            elections_query = elections_query.filter(Election.title.ilike(f"{search_title}%"))
+        elections = elections_query.order_by(Election.start_date.desc()).all()
+
         for election in elections:
             if election.start_date.tzinfo is None:
                 election.start_date = election.start_date.replace(tzinfo=utc_tz)
             if election.end_date.tzinfo is None:
                 election.end_date = election.end_date.replace(tzinfo=utc_tz)
+
+            # Status update logic
             if election.status not in [ElectionStatusEnum.ENDED, ElectionStatusEnum.PAUSED]:
                 if election.start_date <= now_utc < election.end_date:
                     election.status = ElectionStatusEnum.ACTIVE
                 elif now_utc >= election.end_date:
                     election.status = ElectionStatusEnum.ENDED
-        db.session.commit()
 
-        search_title = request.args.get("search_title", "").strip()
-        elections_query = Election.query
-        if search_title:
-            elections_query = elections_query.filter(Election.title.ilike(f"{search_title}%"))
-        elections = elections_query.order_by(Election.start_date.desc()).all()
+        db.session.commit()
 
         return render_template(
             "admin/manage_elections.html",
@@ -552,34 +562,11 @@ def manage_elections():
             search_title=search_title,
             now=now_local
         )
+
     except Exception as e:
         db.session.rollback()
         flash(f"❌ Error managing elections: {e}", "danger")
         return redirect(url_for("admin_web.dashboard"))
-
-
-
-@admin_web_bp.route('/debug/election-time/<int:election_id>')
-@login_required
-def debug_election_time(election_id):
-    election = Election.query.get_or_404(election_id)
-
-    return {
-        "election_id": election.id,
-        "title": election.title,
-        "status": election.status.value,
-        "start_date_raw": str(election.start_date),
-        "start_date_utc": election.start_date.astimezone(ZoneInfo("UTC")).isoformat(),
-        "start_date_nairobi": election.start_date.astimezone(ZoneInfo("Africa/Nairobi")).isoformat(),
-        "end_date_raw": str(election.end_date),
-        "end_date_utc": election.end_date.astimezone(ZoneInfo("UTC")).isoformat(),
-        "end_date_nairobi": election.end_date.astimezone(ZoneInfo("Africa/Nairobi")).isoformat(),
-        "now_utc": datetime.now(ZoneInfo("UTC")).isoformat(),
-        "now_nairobi": datetime.now(ZoneInfo("Africa/Nairobi")).isoformat(),
-    }
-
-
-
 @admin_web_bp.route('/elections/<int:election_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_election(election_id):
