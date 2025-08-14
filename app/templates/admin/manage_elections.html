@@ -296,27 +296,48 @@
     easing: 'ease-out-cubic'
   });
 
-  // Update local time display
+  // Update local time display in Nairobi time
   function updateLocalTime() {
     const timeElement = document.getElementById("local-time");
     const now = new Date();
     const options = {
       weekday: 'short', year: 'numeric', month: 'short',
-      day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'
+      day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit',
+      timeZone: 'Africa/Nairobi'
     };
-    timeElement.textContent = now.toLocaleString(undefined, options);
+    timeElement.textContent = now.toLocaleString('en-GB', options);
   }
   setInterval(updateLocalTime, 1000);
   updateLocalTime();
 
-  // Set min datetime-local to current local time
+  // Set min and default datetime-local to current Nairobi time
   function setMinDateTime() {
     const now = new Date();
-    const localISOTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
-      .toISOString().slice(0, 16);
-    document.getElementById('start_date').min = localISOTime;
-    document.getElementById('end_date').min = localISOTime;
+
+    // Convert to Nairobi time as "YYYY-MM-DDTHH:MM"
+    const nairobiTimeString = now.toLocaleString('sv-SE', {
+      timeZone: 'Africa/Nairobi',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).replace(' ', 'T');
+
+    // Apply to start_date and end_date fields
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+
+    if (startDateInput) {
+      startDateInput.min = nairobiTimeString;
+      startDateInput.value = nairobiTimeString;
+    }
+    if (endDateInput) {
+      endDateInput.min = nairobiTimeString;
+      endDateInput.value = nairobiTimeString;
+    }
   }
   setMinDateTime();
 </script>
+
 {% endblock %}

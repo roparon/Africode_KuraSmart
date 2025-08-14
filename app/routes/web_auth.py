@@ -547,28 +547,8 @@ def manage_elections():
 
     except Exception as e:
         db.session.rollback()
-        flash(f"❌ Error managing elections: {e}", "danger")
+        flash(f"Error managing elections: {e}", "danger")
         return redirect(url_for("admin_web.dashboard"))
-
-@admin_web_bp.route('/debug/election-time/<int:election_id>')
-@login_required
-def debug_election_time(election_id):
-    election = Election.query.get_or_404(election_id)
-
-    return {
-        "election_id": election.id,
-        "title": election.title,
-        "status": election.status.value,
-        "start_date_raw": str(election.start_date),
-        "start_date_utc": election.start_date.astimezone(ZoneInfo("UTC")).isoformat(),
-        "start_date_nairobi": election.start_date.astimezone(ZoneInfo("Africa/Nairobi")).isoformat(),
-        "end_date_raw": str(election.end_date),
-        "end_date_utc": election.end_date.astimezone(ZoneInfo("UTC")).isoformat(),
-        "end_date_nairobi": election.end_date.astimezone(ZoneInfo("Africa/Nairobi")).isoformat(),
-        "now_utc": datetime.now(ZoneInfo("UTC")).isoformat(),
-        "now_nairobi": datetime.now(ZoneInfo("Africa/Nairobi")).isoformat(),
-    }
-
 
 
 @admin_web_bp.route('/elections/<int:election_id>/edit', methods=['GET', 'POST'])
