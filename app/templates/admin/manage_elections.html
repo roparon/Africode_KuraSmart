@@ -51,18 +51,25 @@
           <div class="mb-3">
             <h5 class="fw-semibold text-dark">Registered Candidates</h5>
             <div class="text-muted small mb-2">⚠️ Candidates can only be modified from the Edit Election page.</div>
+
             <div id="candidates-list">
               {% for cand_form in form.candidates %}
               <div class="card candidate-card mb-3 p-3">
-                <div class="row g-3">
+                <div class="row g-3 align-items-center">
+
+                  <!-- Full Name -->
                   <div class="col-12 col-md-6">
                     {{ cand_form.full_name.label(class="form-label") }}
                     {{ cand_form.full_name(class="form-control") }}
                   </div>
+
+                  <!-- Party Name -->
                   <div class="col-12 col-md-6">
                     {{ cand_form.party_name.label(class="form-label") }}
                     {{ cand_form.party_name(class="form-control") }}
                   </div>
+
+                  <!-- Position -->
                   <div class="col-12 col-md-6">
                     {% set loop_id = 'positionOptions' ~ loop.index %}
                     <input 
@@ -83,22 +90,46 @@
                       <option value="Member Of County Assembly"></option>
                     </datalist>
                   </div>
+
+                  <!-- Manifesto -->
                   <div class="col-12 col-md-6">
                     {{ cand_form.manifesto.label(class="form-label") }}
                     {{ cand_form.manifesto(class="form-control", rows=2) }}
                   </div>
+
+                  <!-- Profile Photo -->
                   <div class="col-12 col-md-6">
                     {{ cand_form.profile_photo.label(class="form-label") }}
-                    {{ cand_form.profile_photo(class="form-control", type="file") }}
+                    {{ cand_form.profile_photo(class="form-control", type="file", accept="image/*") }}
                     {% if cand_form.profile_photo.errors %}
                       <div class="text-danger small">{{ cand_form.profile_photo.errors[0] }}</div>
                     {% endif %}
+
+                    {% if cand_form.profile_photo.data and cand_form.profile_photo.data.filename %}
+                      <!-- Show newly uploaded image (not yet saved to DB) -->
+                      <div class="mt-2">
+                        <img src="{{ url_for('static', filename='uploads/candidates/' ~ cand_form.profile_photo.data.filename) }}"
+                            alt="Candidate Photo"
+                            class="img-thumbnail"
+                            style="max-height: 150px;">
+                      </div>
+                    {% elif cand_form.existing_photo %}
+                      <!-- Show already saved DB image -->
+                      <div class="mt-2">
+                        <img src="{{ url_for('static', filename='uploads/candidates/' ~ cand_form.existing_photo) }}"
+                            alt="Candidate Photo"
+                            class="img-thumbnail"
+                            style="max-height: 150px;">
+                      </div>
+                    {% endif %}
                   </div>
+
                 </div>
               </div>
               {% endfor %}
             </div>
           </div>
+
 
           <div class="mb-3 w-50">
             {{ form.status.label(class="form-label fw-semibold text-dark") }}

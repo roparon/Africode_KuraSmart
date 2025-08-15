@@ -409,23 +409,28 @@ def export_users_csv():
         )
     except Exception as e:
         return jsonify({'error': 'Failed to export users', 'details': str(e)}), 500
-    
-import uuid
 
-UPLOAD_FOLDER = 'static/uploads/candidates'
+import uuid
+# ===== Candidate Photo Upload Settings =====
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'static', 'uploads', 'candidates')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def save_candidate_photo(file):
+    """Save uploaded candidate profile photo and return filename."""
     if file and file.filename:
-        ext = file.filename.rsplit('.', 1)[-1].lower()
+        filename = secure_filename(file.filename)
+        ext = filename.rsplit('.', 1)[-1].lower()
+        if ext not in {"jpg", "jpeg", "png", "gif", "webp"}:
+            return None
         filename = f"{uuid.uuid4().hex}.{ext}"
         path = os.path.join(UPLOAD_FOLDER, filename)
         try:
             file.save(path)
-        except Exception as e:
+            return filename
+        except Exception:
             return None
-        return filename
     return None
+
 
 @admin_web_bp.route('/manage-elections', methods=['GET', 'POST'])
 @login_required
@@ -439,10 +444,9 @@ def manage_elections():
     utc_tz = ZoneInfo("UTC")
     now_utc = datetime.now(tz=utc_tz)
     now_local = now_utc.astimezone(local_tz)
-    current_datetime = now_local.strftime('%Y-%m-%dT%H:%M')  # for min values in datetime-local inputs
+    current_datetime = now_local.strftime('%Y-%m-%dT%H:%M')
 
     try:
-        # ------------------- POST: Create or update election -------------------
         if request.method == "POST" and form.validate_on_submit():
             start_dt_local = form.start_date.data.replace(tzinfo=local_tz)
             end_dt_local = form.end_date.data.replace(tzinfo=local_tz)
@@ -466,7 +470,6 @@ def manage_elections():
                 election.end_date = end_dt_utc
                 election.status = form.status.data
 
-            # Candidate handling (unchanged)
             for cand_form in form.candidates.entries:
                 full_name = cand_form.form.full_name.data.strip()
                 position_name = cand_form.form.position.data.strip()
@@ -481,10 +484,10 @@ def manage_elections():
                     election_id=election.id,
                     position_id=position.id
                 ).first()
+
+                # ✅ Handle Profile Photo Upload
                 photo_file = cand_form.form.profile_photo.data
-                photo_filename = None
-                if photo_file and hasattr(photo_file, 'filename') and photo_file.filename:
-                    photo_filename = save_candidate_photo(photo_file)
+                photo_filename = save_candidate_photo(photo_file) if photo_file else None
 
                 if cand_form.form.original_candidate:
                     candidate = cand_form.form.original_candidate
@@ -514,7 +517,6 @@ def manage_elections():
             flash("Election and candidates saved successfully.", "success")
             return redirect(url_for("admin_web.manage_elections"))
 
-        # ------------------- GET: Prepare elections for display -------------------
         search_title = request.args.get("search_title", "").strip()
         elections_query = Election.query
         if search_title:
@@ -522,12 +524,11 @@ def manage_elections():
         elections = elections_query.order_by(Election.start_date.desc()).all()
 
         for election in elections:
-            # Ensure UTC timezone awareness
             if election.start_date.tzinfo is None:
                 election.start_date = election.start_date.replace(tzinfo=utc_tz)
             if election.end_date.tzinfo is None:
                 election.end_date = election.end_date.replace(tzinfo=utc_tz)
-            # Auto-update status if ongoing or ended
+
             if election.status not in [ElectionStatusEnum.ENDED, ElectionStatusEnum.PAUSED]:
                 if election.start_date <= now_utc < election.end_date:
                     election.status = ElectionStatusEnum.ACTIVE
@@ -551,6 +552,7 @@ def manage_elections():
         return redirect(url_for("admin_web.dashboard"))
 
 
+from werkzeug.datastructures import CombinedMultiDict
 @admin_web_bp.route('/elections/<int:election_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_election(election_id):
@@ -563,135 +565,47 @@ def edit_election(election_id):
     now_local = now_utc.astimezone(local_tz)
     current_datetime = now_local.strftime('%Y-%m-%dT%H:%M')
 
-    try:
-        election = Election.query.get_or_404(election_id)
+    election = Election.query.get_or_404(election_id)
 
-        # Ensure start/end dates are timezone-aware
-        if election.start_date.tzinfo is None:
-            election.start_date = election.start_date.replace(tzinfo=utc_tz)
-        if election.end_date.tzinfo is None:
-            election.end_date = election.end_date.replace(tzinfo=utc_tz)
+    # Ensure timezone awareness for stored dates
+    if election.start_date.tzinfo is None:
+        election.start_date = election.start_date.replace(tzinfo=utc_tz)
+    if election.end_date.tzinfo is None:
+        election.end_date = election.end_date.replace(tzinfo=utc_tz)
 
-        # Auto-end election if past end date
-        if election.status != ElectionStatusEnum.ENDED and now_utc >= election.end_date:
-            election.status = ElectionStatusEnum.ENDED
-            db.session.commit()
+    # Auto-end election if past end date
+    if election.status != ElectionStatusEnum.ENDED and now_utc >= election.end_date:
+        election.status = ElectionStatusEnum.ENDED
+        db.session.commit()
 
-        form = ElectionForm()
+    # -------- GET REQUEST --------
+    if request.method == "GET":
+        form = ElectionForm(obj=election)
+        form.candidates.entries = []
 
-        # ---------- GET: Populate form with local time ----------
-        if request.method == "GET":
-            form = ElectionForm(obj=election)
-            form.candidates.entries = []
+        # Pre-fill form with local datetime
+        form.start_date.data = election.start_date.astimezone(local_tz).replace(tzinfo=None)
+        form.end_date.data = election.end_date.astimezone(local_tz).replace(tzinfo=None)
 
-            # Convert stored UTC to local for display
-            form.start_date.data = election.start_date.astimezone(local_tz).replace(tzinfo=None)
-            form.end_date.data = election.end_date.astimezone(local_tz).replace(tzinfo=None)
+        # Populate candidates
+        for candidate in election.candidates:
+            entry = form.candidates.append_entry()
+            entry.form.original_candidate = candidate
+            entry.form.full_name.data = candidate.full_name
+            entry.form.party_name.data = candidate.party_name
+            entry.form.manifesto.data = candidate.manifesto
+            entry.form.position.data = candidate.position
+            entry.form.election_id.data = str(election.id)
+            entry.form.candidate_id.data = str(candidate.id)
+            entry.form.existing_photo = candidate.profile_photo
 
-            for candidate in election.candidates:
-                entry = form.candidates.append_entry()
-                entry.form.original_candidate = candidate
-                entry.form.full_name.data = candidate.full_name
-                entry.form.party_name.data = candidate.party_name
-                entry.form.manifesto.data = candidate.manifesto
-                entry.form.position.data = candidate.position
-                entry.form.election_id.data = str(election.id)
-                entry.form.candidate_id.data = str(candidate.id)
-
-            if request.args.get("add_candidate"):
-                form.candidates.append_entry()
-            if request.args.get("remove_candidate"):
-                index = int(request.args.get("remove_candidate"))
-                if 0 <= index < len(form.candidates.entries):
-                    form.candidates.entries.pop(index)
-
-            return render_template(
-                "admin/edit_election.html",
-                form=form,
-                election=election,
-                current_datetime=current_datetime,
-                now=now_local
-            )
-
-        # ---------- POST: Handle updates, convert local to UTC ----------
-        if request.method == "POST":
-            form = ElectionForm(request.form)
-
-            for entry in form.candidates.entries:
-                candidate_id = entry.form.candidate_id.data
-                if candidate_id:
-                    existing = Candidate.query.get(candidate_id)
-                    if existing:
-                        entry.form.original_candidate = existing
-                        entry.form.election_id.data = str(election.id)
-                else:
-                    entry.form.original_candidate = None
-                    entry.form.election_id.data = str(election.id)
-
-            if form.validate_on_submit():
-                # Convert local datetime to UTC before saving
-                local_start = form.start_date.data.replace(tzinfo=local_tz)
-                local_end = form.end_date.data.replace(tzinfo=local_tz)
-
-                election.title = form.title.data
-                election.description = form.description.data
-                election.start_date = local_start.astimezone(utc_tz)
-                election.end_date = local_end.astimezone(utc_tz)
-                election.status = form.status.data
-
-                # Sync candidate data
-                existing_candidates = {
-                    (c.full_name.strip().lower(), c.position.strip().lower()): c
-                    for c in election.candidates
-                }
-                seen_keys = set()
-
-                for entry in form.candidates.entries:
-                    data = entry.data
-                    full_name = (data.get("full_name") or "").strip()
-                    position_name = (data.get("position") or "").strip()
-
-                    if not full_name or not position_name:
-                        flash("Candidate name and position are required.", "warning")
-                        continue
-
-                    key = (full_name.lower(), position_name.lower())
-                    seen_keys.add(key)
-
-                    # Ensure position exists
-                    position = Position.query.filter_by(name=position_name, election_id=election.id).first()
-                    if not position:
-                        position = Position(name=position_name, election_id=election.id)
-                        db.session.add(position)
-                        db.session.flush()
-
-                    # Update or create candidate
-                    if key in existing_candidates:
-                        candidate = existing_candidates[key]
-                        candidate.party_name = data.get("party_name")
-                        candidate.manifesto = data.get("manifesto")
-                        candidate.position = position.name
-                        candidate.position_id = position.id
-                    else:
-                        new_candidate = Candidate(
-                            user_id=current_user.id,
-                            election_id=election.id,
-                            full_name=full_name,
-                            party_name=data.get("party_name"),
-                            manifesto=data.get("manifesto"),
-                            position=position.name,
-                            position_id=position.id
-                        )
-                        db.session.add(new_candidate)
-
-                # Remove candidates no longer in form
-                for key, candidate in existing_candidates.items():
-                    if key not in seen_keys:
-                        db.session.delete(candidate)
-
-                db.session.commit()
-                flash("Election updated successfully!", "success")
-                return redirect(url_for("admin_web.manage_elections"))
+        # Add/remove candidate dynamically
+        if request.args.get("add_candidate"):
+            form.candidates.append_entry()
+        if request.args.get("remove_candidate"):
+            index = int(request.args.get("remove_candidate"))
+            if 0 <= index < len(form.candidates.entries):
+                form.candidates.entries.pop(index)
 
         return render_template(
             "admin/edit_election.html",
@@ -701,10 +615,105 @@ def edit_election(election_id):
             now=now_local
         )
 
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Error editing election: {e}", "danger")
-        return redirect(url_for("admin_web.manage_elections"))
+    # -------- POST REQUEST --------
+    if request.method == "POST":
+        # ✅ Include both form and files
+        form = ElectionForm(CombinedMultiDict([request.form, request.files]))
+
+        # Restore original candidate objects for editing
+        for entry in form.candidates.entries:
+            candidate_id = entry.form.candidate_id.data
+            if candidate_id:
+                existing = Candidate.query.get(candidate_id)
+                if existing:
+                    entry.form.original_candidate = existing
+                    entry.form.election_id.data = str(election.id)
+            else:
+                entry.form.original_candidate = None
+                entry.form.election_id.data = str(election.id)
+
+        if form.validate_on_submit():
+            # Update election details
+            local_start = form.start_date.data.replace(tzinfo=local_tz)
+            local_end = form.end_date.data.replace(tzinfo=local_tz)
+
+            election.title = form.title.data
+            election.description = form.description.data
+            election.start_date = local_start.astimezone(utc_tz)
+            election.end_date = local_end.astimezone(utc_tz)
+            election.status = form.status.data
+
+            # Track candidates
+            existing_candidates = {
+                (c.full_name.strip().lower(), c.position.strip().lower()): c
+                for c in election.candidates
+            }
+            seen_keys = set()
+
+            # Process candidates
+            for idx, entry in enumerate(form.candidates.entries):
+                data = entry.data
+                full_name = (data.get("full_name") or "").strip()
+                position_name = (data.get("position") or "").strip()
+
+                if not full_name or not position_name:
+                    flash("Candidate name and position are required.", "warning")
+                    continue
+
+                key = (full_name.lower(), position_name.lower())
+                seen_keys.add(key)
+
+                # Ensure position exists
+                position = Position.query.filter_by(name=position_name, election_id=election.id).first()
+                if not position:
+                    position = Position(name=position_name, election_id=election.id)
+                    db.session.add(position)
+                    db.session.flush()
+
+                # ✅ Handle profile photo upload
+                photo_file = request.files.get(f"candidates-{idx}-profile_photo")
+                photo_filename = save_candidate_photo(photo_file) if photo_file and photo_file.filename else None
+
+                if key in existing_candidates:
+                    # Update existing candidate
+                    candidate = existing_candidates[key]
+                    candidate.party_name = data.get("party_name")
+                    candidate.manifesto = data.get("manifesto")
+                    candidate.position = position.name
+                    candidate.position_id = position.id
+                    if photo_filename:  # ✅ Only replace if new photo uploaded
+                        candidate.profile_photo = photo_filename
+                else:
+                    # Add new candidate
+                    new_candidate = Candidate(
+                        user_id=current_user.id,
+                        election_id=election.id,
+                        full_name=full_name,
+                        party_name=data.get("party_name"),
+                        manifesto=data.get("manifesto"),
+                        position=position.name,
+                        position_id=position.id,
+                        profile_photo=photo_filename
+                    )
+                    db.session.add(new_candidate)
+
+            # Delete removed candidates
+            for key, candidate in existing_candidates.items():
+                if key not in seen_keys:
+                    db.session.delete(candidate)
+
+            db.session.commit()
+            flash("Election updated successfully!", "success")
+            return redirect(url_for("admin_web.manage_elections"))
+
+    # Fallback in case of validation error
+    return render_template(
+        "admin/edit_election.html",
+        form=form,
+        election=election,
+        current_datetime=current_datetime,
+        now=now_local
+    )
 
 @admin_web_bp.route('/elections/<int:election_id>/activate', methods=['POST'])
 @login_required

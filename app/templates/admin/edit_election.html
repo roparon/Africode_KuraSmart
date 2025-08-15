@@ -26,16 +26,19 @@
       <form method="POST" id="election-form" enctype="multipart/form-data" novalidate>
         {{ form.hidden_tag() }}
 
+        <!-- Election Title -->
         <div class="mb-3">
           {{ form.title.label(class="form-label") }}
           {{ form.title(class="form-control", placeholder="Enter election title") }}
         </div>
 
+        <!-- Description -->
         <div class="mb-3">
           {{ form.description.label(class="form-label") }}
           {{ form.description(class="form-control", rows=3) }}
         </div>
 
+        <!-- Dates -->
         <div class="row">
           <div class="col-md-6 mb-3">
             {{ form.start_date.label(class="form-label") }}
@@ -47,52 +50,76 @@
           </div>
         </div>
 
+        <!-- Status (Superadmin only) -->
         {% if current_user.is_superadmin %}
         <div class="mb-3">
           {{ form.status.label(class="form-label") }}
           {{ form.status(class="form-select") }}
         </div>
         {% endif %}
+
+        <!-- Candidates Section -->
         <h5 class="mt-4">Candidates</h5>
         <div id="candidates-list">
           {% for cand_form in form.candidates %}
           <div class="card my-3 p-3 candidate-entry bg-light">
             <div class="row g-3">
+
+              <!-- Full Name -->
               <div class="col-md-6">
                 {{ cand_form.full_name.label(class="form-label") }}
                 {{ cand_form.full_name(class="form-control") }}
               </div>
+
+              <!-- Party Name -->
               <div class="col-md-6">
                 {{ cand_form.party_name.label(class="form-label") }}
                 {{ cand_form.party_name(class="form-control") }}
               </div>
+
+              <!-- Position -->
               <div class="col-md-6">
                 {{ cand_form.position.label(class="form-label") }}
                 {{ cand_form.position(class="form-select") }}
               </div>
+
+              <!-- Manifesto -->
               <div class="col-md-6">
                 {{ cand_form.manifesto.label(class="form-label") }}
                 {{ cand_form.manifesto(class="form-control", rows=2) }}
               </div>
+
+              <!-- Profile Photo -->
               <div class="col-md-6">
                 {{ cand_form.profile_photo.label(class="form-label") }}
-                {{ cand_form.profile_photo(class="form-control", type="file") }}
+                {{ cand_form.profile_photo(class="form-control", type="file", accept="image/*") }}
                 {% if cand_form.profile_photo.errors %}
                   <div class="text-danger small">{{ cand_form.profile_photo.errors[0] }}</div>
                 {% endif %}
               </div>
-              {% if cand_form.existing_photo %}
+
+              <!-- Show Current or Newly Uploaded Photo -->
+              {% if cand_form.profile_photo.data and cand_form.profile_photo.data.filename %}
+              <div class="col-md-6">
+                <label class="form-label">Preview (New Upload)</label><br>
+                <img src="{{ url_for('static', filename='uploads/candidates/' ~ cand_form.profile_photo.data.filename) }}"
+                     class="img-thumbnail" style="max-height:150px;">
+              </div>
+              {% elif cand_form.existing_photo %}
               <div class="col-md-6">
                 <label class="form-label">Current Photo</label><br>
                 <img src="{{ url_for('static', filename='uploads/candidates/' ~ cand_form.existing_photo) }}"
-                     class="img-thumbnail" width="100">
+                     class="img-thumbnail" style="max-height:150px;">
               </div>
               {% endif %}
+
             </div>
 
+            <!-- Hidden IDs -->
             {{ cand_form.candidate_id(type="hidden") }}
             {{ cand_form.election_id(type="hidden") }}
 
+            <!-- Remove Button -->
             {% if form.candidates|length > 1 %}
               <a href="{{ url_for('admin_web.edit_election', election_id=election.id, remove_candidate=loop.index0) }}"
                  class="btn btn-danger btn-sm mt-3">
@@ -103,11 +130,13 @@
           {% endfor %}
         </div>
 
+        <!-- Add Candidate Button -->
         <a href="{{ url_for('admin_web.edit_election', election_id=election.id, add_candidate=1) }}"
            class="btn btn-success btn-sm mt-3">
           Add Candidate
         </a>
 
+        <!-- Action Buttons -->
         <div class="d-flex justify-content-between mt-4">
           <a href="{{ url_for('admin_web.manage_elections') }}" class="btn btn-secondary">
             <i class="bi bi-arrow-left-circle me-1"></i> Cancel
