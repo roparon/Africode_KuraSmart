@@ -111,7 +111,8 @@
                         <img src="{{ url_for('static', filename='uploads/candidates/' ~ cand_form.profile_photo.data.filename) }}"
                             alt="Candidate Photo"
                             class="img-thumbnail"
-                            style="max-height: 150px;">
+                            style="max-height: 150px;"
+                            loading="lazy">
                       </div>
                     {% elif cand_form.existing_photo %}
                       <!-- Show already saved DB image -->
