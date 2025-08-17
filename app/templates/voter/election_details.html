@@ -3,8 +3,8 @@
 
 {% block content %}
 <div style="min-height: 100vh; background: radial-gradient(circle at 30% 30%, #9afc49 0%, transparent 40%),
-            radial-gradient(circle at 70% 70%, #1e3a8a 0%, transparent 40%),
-            radial-gradient(circle at 50% 50%, #000000 0%, transparent 30%);
+            radial-gradient(circle at 70% 70%, #36f008 0%, transparent 40%),
+            radial-gradient(circle at 50% 50%, #52fc0f 0%, transparent 30%);
             background-color: #e9c93c;">
 
   <div class="card border-0 shadow-lg rounded-4 p-4 text-white"
@@ -45,11 +45,7 @@
   {% endif %}
 
   {% for position in positions %}
-    <div class="card my-4 shadow-sm" style="background: radial-gradient(circle at 25% 25%, #fcbf49 0% 50%, transparent 50%),
-                 radial-gradient(circle at 75% 75%, #f9d71c 0% 50%, transparent 50%),
-                 radial-gradient(circle at 25% 75%, #1e3a8a 0% 50%, transparent 50%),
-                 radial-gradient(circle at 75% 25%, #000000 0% 50%, transparent 50%);
-                 background-color: #f9d71c;">
+    <div class="card my-4 border-0 shadow-sm bg-transparent">
       <div class="card-header bg-primary text-white">
         <h5 class="mb-0">{{ position.name }}</h5>
       </div>
@@ -61,25 +57,36 @@
           <div class="row">
             {% for candidate in filtered %}
               <div class="col-md-6 col-lg-4 mb-4">
-                <div class="card shadow-lg h-100 border-0 rounded-4" data-aos="zoom-in" data-aos-delay="100">
-                  <div class="card-body d-flex flex-column align-items-center text-center">
+                <div class="card shadow-lg h-100 border-0 rounded-4 overflow-hidden position-relative bg-transparent" 
+                     style="transition: transform 0.3s; cursor: pointer;"
+                     data-aos="zoom-in" data-aos-delay="100">
 
+                  <!-- Candidate Image -->
+                  <div class="position-relative" style="height: 250px; overflow: hidden;">
                     {% set photo_filename = candidate.profile_photo or 'default-avatar.png' %}
                     <img src="{{ url_for('static', filename='uploads/candidates/' ~ photo_filename) }}"
                          alt="{{ candidate.full_name }} Profile Photo"
-                         class="rounded-circle border border-3 shadow-sm mb-3"
-                         style="width: 120px; height: 120px; object-fit: cover;"
+                         class="w-100 h-100"
+                         style="object-fit: cover; transition: transform 0.4s;"
                          loading="lazy">
 
-                    <h5 class="card-title">{{ candidate.full_name }}</h5>
-                    <p class="mb-1"><strong>Party:</strong> {{ candidate.party_name or 'Independent' }}</p>
+                    <!-- Overlay with Name + Party -->
+                    <div class="position-absolute bottom-0 start-0 w-100 text-white p-2"
+                         style="background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);">
+                      <h6 class="mb-0 fw-bold">{{ candidate.full_name }}</h6>
+                      <small>{{ candidate.party_name or 'Independent' }}</small>
+                    </div>
+                  </div>
+
+                  <!-- Candidate Details -->
+                  <div class="card-body text-center p-3 bg-transparent">
                     <p class="mb-1"><strong>Votes:</strong> {{ candidate.vote_count }}</p>
                     <p class="text-muted small mb-2">Running for {{ position.name }}</p>
 
                     {% if total_votes > 0 %}
                       {% set percentage = (candidate.vote_count / total_votes) * 100 %}
                       <div class="w-100 mb-2">
-                        <div class="progress" style="height: 10px;">
+                        <div class="progress" style="height: 6px; border-radius: 4px;">
                           <div class="progress-bar bg-success" role="progressbar"
                                style="width: {{ percentage | round(4) }}%;"
                                aria-valuenow="{{ percentage | round(2) }}" aria-valuemin="0" aria-valuemax="100"></div>
@@ -89,7 +96,7 @@
                     {% endif %}
 
                     <div class="d-grid gap-2 w-100">
-                      <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#manifestoModal{{ candidate.id }}">
+                      <button class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#manifestoModal{{ candidate.id }}">
                         📜 View Manifesto
                       </button>
 
@@ -98,10 +105,10 @@
                           {{ form.csrf_token }}
                           <input type="hidden" name="candidate_id" value="{{ candidate.id }}">
                           <input type="hidden" name="position_id" value="{{ position.id }}">
-                          <button type="submit" class="btn btn-success btn-sm mt-1">🗳️ Vote</button>
+                          <button type="submit" class="btn btn-success btn-sm mt-1 rounded-pill">🗳️ Vote</button>
                         </form>
                       {% else %}
-                        <button class="btn btn-secondary btn-sm mt-1" disabled>✅ Voted</button>
+                        <button class="btn btn-secondary btn-sm mt-1 rounded-pill" disabled>✅ Voted</button>
                       {% endif %}
                     </div>
                   </div>
