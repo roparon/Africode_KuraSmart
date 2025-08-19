@@ -328,7 +328,6 @@
     easing: 'ease-out-cubic'
   });
 
-  // Update local time display in Nairobi time
   function updateLocalTime() {
     const timeElement = document.getElementById("local-time");
     const now = new Date();
@@ -341,12 +340,8 @@
   }
   setInterval(updateLocalTime, 1000);
   updateLocalTime();
-
-  // Set min and default datetime-local to current Nairobi time
   function setMinDateTime() {
     const now = new Date();
-
-    // Convert to Nairobi time as "YYYY-MM-DDTHH:MM"
     const nairobiTimeString = now.toLocaleString('sv-SE', {
       timeZone: 'Africa/Nairobi',
       year: 'numeric',
@@ -355,8 +350,6 @@
       hour: '2-digit',
       minute: '2-digit'
     }).replace(' ', 'T');
-
-    // Apply to start_date and end_date fields
     const startDateInput = document.getElementById('start_date');
     const endDateInput = document.getElementById('end_date');
 
