@@ -67,8 +67,8 @@ def election_analytics(election_id):
         'election': {
             'id': election.id,
             'title': election.title,
-            'start_date': election.start_date,
-            'end_date': election.end_date
+            'start_date': election.start_date_aware,
+            'end_date': election.end_date_aware
         },
         'candidates': total_candidates,
         'total_votes': total_votes,

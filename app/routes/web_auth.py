@@ -411,6 +411,9 @@ def export_users_csv():
         return jsonify({'error': 'Failed to export users', 'details': str(e)}), 500
 
 
+from PIL import Image
+import uuid
+
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'static', 'uploads', 'candidates')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -531,9 +534,9 @@ def manage_elections():
         # Update status based on local time
         for election in elections:
             if election.status not in [ElectionStatusEnum.ENDED, ElectionStatusEnum.PAUSED]:
-                if election.start_date <= now_local < election.end_date:
+                if election.start_date_aware <= now_local < election.end_date_aware:
                     election.status = ElectionStatusEnum.ACTIVE
-                elif now_local >= election.end_date:
+                elif now_local >= election.end_date_aware:
                     election.status = ElectionStatusEnum.ENDED
 
         db.session.commit()
@@ -553,6 +556,11 @@ def manage_elections():
         return redirect(url_for("admin_web.dashboard"))
 
 
+
+
+
+from werkzeug.datastructures import CombinedMultiDict
+
 # ================= EDIT ELECTION =================
 @admin_web_bp.route('/elections/<int:election_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -568,18 +576,30 @@ def edit_election(election_id):
         joinedload(Election.candidates)
     ).get_or_404(election_id)
 
-    # Auto-end expired election
-    if election.end_date and election.status != ElectionStatusEnum.ENDED and now_local >= election.end_date:
-        election.status = ElectionStatusEnum.ENDED
-        db.session.commit()
+    # Auto-end expired election (normalize timezone first)
+    if election.end_date and election.status != ElectionStatusEnum.ENDED:
+        election_end = (
+            election.end_date.replace(tzinfo=local_tz)
+            if election.end_date.tzinfo is None
+            else election.end_date.astimezone(local_tz)
+        )
+        if now_local >= election_end:
+            election.status = ElectionStatusEnum.ENDED
+            db.session.commit()
 
     if request.method == "GET":
         form = ElectionForm(obj=election)
         form.candidates.entries = []
 
         # WTForms DateTimeLocalField needs naive → strip tzinfo only for display
-        form.start_date.data = election.start_date.astimezone(local_tz).replace(tzinfo=None)
-        form.end_date.data = election.end_date.astimezone(local_tz).replace(tzinfo=None)
+        form.start_date.data = (
+            election.start_date.astimezone(local_tz).replace(tzinfo=None)
+            if election.start_date else None
+        )
+        form.end_date.data = (
+            election.end_date.astimezone(local_tz).replace(tzinfo=None)
+            if election.end_date else None
+        )
 
         # Populate existing candidates
         for candidate in election.candidates:
@@ -618,9 +638,9 @@ def edit_election(election_id):
             start_dt_local = form.start_date.data
             end_dt_local = form.end_date.data
 
-            if start_dt_local.tzinfo is None:
+            if start_dt_local and start_dt_local.tzinfo is None:
                 start_dt_local = start_dt_local.replace(tzinfo=local_tz)
-            if end_dt_local.tzinfo is None:
+            if end_dt_local and end_dt_local.tzinfo is None:
                 end_dt_local = end_dt_local.replace(tzinfo=local_tz)
 
             election.title = form.title.data
@@ -636,7 +656,10 @@ def edit_election(election_id):
                 data = entry.data
                 candidate_id = entry.form.candidate_id.data
                 photo_file = entry.form.profile_photo.data
-                photo_filename = save_candidate_photo(photo_file) if photo_file else entry.form.original_candidate.profile_photo
+                photo_filename = (
+                    save_candidate_photo(photo_file)
+                    if photo_file else entry.form.original_candidate.profile_photo
+                )
 
                 if candidate_id and int(candidate_id) in existing_candidates:
                     # Update existing

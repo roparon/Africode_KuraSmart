@@ -1,0 +1,17 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "Create migration to update existing election datetimes to be timezone-aware (assume UTC if naive)",
+			"command": "python3",
+			"args": [
+				"-c",
+				"from app import create_app; from app.extensions import db; from app.models import Election; from sqlalchemy import update; from zoneinfo import ZoneInfo; app = create_app();\nwith app.app_context():\n    elections = Election.query.all()\n    for e in elections:\n        changed = False\n        if e.start_date and e.start_date.tzinfo is None:\n            e.start_date = e.start_date.replace(tzinfo=ZoneInfo('UTC'))\n            changed = True\n        if e.end_date and e.end_date.tzinfo is None:\n            e.end_date = e.end_date.replace(tzinfo=ZoneInfo('UTC'))\n            changed = True\n        if changed:\n            db.session.add(e)\n    db.session.commit()\nprint('Election datetimes normalized.')"
+			],
+			"problemMatcher": [],
+			"group": "build",
+			"isBackground": false
+		}
+	]
+}

@@ -25,9 +25,10 @@ def create_election():
     if not title or not start_date or not end_date:
         return jsonify({'error': 'Missing required fields'}), 400
 
+    from app.utils.datetime_utils import ensure_nairobi_aware
     try:
-        start_dt = datetime.fromisoformat(start_date)
-        end_dt = datetime.fromisoformat(end_date)
+        start_dt = ensure_nairobi_aware(datetime.fromisoformat(start_date))
+        end_dt = ensure_nairobi_aware(datetime.fromisoformat(end_date))
     except ValueError:
         return jsonify({'error': 'Invalid date format. Use ISO format (YYYY-MM-DDTHH:MM:SS)'}), 400
 
@@ -127,7 +128,8 @@ def get_election_results(election_id):
     if not election:
         return jsonify({"error": "Election not found"}), 404
 
-    if election.end_date and election.end_date > datetime.utcnow():
+    from app.utils.datetime_utils import ensure_nairobi_aware
+    if election.end_date_aware and election.end_date_aware > ensure_nairobi_aware(datetime.now()):
         return jsonify({"error": "Results not available until the election ends."}), 403
 
     total_voters = User.query.filter_by(role='voter').count()

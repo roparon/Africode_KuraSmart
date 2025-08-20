@@ -1,4 +1,5 @@
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db
@@ -92,7 +93,16 @@ class User(db.Model, UserMixin):
 from zoneinfo import ZoneInfo
 
 
+from app.utils.datetime_utils import ensure_nairobi_aware
+
 class Election(db.Model):
+    @property
+    def start_date_aware(self):
+        return ensure_nairobi_aware(self.start_date)
+
+    @property
+    def end_date_aware(self):
+        return ensure_nairobi_aware(self.end_date)
     __tablename__ = 'election'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -240,8 +250,19 @@ class Vote(db.Model):
     election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=False)
     candidate_id = db.Column(db.Integer, db.ForeignKey('candidate.id'), nullable=False)
     position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    start_date = db.Column(db.DateTime(timezone=True), nullable=False)
+    end_date = db.Column(db.DateTime(timezone=True), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    @property
+    def start_date_aware(self):
+        from app.utils.datetime_utils import ensure_nairobi_aware
+        return ensure_nairobi_aware(self.start_date)
+
+    @property
+    def end_date_aware(self):
+        from app.utils.datetime_utils import ensure_nairobi_aware
+        return ensure_nairobi_aware(self.end_date)
     voter = db.relationship('User', back_populates='votes')
     election = db.relationship('Election', back_populates='votes')
     candidate = db.relationship('Candidate', back_populates='votes')

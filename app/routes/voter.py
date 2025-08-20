@@ -20,27 +20,13 @@ voter_bp = Blueprint('voter', __name__)
 @login_required
 def voter_dashboard():
     try:
-        now = datetime.utcnow()
+        from app.utils.datetime_utils import ensure_nairobi_aware
+        now = ensure_nairobi_aware(datetime.now())
 
         # Fetch elections based on time
-        active_elections = Election.query.filter(
-            and_(
-                Election.start_date <= now,
-                Election.end_date >= now,
-                Election.is_active.is_(True)
-            )
-        ).order_by(Election.created_at.desc()).all()
-
-        upcoming_elections = Election.query.filter(
-            and_(
-                Election.start_date > now,
-                Election.is_active.is_(True)
-            )
-        ).order_by(Election.start_date.asc()).all()
-
-        ended_elections = Election.query.filter(
-            Election.end_date < now
-        ).order_by(Election.end_date.desc()).all()
+        active_elections = [e for e in Election.query.filter(Election.is_active.is_(True)).all() if e.start_date_aware <= now <= e.end_date_aware]
+        upcoming_elections = [e for e in Election.query.filter(Election.is_active.is_(True)).all() if e.start_date_aware > now]
+        ended_elections = [e for e in Election.query.filter(Election.is_active.is_(True)).all() if e.end_date_aware < now]
 
         # Format elections with status
         def format_elections(elections, status):
@@ -141,15 +127,10 @@ def delete_notification(notif_id):
 def cast_vote(election_id):
     try:
         election = Election.query.get_or_404(election_id)
-        now_local = datetime.now(ZoneInfo("Africa/Nairobi"))
-        if election.start_date.tzinfo is None:
-            start_local = election.start_date.replace(tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("Africa/Nairobi"))
-        else:
-            start_local = election.start_date.astimezone(ZoneInfo("Africa/Nairobi"))
-        if election.end_date.tzinfo is None:
-            end_local = election.end_date.replace(tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("Africa/Nairobi"))
-        else:
-            end_local = election.end_date.astimezone(ZoneInfo("Africa/Nairobi"))
+        from app.utils.datetime_utils import ensure_nairobi_aware
+        now_local = ensure_nairobi_aware(datetime.now())
+        start_local = election.start_date_aware
+        end_local = election.end_date_aware
         if now_local < start_local:
             flash('Voting has not yet started for this election.', 'warning')
             return redirect(url_for('voter.view_election', election_id=election_id))

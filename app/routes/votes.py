@@ -28,11 +28,12 @@ def cast_vote(election_id):
             return jsonify({"error": "Candidate does not belong to this election"}), 400
 
         # Get current aware time in Africa/Nairobi
-        now = datetime.now(ZoneInfo("Africa/Nairobi"))
+        from app.utils.datetime_utils import ensure_nairobi_aware
+        now = ensure_nairobi_aware(datetime.now())
 
-        # Ensure election start/end are timezone-aware
-        start_time = election.start_date.astimezone(ZoneInfo("Africa/Nairobi"))
-        end_time = election.end_date.astimezone(ZoneInfo("Africa/Nairobi"))
+        # Use aware properties
+        start_time = election.start_date_aware
+        end_time = election.end_date_aware
 
         # Time checks
         if now < start_time:

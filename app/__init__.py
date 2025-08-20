@@ -39,10 +39,9 @@ def create_app():
     if not scheduler.running:
         scheduler.start()
 
-    # Job registration must be done after app context is available
+    # Job registration + auto super admin
     with app.app_context():
         from app.tasks.reminders import send_reminders
-        # from app.tasks.elections import update_election_statuses
 
         scheduler.add_job(
             id='daily_election_reminder',
@@ -53,16 +52,26 @@ def create_app():
             replace_existing=True
         )
 
-        # scheduler.add_job(
-        #     id='update_election_statuses',
-        #     func=update_election_statuses,
-        #     trigger='interval',
-        #     seconds=60,
-        #     replace_existing=True,
-        #     max_instances=1,
-        #     coalesce=True,
-        #     misfire_grace_time=30
-        # )
+        # ✅ Ensure super admin exists
+        from app.models import User, UserRole
+        from werkzeug.security import generate_password_hash
+
+        existing = User.query.filter_by(role=UserRole.super_admin).first()
+        if not existing:
+            super_admin = User(
+                email="aaronrop40@gmail.com",
+                full_name="Aron Rop",
+                username="roparon",
+                role=UserRole.super_admin,
+                password_hash=generate_password_hash("0987654321"),
+                is_verified=True,
+                is_superadmin=True,
+            )
+            db.session.add(super_admin)
+            db.session.commit()
+            print("✅ Super admin created automatically.")
+        else:
+            print("⚠️ Super admin already exists.")
 
     # Flask-Login
     @login_manager.user_loader
@@ -103,7 +112,6 @@ def create_app():
     app.register_blueprint(notifications_bp)
     app.register_blueprint(static_pages)
 
-
     @app.template_filter('to_local')
     def to_local(dt, tz_name='Africa/Nairobi'):
         if dt is None:
@@ -112,11 +120,12 @@ def create_app():
             dt = dt.replace(tzinfo=timezone.utc)
         return dt.astimezone(ZoneInfo(tz_name))
 
-
     @app.context_processor
     def inject_unread_count():
         if current_user.is_authenticated:
-            count = Notification.query.filter_by(user_id=current_user.id, read=False).count()
+            count = Notification.query.filter_by(
+                user_id=current_user.id, read=False
+            ).count()
             return {'unread_count': count}
         return {}
 
@@ -125,6 +134,5 @@ def create_app():
         app.cli.add_command(create_superadmin)
     except ImportError:
         pass
-
 
     return app
