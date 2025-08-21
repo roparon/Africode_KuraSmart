@@ -306,7 +306,7 @@ class Notification(db.Model):
     user_id = db.Column(
         db.Integer,
         db.ForeignKey('users.id', name='fk_notifications_user_id_users'),
-        nullable=False
+        nullable=True
     )
     user = db.relationship('User', backref='notifications')
 

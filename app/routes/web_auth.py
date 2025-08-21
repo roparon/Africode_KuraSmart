@@ -613,6 +613,10 @@ def edit_election(election_id):
             entry.form.candidate_id.data = str(candidate.id)
             entry.form.existing_photo = candidate.profile_photo or "default_profile.png"
 
+
+        if request.args.get("add_candidate"):
+            form.candidates.append_entry()
+
         return render_template(
             "admin/edit_election.html",
             form=form,
@@ -656,10 +660,17 @@ def edit_election(election_id):
                 data = entry.data
                 candidate_id = entry.form.candidate_id.data
                 photo_file = entry.form.profile_photo.data
-                photo_filename = (
-                    save_candidate_photo(photo_file)
-                    if photo_file else entry.form.original_candidate.profile_photo
-                )
+                if photo_file:
+                    photo_filename = save_candidate_photo(photo_file)
+                elif getattr(entry.form, "original_candidate", None):
+                    photo_filename = entry.form.original_candidate.profile_photo
+                else:
+                    photo_filename = "default_profile.png"
+
+                position_name = data.get("position")
+                position_id = None
+                if position_name:
+                    position_id = get_position_id(position_name, election.id)
 
                 if candidate_id and int(candidate_id) in existing_candidates:
                     # Update existing
@@ -667,7 +678,8 @@ def edit_election(election_id):
                     candidate.full_name = data.get("full_name")
                     candidate.party_name = data.get("party_name")
                     candidate.manifesto = data.get("manifesto")
-                    candidate.position = data.get("position")
+                    candidate.position = position_name
+                    candidate.position_id = position_id
                     candidate.profile_photo = photo_filename
                     seen_ids.add(candidate.id)
                 else:
@@ -678,7 +690,8 @@ def edit_election(election_id):
                         full_name=data.get("full_name"),
                         party_name=data.get("party_name"),
                         manifesto=data.get("manifesto"),
-                        position=data.get("position"),
+                        position=position_name,
+                        position_id=position_id,
                         profile_photo=photo_filename
                     )
                     db.session.add(new_candidate)
@@ -993,57 +1006,90 @@ def manage_notifications():
 
     form = NotificationForm()
     try:
+        # Defensive: ensure form has id attribute
+        form_id = getattr(form, 'id', None)
         if form.validate_on_submit():
-            users = User.query.all()
+            if form_id and form.id.data:  
+                # ✅ EDIT EXISTING NOTIFICATION
+                notif = Notification.query.get(form.id.data)
+                if not notif:
+                    flash('Notification not found.', 'danger')
+                    return redirect(url_for('admin_web.manage_notifications'))
 
-            for user in users:
+                notif.subject = form.title.data
+                notif.message = form.message.data
+                notif.send_email = form.send_email.data
+                db.session.commit()
+
+                # Resend emails if needed
+                if form.send_email.data:
+                    users = User.query.all()
+                    for user in users:
+                        try:
+                            send_email(user.email, notif.subject, notif.message)
+                        except Exception as email_err:
+                            current_app.logger.exception(
+                                f"[Email Error] Failed to send to {user.email}: {email_err}"
+                            )
+
+                flash('Notification updated successfully!', 'success')
+
+            else:
+                # ✅ CREATE NEW BROADCAST NOTIFICATION
                 notif = Notification(
                     subject=form.title.data,
                     message=form.message.data,
                     send_email=form.send_email.data,
-                    user_id=user.id,
+                    user_id=None,  # broadcast (ensure user_id is nullable in model)
                     read=False
                 )
                 db.session.add(notif)
+                db.session.commit()
 
+                # Email broadcast
                 if form.send_email.data:
-                    try:
-                        send_email(user.email, notif.subject, notif.message)
-                    except Exception as email_err:
-                        current_app.logger.exception(f"[Email Error] Failed to send to {user.email}: {email_err}")
+                    users = User.query.all()
+                    for user in users:
+                        try:
+                            send_email(user.email, notif.subject, notif.message)
+                        except Exception as email_err:
+                            current_app.logger.exception(
+                                f"[Email Error] Failed to send to {user.email}: {email_err}"
+                            )
 
-            db.session.commit()
-            flash('Notification sent successfully!', 'success')
+                flash('Notification sent successfully!', 'success')
+
             return redirect(url_for('admin_web.manage_notifications'))
-        notifications = (
-                db.session.query(
-                    Notification.subject,
-                    Notification.message,
-                    Notification.send_email,
-                    db.func.count(Notification.id).label('recipient_count'),
-                    db.func.max(Notification.created_at).label('created_at')
-                )
-                .group_by(Notification.subject, Notification.message, Notification.send_email)
-                .order_by(db.desc('created_at'))
-                .all()
-            )
 
-        return render_template('admin/notifications.html', form=form, notifications=notifications)
+        # ✅ PAGINATED LIST
+        page = request.args.get('page', 1, type=int)
+        notifications = (
+            Notification.query
+            .order_by(Notification.created_at.desc())
+            .paginate(page=page, per_page=5, error_out=False)
+        )
+
+        return render_template('admin/notifications.html', form=form, notifications=notifications, int=int)
+
     except Exception as err:
         db.session.rollback()
         current_app.logger.exception(f"[Notification Error] {err}")
-        flash('An unexpected error occurred while managing notifications.', 'danger')
-        notifications = Notification.query.order_by(Notification.created_at.desc()).all()
-        return render_template('admin/notifications.html', form=form, notifications=notifications)
+        flash(f'An unexpected error occurred while managing notifications. {err}', 'danger')
+        page = request.args.get('page', 1, type=int)
+        notifications = Notification.query.order_by(Notification.created_at.desc()).paginate(page=page, per_page=5, error_out=False)
+        return render_template('admin/notifications.html', form=form, notifications=notifications, int=int)
 
 @admin_web_bp.route('/notifications/edit/<int:notif_id>', methods=['GET', 'POST'])
 @login_required
 def edit_notification(notif_id):
-    if not current_user.is_superadmin:
+    if not getattr(current_user, 'is_superadmin', False):
         abort(403)
     try:
         notif = Notification.query.get_or_404(notif_id)
         form = NotificationForm(obj=notif)
+        # Ensure the title field is populated from notif.subject
+        if request.method == 'GET':
+            form.title.data = notif.subject
         if form.validate_on_submit():
             notif.subject = form.title.data
             notif.message = form.message.data
@@ -1052,12 +1098,12 @@ def edit_notification(notif_id):
             flash('Notification updated.', 'success')
             return redirect(url_for('admin_web.manage_notifications'))
         notifications = Notification.query.order_by(Notification.created_at.desc()).all()
-        return render_template('admin/notifications.html', form=form, notifications=notifications)
+        return render_template('admin/notifications.html', form=form, notifications=notifications, edit_mode=True, notif=notif)
     except Exception as e:
         db.session.rollback()
+        current_app.logger.exception(f"Error updating notification: {e}")
         flash(f"Error updating notification: {e}", "danger")
         return redirect(url_for('admin_web.manage_notifications'))
-
 
 @admin_web_bp.context_processor
 def inject_notifications():
