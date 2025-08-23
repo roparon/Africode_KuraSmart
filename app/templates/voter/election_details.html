@@ -4,7 +4,8 @@
 {% block content %}
 <div style="background-color: #e9c93c;">
 
-  <div class="card border-0 shadow-lg rounded-4 p-4 text-white"
+  <!-- Election Header -->
+  <div class="card border-0 shadow-lg rounded-4 p-4 text-white mb-4"
        style="background: linear-gradient(135deg, #1e3a8a, #000000);">
     <h2 class="text-center mb-4 display-6 fw-semibold text-warning">{{ election.title }}</h2>
 
@@ -35,15 +36,17 @@
     </div>
   </div>
 
+  <!-- Voted Message -->
   {% if has_voted %}
     <div class="alert alert-success text-center mt-3">
       ✅ You have already voted in this election.
     </div>
   {% endif %}
 
+  <!-- Positions & Candidates -->
   {% for position in positions %}
     <div class="card my-4 border-0 shadow-sm bg-transparent">
-      <div class="card-header bg-primary text-white">
+      <div class="card-header bg-dark text-white">
         <h5 class="mb-0">{{ position.name }}</h5>
       </div>
       <div class="card-body">
@@ -51,50 +54,55 @@
         {% set total_votes = total_votes_by_position.get(position.id, 0) %}
 
         {% if filtered %}
-          <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+          <!-- 🔹 Three per row -->
+          <div class="row row-cols-2 row-cols-sm-3 row-cols-lg-6 g-3 border border-dark rounded p-2">
             {% for candidate in filtered %}
-              <div class="col d-flex align-items-stretch">
-                <div class="card shadow-lg h-100 w-100 border-0 rounded-4 overflow-hidden position-relative bg-transparent" 
-                     style="transition: transform 0.3s; cursor: pointer;"
-                     data-aos="zoom-in" data-aos-delay="100">
+              <div class="col">
+                <div class="card shadow-sm border-0 rounded-4 h-100 overflow-hidden bg-warning"
+                     style="transition: transform 0.25s ease-in-out; cursor: pointer;"
+                     onmouseover="this.style.transform='translateY(-6px)';"
+                     onmouseout="this.style.transform='translateY(0)';">
 
                   <!-- Candidate Image -->
-                  <div class="position-relative" style="height: 220px; overflow: hidden;">
+                  <div class="position-relative" style="height: 180px; overflow: hidden;">
                     {% set photo_filename = candidate.profile_photo or 'default-avatar.png' %}
                     <img src="{{ url_for('static', filename='uploads/candidates/' ~ photo_filename) }}"
                          alt="{{ candidate.full_name }} Profile Photo"
                          class="w-100 h-100"
-                         style="object-fit: cover; transition: transform 0.4s;"
+                         style="object-fit: cover; transition: transform 0.3s;"
                          loading="lazy">
 
-                    <!-- Overlay with Name + Party -->
-                    <div class="position-absolute bottom-0 start-0 w-100 text-white p-2"
+                    <div class="position-absolute bottom-0 start-0 w-100 text-white px-2 py-1"
                          style="background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);">
-                      <h6 class="mb-0 fw-bold">{{ candidate.full_name }}</h6>
-                      <small>{{ candidate.party_name or 'Independent' }}</small>
+                      <h6 class="mb-0 fw-bold small">{{ candidate.full_name }}</h6>
+                      <small class="text-light">{{ candidate.party_name or 'Independent' }}</small>
                     </div>
                   </div>
 
                   <!-- Candidate Details -->
-                  <div class="card-body text-center p-3 bg-transparent">
-                    <p class="mb-1"><strong>Votes:</strong> {{ candidate.vote_count }}</p>
+                  <div class="card-body text-center p-2">
+                    <p class="mb-1 small"><strong>Votes:</strong> {{ candidate.vote_count }}</p>
                     <p class="text-muted small mb-2">Running for {{ position.name }}</p>
 
                     {% if total_votes > 0 %}
                       {% set percentage = (candidate.vote_count / total_votes) * 100 %}
-                      <div class="w-100 mb-2">
-                        <div class="progress" style="height: 6px; border-radius: 4px;">
-                          <div class="progress-bar bg-success" role="progressbar"
+                      <div class="mb-2">
+                        <div class="progress" style="height: 5px; border-radius: 4px;">
+                          <div class="progress-bar bg-success"
+                               role="progressbar"
                                style="width: {{ percentage | round(4) }}%;"
                                aria-valuenow="{{ percentage | round(2) }}" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
-                        <small>{{ percentage | round(2) }}%</small>
+                        <small class="text-muted">{{ percentage | round(2) }}%</small>
                       </div>
                     {% endif %}
 
-                    <div class="d-grid gap-2 w-100">
-                      <button class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#manifestoModal{{ candidate.id }}">
-                        📜 View Manifesto
+                    <!-- Actions -->
+                    <div class="d-grid gap-1">
+                      <button class="btn btn-outline-primary btn-sm rounded-pill"
+                              data-bs-toggle="modal"
+                              data-bs-target="#manifestoModal{{ candidate.id }}">
+                        Manifesto
                       </button>
 
                       {% if position.id not in voted_position_ids %}
@@ -102,10 +110,10 @@
                           {{ form.csrf_token }}
                           <input type="hidden" name="candidate_id" value="{{ candidate.id }}">
                           <input type="hidden" name="position_id" value="{{ position.id }}">
-                          <button type="submit" class="btn btn-success btn-sm mt-1 rounded-pill">🗳️ Vote</button>
+                          <button type="submit" class="btn btn-success btn-sm rounded-pill"> Vote</button>
                         </form>
                       {% else %}
-                        <button class="btn btn-secondary btn-sm mt-1 rounded-pill" disabled>✅ Voted</button>
+                        <button class="btn btn-secondary btn-sm rounded-pill" disabled>✅ Voted</button>
                       {% endif %}
                     </div>
                   </div>
@@ -147,7 +155,6 @@
 
 <!-- Countdown Script -->
 <script>
-  // Parse start and end dates (works for both UTC-aware and naive datetimes)
   const startDateUTC = new Date("{{ election.start_date.isoformat() }}").getTime();
   const endDateUTC   = new Date("{{ election.end_date.isoformat() }}").getTime();
 
@@ -156,36 +163,27 @@
     const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((ms % (1000 * 60)) / 1000);
-
     let parts = [];
     if (days > 0) parts.push(`${days}d`);
     if (hours > 0 || days > 0) parts.push(`${hours}h`);
     if (minutes > 0 || hours > 0 || days > 0) parts.push(`${minutes}m`);
     parts.push(`${seconds}s`);
-
     return parts.join(" ");
   }
 
   function updateCountdown() {
     const now = Date.now();
-
     if (now < startDateUTC) {
-      // Before election
-      const diff = startDateUTC - now;
       document.getElementById("countdown").innerText =
-        `⏳ Starts in: ${formatDiff(diff)}`;
+        `⏳ Starts in: ${formatDiff(startDateUTC - now)}`;
     } else if (now >= startDateUTC && now < endDateUTC) {
-      // During election
-      const diff = endDateUTC - now;
       document.getElementById("countdown").innerText =
-        `🗳️ Ends in: ${formatDiff(diff)}`;
+        `🗳️ Ends in: ${formatDiff(endDateUTC - now)}`;
     } else {
-      // Election finished
       document.getElementById("countdown").innerText = "✅ Election Ended";
       clearInterval(timer);
     }
   }
-
   const timer = setInterval(updateCountdown, 1000);
   updateCountdown();
 </script>
