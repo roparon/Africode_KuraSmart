@@ -446,12 +446,12 @@ def manage_elections():
 
     form = ElectionForm()
     local_tz = ZoneInfo("Africa/Nairobi")
-    now_local = datetime.now(tz=local_tz)   # always aware
+    now_local = datetime.now(local_tz)  # always aware, always local
     current_datetime = now_local.strftime('%Y-%m-%dT%H:%M')
 
     try:
         if request.method == "POST" and form.validate_on_submit():
-            # Save times as local aware
+            # Always treat times as Africa/Nairobi local
             start_dt_local = form.start_date.data
             end_dt_local = form.end_date.data
 
@@ -531,13 +531,22 @@ def manage_elections():
             elections_query = elections_query.filter(Election.title.ilike(f"{search_title}%"))
         elections = elections_query.order_by(Election.start_date.desc()).all()
 
-        # Update status based on local time
+        # Update status based on local time, ensure all datetimes are timezone-aware
         for election in elections:
+            # Always treat election.start_date and end_date as local
             if election.status not in [ElectionStatusEnum.ENDED, ElectionStatusEnum.PAUSED]:
-                if election.start_date_aware <= now_local < election.end_date_aware:
-                    election.status = ElectionStatusEnum.ACTIVE
-                elif now_local >= election.end_date_aware:
-                    election.status = ElectionStatusEnum.ENDED
+                # Ensure start_date and end_date are timezone-aware
+                start_dt = election.start_date
+                end_dt = election.end_date
+                if start_dt and start_dt.tzinfo is None:
+                    start_dt = start_dt.replace(tzinfo=local_tz)
+                if end_dt and end_dt.tzinfo is None:
+                    end_dt = end_dt.replace(tzinfo=local_tz)
+                if start_dt and end_dt:
+                    if start_dt <= now_local < end_dt:
+                        election.status = ElectionStatusEnum.ACTIVE
+                    elif now_local >= end_dt:
+                        election.status = ElectionStatusEnum.ENDED
 
         db.session.commit()
 
@@ -569,20 +578,18 @@ def edit_election(election_id):
         abort(403)
 
     local_tz = ZoneInfo("Africa/Nairobi")
-    now_local = datetime.now(tz=local_tz)
+    now_local = datetime.now(local_tz)
     current_datetime = now_local.strftime('%Y-%m-%dT%H:%M')
 
     election = Election.query.options(
         joinedload(Election.candidates)
     ).get_or_404(election_id)
 
-    # Auto-end expired election (normalize timezone first)
+    # Auto-end expired election (local time only)
     if election.end_date and election.status != ElectionStatusEnum.ENDED:
-        election_end = (
-            election.end_date.replace(tzinfo=local_tz)
-            if election.end_date.tzinfo is None
-            else election.end_date.astimezone(local_tz)
-        )
+        election_end = election.end_date
+        if election_end.tzinfo is None:
+            election_end = election_end.replace(tzinfo=local_tz)
         if now_local >= election_end:
             election.status = ElectionStatusEnum.ENDED
             db.session.commit()
@@ -592,12 +599,13 @@ def edit_election(election_id):
         form.candidates.entries = []
 
         # WTForms DateTimeLocalField needs naive → strip tzinfo only for display
+        # If already local, just remove tzinfo for display
         form.start_date.data = (
-            election.start_date.astimezone(local_tz).replace(tzinfo=None)
+            election.start_date.replace(tzinfo=None)
             if election.start_date else None
         )
         form.end_date.data = (
-            election.end_date.astimezone(local_tz).replace(tzinfo=None)
+            election.end_date.replace(tzinfo=None)
             if election.end_date else None
         )
 
@@ -638,7 +646,7 @@ def edit_election(election_id):
                     entry.form.election_id.data = str(election.id)
 
         if form.validate_on_submit():
-            # Save dates as local aware
+            # Always treat times as Africa/Nairobi local
             start_dt_local = form.start_date.data
             end_dt_local = form.end_date.data
 

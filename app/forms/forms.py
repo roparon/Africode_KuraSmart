@@ -121,8 +121,10 @@ class ElectionForm(FlaskForm):
         if end <= start:
             raise ValidationError("End time must be after the start time.")
 
-        if end > start + timedelta(hours=12, minutes=30):
-            raise ValidationError("Election duration cannot exceed 12 h 30 min.")
+        # Optional: cap election duration (e.g., 1 year max)
+        max_duration = timedelta(days=365)
+        if end > start + max_duration:
+            raise ValidationError("Election duration cannot exceed 1 year.")
 
     def get_localized_dates(self):
         """Utility to get timezone-aware datetimes for saving to DB."""

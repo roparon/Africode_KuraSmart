@@ -147,25 +147,47 @@
 
 <!-- Countdown Script -->
 <script>
-  const endDateUTC = new Date("{{ election.end_date.isoformat() }}Z");
+  // Parse start and end dates (works for both UTC-aware and naive datetimes)
+  const startDateUTC = new Date("{{ election.start_date.isoformat() }}").getTime();
+  const endDateUTC   = new Date("{{ election.end_date.isoformat() }}").getTime();
+
+  function formatDiff(ms) {
+    const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+
+    let parts = [];
+    if (days > 0) parts.push(`${days}d`);
+    if (hours > 0 || days > 0) parts.push(`${hours}h`);
+    if (minutes > 0 || hours > 0 || days > 0) parts.push(`${minutes}m`);
+    parts.push(`${seconds}s`);
+
+    return parts.join(" ");
+  }
 
   function updateCountdown() {
-    const now = new Date().getTime();
-    const diff = endDateUTC - now;
-    if (diff <= 0) {
-      document.getElementById("countdown").innerText = "⏳ Election Ended";
+    const now = Date.now();
+
+    if (now < startDateUTC) {
+      // Before election
+      const diff = startDateUTC - now;
+      document.getElementById("countdown").innerText =
+        `⏳ Starts in: ${formatDiff(diff)}`;
+    } else if (now >= startDateUTC && now < endDateUTC) {
+      // During election
+      const diff = endDateUTC - now;
+      document.getElementById("countdown").innerText =
+        `🗳️ Ends in: ${formatDiff(diff)}`;
+    } else {
+      // Election finished
+      document.getElementById("countdown").innerText = "✅ Election Ended";
       clearInterval(timer);
-      return;
     }
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-    const minutes = Math.floor((diff / (1000 * 60)) % 60);
-    const seconds = Math.floor((diff / 1000) % 60);
-    document.getElementById("countdown").innerText =
-      `${days}d ${hours}h ${minutes}m ${seconds}s`;
   }
 
   const timer = setInterval(updateCountdown, 1000);
   updateCountdown();
 </script>
+
 {% endblock %}
