@@ -67,43 +67,44 @@
 
                 <!-- Turnout & Election Stats -->
                 <div class="row mb-4">
-                <div class="col-md-3 mb-3" data-aos="zoom-in">
-                    <div class="card text-white bg-primary shadow-sm animated-card-1">
-                    <div class="card-body text-center">
-                        <i class="bi bi-people display-6 mb-2"></i>
-                        <h6 class="card-title">Total Voters</h6>
-                        <p class="display-6 fw-bold">{{ total_voters }}</p>
+                    <div class="col-6 col-sm-3 mb-3" data-aos="zoom-in">
+                        <div class="card text-white bg-primary shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-people display-6 mb-2"></i>
+                                <h6 class="card-title">Total Voters</h6>
+                                <p class="display-6 fw-bold">{{ total_voters }}</p>
+                            </div>
+                        </div>
                     </div>
+                    <div class="col-6 col-sm-3 mb-3" data-aos="zoom-in" data-aos-delay="100">
+                        <div class="card text-white bg-success shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-check-circle display-6 mb-2"></i>
+                                <h6 class="card-title">Voted</h6>
+                                <p class="display-6 fw-bold">{{ voted_count }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-sm-3 mb-3" data-aos="zoom-in" data-aos-delay="200">
+                        <div class="card text-dark bg-warning shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-bar-chart-line-fill display-6 mb-2"></i>
+                                <h6 class="card-title">Turnout %</h6>
+                                <p class="display-6 fw-bold">{{ turnout_percent }}%</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-sm-3 mb-3" data-aos="zoom-in" data-aos-delay="300">
+                        <div class="card text-white bg-info shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-clock-history display-6 mb-2"></i>
+                                <h6 class="card-title">Active Elections</h6>
+                                <p class="display-6 fw-bold">{{ ongoing_elections|length }}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-3 mb-3" data-aos="zoom-in" data-aos-delay="100">
-                    <div class="card text-white bg-success shadow-sm animated-card-2">
-                    <div class="card-body text-center">
-                        <i class="bi bi-check-circle display-6 mb-2"></i>
-                        <h6 class="card-title">Voted</h6>
-                        <p class="display-6 fw-bold">{{ voted_count }}</p>
-                    </div>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-3" data-aos="zoom-in" data-aos-delay="200">
-                    <div class="card text-dark bg-warning shadow-sm animated-card-3">
-                    <div class="card-body text-center">
-                        <i class="bi bi-bar-chart-line-fill display-6 mb-2"></i>
-                        <h6 class="card-title">Turnout %</h6>
-                        <p class="display-6 fw-bold">{{ turnout_percent }}%</p>
-                    </div>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-3" data-aos="zoom-in" data-aos-delay="300">
-                    <div class="card text-white bg-info shadow-sm animated-card-4">
-                    <div class="card-body text-center">
-                        <i class="bi bi-clock-history display-6 mb-2"></i>
-                        <h6 class="card-title">Active Elections</h6>
-                        <p class="display-6 fw-bold">{{ ongoing_elections|length }}</p>
-                    </div>
-                    </div>
-                </div>
-                </div>
+
                 {% if ending_soon %}
                 <div class="alert alert-warning shadow-sm rounded-3" data-aos="fade-in">
                     ⚠️ The following election(s) are ending soon:
@@ -116,7 +117,7 @@
                 {% endif %}
                 <!-- Management Cards -->
                 <div class="row">
-                    <div class="col-md-6 mb-4" data-aos="fade-up" data-aos-delay="150">
+                    <div class="col-6 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="150">
                         <div class="card h-100 shadow border-0 rounded-4">
                             <div class="card-header bg-gradient-info text-white fw-semibold rounded-top-4">User Management</div>
                             <div class="card-body d-flex flex-column justify-content-between">
@@ -125,7 +126,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6 mb-4" data-aos="fade-up" data-aos-delay="250">
+                    <div class="col-6 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="250">
                         <div class="card h-100 shadow border-0 rounded-4">
                           <div class="card-header bg-gradient-success text-success fw-semibold rounded-top-4">
                             Candidate Management</div>
@@ -137,7 +138,7 @@
                           </div>
                         </div>
                       </div>
-                    <div class="col-md-6 mb-4" data-aos="fade-up" data-aos-delay="300">
+                    <div class="col-6 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="300">
                         <div class="card h-100 shadow border-0 rounded-4">
                             <div class="card-header bg-gradient-primary text-white fw-semibold rounded-top-4">
                                 <i class="bi bi-bell me-2"></i> Notifications
@@ -150,7 +151,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6 mb-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="col-6 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="200">
                         <div class="card h-100 shadow border-0 rounded-4">
                             <div class="card-header bg-gradient-secondary text-white fw-semibold rounded-top-4">Election Management</div>
                             <div class="card-body d-flex flex-column justify-content-between">
@@ -162,7 +163,7 @@
                 </div>
                 <div class="row">
                     <!-- Audit Logs -->
-                    <div class="col-md-6 mb-4" data-aos="fade-up" data-aos-delay="300">
+                    <div class="col-6 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="300">
                         <div class="card h-100 shadow border-0 rounded-4">
                             <div class="card-header bg-warning text-dark fw-semibold rounded-top-4">Audit Logs</div>
                             <div class="card-body d-flex flex-column justify-content-between">
@@ -172,7 +173,7 @@
                         </div>
                     </div>
                     <!-- Results Summary -->
-                    <div class="col-md-6 mb-4" data-aos="fade-up" data-aos-delay="350">
+                    <div class="col-6 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="350">
                         <div class="card h-100 shadow border-0 rounded-4">
                             <div class="card-header bg-success text-white fw-semibold rounded-top-4">
                                 <i class="bi bi-bar-chart-line me-2"></i> Results Summary
