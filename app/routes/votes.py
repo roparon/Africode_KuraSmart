@@ -31,9 +31,9 @@ def cast_vote(election_id):
         from app.utils.datetime_utils import ensure_nairobi_aware
         now = ensure_nairobi_aware(datetime.now())
 
-        # Use aware properties
-        start_time = election.start_date_aware
-        end_time = election.end_date_aware
+        # Election start and end times
+        start_time = ensure_nairobi_aware(election.start_date)
+        end_time = ensure_nairobi_aware(election.end_date)
 
         # Time checks
         if now < start_time:
@@ -48,49 +48,29 @@ def cast_vote(election_id):
         # Duplicate vote check
         existing_vote = Vote.query.filter_by(
             voter_id=current_user.id,
-            election_id=election_id
+            election_id=election_id,
+            position_id=candidate.position_id
         ).first()
         if existing_vote:
-            return jsonify({"error": "You have already voted in this election"}), 403
+            return jsonify({"error": "You have already voted for this position in this election"}), 403
 
-        # Cast vote
+        # Cast vote (no start_date/end_date stored in Vote anymore)
         vote = Vote(
             voter_id=current_user.id,
             election_id=election_id,
             candidate_id=candidate_id,
-            created_at=datetime.utcnow()
+            position_id=candidate.position_id,
+            created_at=datetime.utcnow(),
+            timestamp=datetime.utcnow()
         )
         db.session.add(vote)
         db.session.commit()
 
-        return jsonify({"message": "✅ Vote cast successfully"}), 201
+        return jsonify({"message": "Vote cast successfully"}), 201
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": f"❌ Failed to cast vote: {str(e)}"}), 500
-
-# Get election results
-@vote_bp.route('/results/<int:election_id>', methods=['GET'])
-def get_results(election_id):
-    try:
-        election = Election.query.get(election_id)
-        if not election:
-            return jsonify({"error": "Election not found"}), 404
-
-        candidates = Candidate.query.filter_by(election_id=election_id).all()
-        results = []
-        for candidate in candidates:
-            vote_count = Vote.query.filter_by(candidate_id=candidate.id).count()
-            results.append({
-                "candidate_id": candidate.id,
-                "full_name": candidate.full_name,
-                "party_name": candidate.party_name,
-                "vote_count": vote_count
-            })
-
-        return jsonify({"election_id": election_id, "results": results}), 200
-    except Exception as e:
-        return jsonify({"error": f"Failed to fetch results: {str(e)}"}), 500
+        return jsonify({"error": f"Failed to cast vote: {str(e)}"}), 500
 
 
 # List all votes (admin only)from sqlalchemy.orm import joinedload
