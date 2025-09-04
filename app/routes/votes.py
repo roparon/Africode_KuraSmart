@@ -67,7 +67,6 @@ def cast_vote(election_id):
         db.session.commit()
 
         return jsonify({"message": "Vote cast successfully"}), 201
-
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Failed to cast vote: {str(e)}"}), 500
