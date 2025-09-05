@@ -72,6 +72,8 @@ def cast_vote(election_id):
         return jsonify({"error": f"Failed to cast vote: {str(e)}"}), 500
 
 
+
+
 @vote_bp.route('', methods=['GET'])
 @login_required
 def list_all_votes():
