@@ -27,30 +27,32 @@ def create_app():
     CSRFProtect(app)
     mail.init_app(app)
 
-    # APScheduler config
-    app.config['SCHEDULER_API_ENABLED'] = True
-    app.config['SCHEDULER_JOBSTORES'] = {
-        'default': MemoryJobStore()
-    }
+    # APScheduler is used locally, while Vercel uses an HTTP cron endpoint.
+    if not os.getenv("VERCEL"):
+        app.config['SCHEDULER_API_ENABLED'] = True
+        app.config['SCHEDULER_JOBSTORES'] = {
+            'default': MemoryJobStore()
+        }
 
-    scheduler.init_app(app)
+        scheduler.init_app(app)
 
-    # Start scheduler only once
-    if not scheduler.running:
-        scheduler.start()
+        if not scheduler.running:
+            scheduler.start()
+
+        with app.app_context():
+            from app.tasks.reminders import send_reminders
+
+            scheduler.add_job(
+                id='daily_election_reminder',
+                func=send_reminders,
+                trigger='cron',
+                hour=9,
+                minute=0,
+                replace_existing=True
+            )
 
     # Job registration + auto super admin
     with app.app_context():
-        from app.tasks.reminders import send_reminders
-
-        scheduler.add_job(
-            id='daily_election_reminder',
-            func=send_reminders,
-            trigger='cron',
-            hour=9,
-            minute=0,
-            replace_existing=True
-        )
 
         # Ensure super admin exists
         if os.getenv("KURASMART_SKIP_BOOTSTRAP") != "1":

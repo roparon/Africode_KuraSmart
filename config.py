@@ -8,6 +8,7 @@ load_dotenv()
 class Config:
     # --- Security ---
     SECRET_KEY = os.getenv("SECRET_KEY", "dev_secret_key")
+    CRON_SECRET = os.getenv("CRON_SECRET", "")
 
     # --- Database ---
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///kura.db")
