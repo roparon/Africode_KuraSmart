@@ -184,9 +184,10 @@ def dashboard():
         turnout_percent = round((voted_count / total_voters) * 100, 2) if total_voters else 0
 
         ongoing_elections = Election.query.filter(Election.status == 'active').all()
+        now_local = datetime.now(ZoneInfo("Africa/Nairobi"))
         ending_soon = [
             e for e in ongoing_elections
-            if e.end_date and e.end_date <= datetime.utcnow() + timedelta(hours=4)
+            if e.end_date_aware and e.end_date_aware <= now_local + timedelta(hours=4)
         ]
 
         return render_template(
