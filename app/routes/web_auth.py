@@ -173,7 +173,7 @@ def logout():
 @admin_web_bp.route('/dashboard')
 @login_required
 def dashboard():
-    if not (current_user.is_super_admin or current_user.role == UserRole.admin.value):
+    if not (current_user.is_super_admin() or current_user.is_admin()):
         abort(403)
 
     form = ProfileImageForm()
@@ -200,7 +200,7 @@ def dashboard():
         )
 
     except Exception as e:
-        current_app.logger.error(f"Admin dashboard error: {e}")
+        current_app.logger.exception("Admin dashboard error")
         flash("Error loading dashboard data.", "danger")
         return redirect(url_for('web_auth.login'))
 
