@@ -291,7 +291,7 @@
 
           {% if current_user.is_authenticated %}
 
-            {% if current_user.is_super_admin or current_user.role == 'admin' %}
+            {% if current_user.is_super_admin() or current_user.is_admin() %}
               <!-- Admin users: show Admin Panel only -->
               <li class="nav-item">
                 <a class="nav-link {% if request.endpoint == 'admin_web.dashboard' %}active{% endif %}" href="{{ url_for('admin_web.dashboard') }}">
