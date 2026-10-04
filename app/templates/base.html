@@ -290,16 +290,19 @@
           </li>
 
           {% if current_user.is_authenticated %}
-            <li class="nav-item">
-              <a class="nav-link {% if request.endpoint in ['admin_web.dashboard'] %}active{% endif %}" href="{{ url_for('admin_web.dashboard') }}">
-                Dashboard
-              </a>
-            </li>
 
             {% if current_user.is_super_admin or current_user.role == 'admin' %}
+              <!-- Admin users: show Admin Panel only -->
               <li class="nav-item">
                 <a class="nav-link {% if request.endpoint == 'admin_web.dashboard' %}active{% endif %}" href="{{ url_for('admin_web.dashboard') }}">
                   Admin Panel
+                </a>
+              </li>
+            {% else %}
+              <!-- Regular authenticated users: show Dashboard only -->
+              <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'voter.voter_dashboard' %}active{% endif %}" href="{{ url_for('voter.voter_dashboard') }}">
+                  Dashboard
                 </a>
               </li>
             {% endif %}
