@@ -63,7 +63,7 @@ def create_app():
                 full_name="Aron Rop",
                 username="roparon",
                 role=UserRole.super_admin,
-                password_hash=generate_password_hash("0987654321"),
+                password_hash=generate_password_hash(os.getenv("SUPER_ADMIN_PASSWORD", "")),
                 is_verified=True,
                 is_superadmin=True,
             )

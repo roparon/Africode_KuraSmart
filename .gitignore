@@ -3,3 +3,9 @@
 .config.py
 kura.db
 jobs.sqlite
+# Local SQLite database
+instance/kura.db
+
+# Python cache
+__pycache__/
+*.py[cod]
