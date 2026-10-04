@@ -1,3 +1,9 @@
+[project]
+name = "kurasmart"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = []
+
 [tool.vercel]
 framework = "flask"
 entrypoint = "run:app"
