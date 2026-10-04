@@ -11,3 +11,10 @@ __pycache__/
 *.py[cod]
 .vercel
 .env*
+
+# Local/tooling artifacts
+.agents/
+.claude/
+skills-lock.json
+*.backup
+instance/

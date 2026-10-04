@@ -52,26 +52,27 @@ def create_app():
             replace_existing=True
         )
 
-        # ✅ Ensure super admin exists
-        from app.models import User, UserRole
-        from werkzeug.security import generate_password_hash
+        # Ensure super admin exists
+        if os.getenv("KURASMART_SKIP_BOOTSTRAP") != "1":
+            from app.models import User, UserRole
+            from werkzeug.security import generate_password_hash
 
-        existing = User.query.filter_by(role=UserRole.super_admin).first()
-        if not existing:
-            super_admin = User(
-                email="aaronrop40@gmail.com",
-                full_name="Aron Rop",
-                username="roparon",
-                role=UserRole.super_admin,
-                password_hash=generate_password_hash(os.getenv("SUPER_ADMIN_PASSWORD", "")),
-                is_verified=True,
-                is_superadmin=True,
-            )
-            db.session.add(super_admin)
-            db.session.commit()
-            print("✅ Super admin created automatically.")
-        else:
-            print("⚠️ Super admin already exists.")
+            existing = User.query.filter_by(role=UserRole.super_admin).first()
+            if not existing:
+                super_admin = User(
+                    email="aaronrop40@gmail.com",
+                    full_name="Aron Rop",
+                    username="roparon",
+                    role=UserRole.super_admin,
+                    password_hash=generate_password_hash(os.getenv("SUPER_ADMIN_PASSWORD", "")),
+                    is_verified=True,
+                    is_superadmin=True,
+                )
+                db.session.add(super_admin)
+                db.session.commit()
+                print("✅ Super admin created automatically.")
+            else:
+                print("⚠️ Super admin already exists.")
 
     # Flask-Login
     @login_manager.user_loader
