@@ -24,10 +24,10 @@ class Config:
         }
 
     # --- Session & Login ---
-    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = bool(os.getenv("VERCEL"))
     REMEMBER_COOKIE_DURATION = timedelta(days=14)
     REMEMBER_COOKIE_HTTPONLY = True
-    REMEMBER_COOKIE_SECURE = False
+    REMEMBER_COOKIE_SECURE = bool(os.getenv("VERCEL"))
     REMEMBER_COOKIE_NAME = 'remember_token'
     SESSION_PROTECTION = 'strong'
 
