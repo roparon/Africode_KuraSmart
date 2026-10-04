@@ -1,0 +1,3 @@
+[tool.vercel]
+framework = "flask"
+entrypoint = "run.py"
