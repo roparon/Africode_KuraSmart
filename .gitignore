@@ -9,3 +9,5 @@ instance/kura.db
 # Python cache
 __pycache__/
 *.py[cod]
+.vercel
+.env*
