@@ -200,8 +200,12 @@ def dashboard():
         )
 
     except Exception as e:
-        current_app.logger.exception("Admin dashboard error")
-        flash("Error loading dashboard data.", "danger")
+        current_app.logger.error(
+            "ADMIN_DASHBOARD_EXCEPTION type=%s message=%s",
+            type(e).__name__,
+            str(e)
+        )
+        flash(f"Admin dashboard error: {type(e).__name__}: {e}", "danger")
         return redirect(url_for('web_auth.login'))
 
 
