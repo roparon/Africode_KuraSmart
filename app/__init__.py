@@ -13,6 +13,7 @@ from app.extensions import db, migrate, login_manager, CSRFProtect, mail
 from app.services.storage import media_url
 from app.models import User, Notification
 from config import Config
+from app.routes.seo import seo_bp
 
 # Initialize scheduler globally
 scheduler = APScheduler()
@@ -141,4 +142,5 @@ def create_app():
     except ImportError:
         pass
 
+    app.register_blueprint(seo_bp)
     return app

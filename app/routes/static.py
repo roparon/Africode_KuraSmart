@@ -12,7 +12,7 @@ def privacy_policy():
 
 @static_pages.route("/terms-and-conditions")
 def terms_and_conditions():
-    return render_template("static_pages/terms_and_conditions.html")
+    return render_template("partials/terms_modal.html")
 
 @static_pages.route("/help-center")
 def help_center():

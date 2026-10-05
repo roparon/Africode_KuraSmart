@@ -43,3 +43,5 @@ class Config:
     # --- App-wide Settings ---
     TIMEZONE = 'Africa/Nairobi'
     SCHEDULER_API_ENABLED = True
+    # Public canonical URL used by SEO routes.
+    SITE_URL = os.getenv("SITE_URL", "https://kurasmart.vercel.app")

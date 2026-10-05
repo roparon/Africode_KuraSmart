@@ -3,7 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="{% block meta_description %}Modern Voting App{% endblock %}">
+  <meta name="description" content="{% block meta_description %}KuraSmart is a secure digital election and online voting platform for creating elections, managing voters and candidates, conducting votes, and viewing election results.{% endblock %}">
+<meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
+<link rel="canonical" href="{% block canonical_url %}{{ config.SITE_URL.rstrip('/') }}{{ request.path }}{% endblock %}">
+
+<meta property="og:type" content="{% block og_type %}website{% endblock %}">
+<meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
+<meta property="og:description" content="{% block og_description %}KuraSmart is a secure digital election and online voting platform for managing elections, voters, candidates and results.{% endblock %}">
+<meta property="og:url" content="{{ config.SITE_URL.rstrip('/') }}{{ request.path }}">
+<meta property="og:site_name" content="KuraSmart">
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="{% block twitter_title %}{{ self.title() }}{% endblock %}">
+<meta name="twitter:description" content="{% block twitter_description %}KuraSmart is a secure digital election and online voting platform for managing elections, voters, candidates and results.{% endblock %}">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "KuraSmart",
+  "url": "{{ config.SITE_URL.rstrip('/') }}",
+  "description": "Secure digital election management, online voting, election results and election analytics."
+}
+</script>
   <meta name="author" content="Africode KuraSmart Team">
   <title>{% block title %}KuraSmart{% endblock %}</title>
   <!-- Favicon -->
@@ -264,6 +286,7 @@
 
 
   {% block head_extra %}{% endblock %}
+
 </head>
 
 <body class="text-dark d-flex flex-column min-vh-100">
