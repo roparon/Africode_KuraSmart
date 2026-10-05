@@ -1,11 +1,10 @@
 from flask import Blueprint, render_template, abort, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app.models import Election, Position, Candidate
-from werkzeug.utils import secure_filename
 from app.models import User
 from app.forms.profile_form import ProfileImageForm
 from app import db
-import os
+from app.services.storage import upload_image, delete_object, is_cloud_key
 
 
 dashboard_bp = Blueprint('dashboard', __name__)
@@ -26,15 +25,27 @@ def voter_dashboard():
         image_file = form.image.data
 
         if image_file:
-            filename = secure_filename(image_file.filename)
-            upload_folder = os.path.join('app', 'static', 'profile_images')
-            os.makedirs(upload_folder, exist_ok=True)
-            file_path = os.path.join(upload_folder, filename)
-            image_file.save(file_path)
+            old_profile_image = current_user.profile_image
 
-            # Save relative path to user profile
-            current_user.profile_image = f'profile_images/{filename}'
+            profile_key = upload_image(
+                image_file,
+                "profiles",
+                max_size=(600, 600),
+                quality=80,
+            )
+
+            current_user.profile_image = profile_key
             db.session.commit()
+
+            # Remove the previous cloud image only after the database update succeeds.
+            if old_profile_image and is_cloud_key(old_profile_image):
+                try:
+                    delete_object(old_profile_image)
+                except Exception as cleanup_error:
+                    from flask import current_app
+                    current_app.logger.warning(
+                        f"Could not delete old profile image: {cleanup_error}"
+                    )
 
             flash("✅ Profile image updated successfully.", "success")
             return redirect(url_for('voter_bp.voter_dashboard'))

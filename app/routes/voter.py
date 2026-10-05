@@ -4,12 +4,11 @@ from app.models import Notification, Election, Vote, Candidate, Position, Candid
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from sqlalchemy import and_
-from werkzeug.utils import secure_filename
 from app.forms.profile_form import ProfileImageForm
 from collections import defaultdict
 from app.forms import VoteForm
 from app.extensions import db
-import os
+from app.services.storage import upload_image, delete_object, is_cloud_key
 
 
 voter_bp = Blueprint('voter', __name__)
@@ -57,13 +56,28 @@ def voter_dashboard():
         if request.method == 'POST' and form.validate_on_submit():
             image_file = form.image.data
             if image_file:
-                filename = secure_filename(image_file.filename)
-                upload_folder = os.path.join('app', 'static', 'profile_images')
-                os.makedirs(upload_folder, exist_ok=True)
-                file_path = os.path.join(upload_folder, filename)
-                image_file.save(file_path)
-                current_user.profile_image = f'profile_images/{filename}'
+                old_profile_image = current_user.profile_image
+
+                profile_key = upload_image(
+                    image_file,
+                    "profiles",
+                    max_size=(600, 600),
+                    quality=80,
+                )
+
+                current_user.profile_image = profile_key
                 db.session.commit()
+
+                # Remove the previous cloud image only after the database update succeeds.
+                if old_profile_image and is_cloud_key(old_profile_image):
+                    try:
+                        delete_object(old_profile_image)
+                    except Exception as cleanup_error:
+                        from flask import current_app
+                        current_app.logger.warning(
+                            f"Could not delete old profile image: {cleanup_error}"
+                        )
+
                 flash("Profile image updated successfully.", "success")
                 return redirect(url_for('voter.voter_dashboard'))
 

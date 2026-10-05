@@ -108,7 +108,7 @@
               {% elif cand_form.existing_photo %}
               <div class="col-md-6">
                 <label class="form-label">Current Photo</label><br>
-                <img src="{{ url_for('static', filename='uploads/candidates/' ~ cand_form.existing_photo) }}"
+                <img src="{{ media_url(cand_form.existing_photo) }}"
                      class="img-thumbnail" style="max-height:150px;">
               </div>
               {% endif %}

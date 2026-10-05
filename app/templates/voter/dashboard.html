@@ -390,7 +390,7 @@
                 <div class="card shadow-sm border-0 rounded-4 mb-4">
                     <div class="card-header text-center py-4" style="background: linear-gradient(to right, #f3cd6b, #093bc5);">
                         <!-- Clickable Profile Image -->
-                        <img src="{{ url_for('static', filename=current_user.profile_image if current_user.profile_image else 'profile_images/default-profile.png') }}"
+                        <img src="{{ media_url(current_user.profile_image or 'profile_images/default-profile.png') }}"
                             alt="Profile Image"
                             class="rounded-circle shadow border border-3 profile-img"
                             style="width: 150px; height: 150px; object-fit: cover;"

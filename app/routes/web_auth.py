@@ -4,6 +4,7 @@ from app.forms.candidate_form import CandidateForm
 from app.forms.forms import LoginForm, RegistrationForm, ElectionForm, PositionForm, ProfileImageForm, NotificationForm, ResetPasswordForm, ForgotPasswordForm
 from app.models import User, Election, Candidate, Vote, Position, Notification, AuditLog
 from app.extensions import db
+from app.services.storage import upload_image, delete_object, is_cloud_key, media_url
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from app.enums import UserRole, ElectionStatusEnum
@@ -416,30 +417,17 @@ def export_users_csv():
         return jsonify({'error': 'Failed to export users', 'details': str(e)}), 500
 
 
-from PIL import Image
-import uuid
-
-UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'static', 'uploads', 'candidates')
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
 def save_candidate_photo(file):
-    """Compress & save uploaded candidate photo only if new file is provided."""
+    """Compress and upload a candidate photo to cloud storage."""
     if not file or not getattr(file, "filename", ""):
         return None
 
-    ext = os.path.splitext(file.filename)[1].lower()
-    filename = f"{uuid.uuid4().hex}{ext}"
-    path = os.path.join(UPLOAD_FOLDER, filename)
-
-    try:
-        img = Image.open(file)
-        img = img.convert("RGB")
-        img.thumbnail((600, 600))  # Resize for performance
-        img.save(path, format="JPEG", quality=75, optimize=True)
-    except Exception:
-        file.save(path)  # fallback
-
-    return filename
+    return upload_image(
+        file,
+        "candidates",
+        max_size=(600, 600),
+        quality=75,
+    )
 
 
 # ================= MANAGE ELECTIONS =================
@@ -481,6 +469,10 @@ def manage_elections():
                 election.end_date = end_dt_local
                 election.status = form.status.data
 
+            # Track old cloud photos so they can be removed only
+            # after the database update succeeds.
+            old_candidate_photos = []
+
             # Handle candidates
             for cand_form in form.candidates.entries:
                 full_name = cand_form.form.full_name.data.strip()
@@ -509,7 +501,11 @@ def manage_elections():
                     candidate.position = position.name
                     candidate.position_id = position.id
                     if photo_filename:
+                        old_photo = candidate.profile_photo
                         candidate.profile_photo = photo_filename
+
+                        if old_photo and is_cloud_key(old_photo):
+                            old_candidate_photos.append(old_photo)
                 elif not existing:
                     candidate = Candidate(
                         full_name=full_name,
@@ -526,6 +522,16 @@ def manage_elections():
                     flash(f"You are already registered as a candidate for '{position.name}' in this election.", "warning")
 
             db.session.commit()
+
+            # Delete replaced cloud photos only after the DB commit succeeds.
+            for old_photo in old_candidate_photos:
+                try:
+                    delete_object(old_photo)
+                except Exception as cleanup_error:
+                    current_app.logger.warning(
+                        f"Could not delete old candidate photo: {cleanup_error}"
+                    )
+
             flash("Election and candidates saved successfully.", "success")
             return redirect(url_for("admin_web.manage_elections"))
 
@@ -668,6 +674,7 @@ def edit_election(election_id):
 
             existing_candidates = {c.id: c for c in election.candidates}
             seen_ids = set()
+            old_candidate_photos = []
 
             for entry in form.candidates.entries:
                 data = entry.data
@@ -693,7 +700,18 @@ def edit_election(election_id):
                     candidate.manifesto = data.get("manifesto")
                     candidate.position = position_name
                     candidate.position_id = position_id
+
+                    old_photo = candidate.profile_photo
                     candidate.profile_photo = photo_filename
+
+                    if (
+                        photo_file
+                        and old_photo
+                        and old_photo != photo_filename
+                        and is_cloud_key(old_photo)
+                    ):
+                        old_candidate_photos.append(old_photo)
+
                     seen_ids.add(candidate.id)
                 else:
                     # New candidate
@@ -711,9 +729,22 @@ def edit_election(election_id):
 
             for cid, candidate in existing_candidates.items():
                 if cid not in seen_ids:
+                    if candidate.profile_photo and is_cloud_key(candidate.profile_photo):
+                        old_candidate_photos.append(candidate.profile_photo)
+
                     db.session.delete(candidate)
 
             db.session.commit()
+
+            # Remove replaced/deleted cloud photos only after the DB commit succeeds.
+            for old_photo in old_candidate_photos:
+                try:
+                    delete_object(old_photo)
+                except Exception as cleanup_error:
+                    current_app.logger.warning(
+                        f"Could not delete old candidate photo: {cleanup_error}"
+                    )
+
             flash("Election updated successfully!", "success")
             return redirect(url_for("admin_web.manage_elections"))
 
@@ -989,12 +1020,27 @@ def update_profile_image():
         if form.validate_on_submit():
             image_file = form.image.data  # ✅ use the form's field directly
             if image_file and image_file.filename:
-                filename = secure_filename(image_file.filename)
-                image_path = os.path.join(current_app.root_path, 'static', 'img', filename)
-                image_file.save(image_path)
+                old_profile_image = current_user.profile_image
 
-                current_user.profile_image = f"img/{filename}"
+                profile_key = upload_image(
+                    image_file,
+                    "profiles",
+                    max_size=(600, 600),
+                    quality=80,
+                )
+
+                current_user.profile_image = profile_key
                 db.session.commit()
+
+                # Remove the previous cloud image only after the database update succeeds.
+                if old_profile_image and is_cloud_key(old_profile_image):
+                    try:
+                        delete_object(old_profile_image)
+                    except Exception as cleanup_error:
+                        current_app.logger.warning(
+                            f"Could not delete old profile image: {cleanup_error}"
+                        )
+
                 flash("Profile image updated successfully!", "success")
             else:
                 flash("Please select a valid image file.", "warning")

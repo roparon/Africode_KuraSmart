@@ -74,10 +74,10 @@
                     {% set loop_id = 'positionOptions' ~ loop.index %}
                     <input 
                       type="text" 
-                      name="{{ cand_form.position.name }}" 
-                      id="{{ cand_form.position.id }}" 
+                      name="{{ cand_form.position.name }}"
+                      id="{{ cand_form.position.id }}"
                       class="form-control" 
-                      list="{{ loop_id }}" 
+                      list="{{ loop_id }}"
                       value="{{ cand_form.position.data or '' }}"
                       placeholder="Enter or select a position"
                     >
@@ -117,7 +117,7 @@
                     {% elif cand_form.existing_photo %}
                       <!-- Show already saved DB image -->
                       <div class="mt-2">
-                        <img src="{{ url_for('static', filename='uploads/candidates/' ~ cand_form.existing_photo) }}"
+                        <img src="{{ media_url(cand_form.existing_photo) }}"
                             alt="Candidate Photo"
                             class="img-thumbnail"
                             style="max-height: 150px;">

@@ -10,6 +10,7 @@ from apscheduler.jobstores.memory import MemoryJobStore
 from datetime import timezone
 from zoneinfo import ZoneInfo
 from app.extensions import db, migrate, login_manager, CSRFProtect, mail
+from app.services.storage import media_url
 from app.models import User, Notification
 from config import Config
 
@@ -122,6 +123,8 @@ def create_app():
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
         return dt.astimezone(ZoneInfo(tz_name))
+
+    app.jinja_env.globals["media_url"] = media_url
 
     @app.context_processor
     def inject_unread_count():

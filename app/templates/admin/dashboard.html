@@ -43,7 +43,7 @@
                     <div class="card-header bg-gradient-primary text-white fw-semibold rounded-top-4">Account Information</div>
                     <div class="card-body d-flex flex-column flex-md-row align-items-center gap-4">
                         <div class="position-relative d-inline-block profile-image-container">
-                            <img src="{{ url_for('static', filename=current_user.profile_image or 'img/default-avatar.png') }}"
+                            <img src="{{ media_url(current_user.profile_image or 'img/default-avatar.png') }}"
                                 alt="Profile Image"
                                 class="rounded-circle border border-3 shadow-sm"
                                 style="width: 120px; height: 120px; object-fit: cover; cursor: pointer;"
